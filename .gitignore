@@ -19,10 +19,11 @@ node_modules/
 next-env.d.ts
 
 # Build outputs
-/.next/
-/out/
-/dist/
-/build/
+.next
+.wrangler
+out
+dist
+build
 
 # Code coverage
 coverage/

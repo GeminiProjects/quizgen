@@ -2,8 +2,5 @@
 
 毕业实习校内团队项目。
 
-## 开发环境
-
-确保你已安装以下工具链。
-
-- [Bun](https://bun.sh)
+- [项目需求](./docs/project_requirement.md)
+- [开发指南](./docs/dev_101.md)
