@@ -1,0 +1,7 @@
+{
+	"recommendations": [
+		"Vercel.turbo-vsc",
+		"bradlc.vscode-tailwindcss",
+		"biomejs.biome"
+	]
+}
