@@ -1,37 +1,55 @@
-# dependencies (bun install)
-node_modules
-
-# output
-out
-dist
-*.tgz
-
-# code coverage
-coverage
-*.lcov
-
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
-
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# caches
-.eslintcache
-.cache
-*.tsbuildinfo
-
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
+# Operating System
 .DS_Store
 
+# IDEs
+.idea
+
+# Node and package managers
+node_modules/
+.pnp/
+.pnp.*
+.yarn/*
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/versions/
+
+# Environment variables
+.env*
+next-env.d.ts
+
+# Build outputs
+/.next/
+/out/
+/dist/
+/build/
+
+# Code coverage
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+report.[0-9]_[0-9]_[0-9]_[0-9]_.json
+
+# Caches
+.cache/
+.eslintcache
+*.tsbuildinfo
+
 # Turbo
-.turbo
+.turbo/
+
+# Archives and packages
+*.tgz
+
+# Cryptographic keys and certificates
+*.pem
+
+# Deployment
+.vercel/
