@@ -1,12 +1,15 @@
 import { beforeAll } from "bun:test";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api";
 import { drizzle } from "drizzle-orm/pglite";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
 export const db = drizzle({ casing: "snake_case" });
 
 // 使用 Bun 的文件系统 API 动态导入
 const dynamicImportSchemas = async () => {
-	const schemaPath = new URL("../src/schema", import.meta.url).pathname;
+	const currentDir = dirname(fileURLToPath(import.meta.url));
+	const schemaPath = join(currentDir, "..", "src", "schema");
 
 	try {
 		// 使用 Bun.file 读取目录
