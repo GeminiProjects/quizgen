@@ -1,0 +1,28 @@
+{
+	"name": "@repo/db",
+	"private": true,
+	"type": "module",
+	"version": "0.0.0",
+	"scripts": {
+		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false",
+		"test": "bun test --preload tests/setup.ts",
+		"db:reset": "bun exec --env-file .env.local 'bunx neonctl branch reset dev/local --parent --project-id $NEON_PROJECT_ID' && bun db:push",
+		"db:push": "bunx drizzle-kit push",
+		"db:pull": "bunx drizzle-kit pull",
+		"db:generate": "bunx drizzle-kit generate",
+		"db:migrate": "bunx drizzle-kit migrate",
+		"db:studio": "bunx drizzle-kit studio"
+	},
+	"dependencies": {
+		"@neondatabase/serverless": "^1.0.1",
+		"drizzle-orm": "^0.44.2"
+	},
+	"devDependencies": {
+		"@electric-sql/pglite": "^0.3.3",
+		"@types/bun": "^1.2.15",
+		"drizzle-kit": "^0.31.2",
+		"dotenv": "^16.4.7",
+		"tsx": "^4.20.0"
+	}
+}
