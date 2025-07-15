@@ -1,8 +1,8 @@
 import { beforeAll } from "bun:test";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api";
 import { drizzle } from "drizzle-orm/pglite";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
 export const db = drizzle({ casing: "snake_case" });
 

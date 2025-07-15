@@ -24,4 +24,4 @@ jobs:
       - name: 🔨 构建项目产物
         run: bunx vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: ✅ 部署项目产物到 Vercel
-        run: bunx vercel deploy --prebuilt -prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
+        run: bunx vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
