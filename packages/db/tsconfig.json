@@ -3,10 +3,19 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"],
-			"@/tests/*": ["./tests/*"]
+			"@/*": [
+				"./src/*"
+			],
+			"@/tests/*": [
+				"./tests/*"
+			]
 		}
 	},
-	"include": ["."],
-	"exclude": ["node_modules", "dist"]
+	"include": [
+		"."
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
 }
