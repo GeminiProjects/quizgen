@@ -1,31 +1,41 @@
-import {
-    pgEnum,
-    pgTable,
-    serial,
-    text,
-    timestamp,
-    varchar,
-} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-// 用户角色枚举
-export const userRoleEnum = pgEnum("user_role", [
-    "speaker",
-    "organizer",
-    "audience",
-]);
-
-// 用户表 - 支持演讲者、组织者、听众三种角色
+/**
+ * 用户表
+ * 由 Better Auth 管理，仅支持 GitHub OAuth 登录
+ */
 export const users = pgTable("users", {
-    id: serial("id").primaryKey(),
-    username: varchar("username", { length: 50 }).notNull().unique(),
-    email: varchar("email", { length: 255 }).notNull().unique(),
-    password: varchar("password", { length: 255 }).notNull(),
-    role: userRoleEnum("role").notNull(),
-    displayName: varchar("display_name", { length: 100 }),
-    avatar: text("avatar"), // 头像URL
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	// 用户唯一标识符
+	id: text("id").primaryKey(),
+	// 用户显示名称
+	name: text("name"),
+	// GitHub 邮箱（GitHub OAuth 登录后会提供）
+	email: text("email").notNull().unique(),
+	// 邮箱验证状态
+	emailVerified: boolean("email_verified").notNull().default(false),
+	// 记录创建时间
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	// 记录更新时间
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// 用户关系定义
+export const usersRelations = relations(users, ({ many }) => ({
+	// 用户创建的演讲
+	lectures: many(lectures),
+	// 用户的答题记录
+	attempts: many(attempts),
+}));
+
+// Zod 模式验证
+export const insertUserSchema = createInsertSchema(users);
+export const selectUserSchema = createSelectSchema(users);
+
+// TypeScript 类型导出
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+import { attempts } from "./attempts";
+import { lectures } from "./lectures";
