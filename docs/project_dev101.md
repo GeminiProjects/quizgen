@@ -1,14 +1,12 @@
-<!-- 
+
 # 开发指南
 
 本文旨在快速介绍本项目使用的一些技术栈，并提供一些开发、维护指南。  
 在开始之前，推荐使用 [Cursor](https://cursor.com) 作为 IDE。  
 
-本项目自带一些 [Cursor Rules](https://docs.cursor.com/context/rules)，用于增强 AI 辅助编辑的体验。
+- 本项目自带一些 [Cursor Rules](https://docs.cursor.com/context/rules)，用于增强 AI 辅助编辑的体验。
+- 同时，你的 IDE (VSCode / Cursor) 应该会自动推荐安装以下扩展：
 
-同时，你的 IDE (VSCode / Cursor) 应该会自动推荐安装以下扩展：
-
-- [Vercel.turbo-vsc](https://marketplace.visualstudio.com/items?itemName=Vercel.turbo-vsc) 增强 Turborepo 的使用体验
 - [bradlc.vscode-tailwindcss](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss) 增强 Tailwind CSS 的语法体验
 - [biomejs.biome](https://marketplace.visualstudio.com/items?itemName=biomejs.biome) 用于自动代码格式化、类型检查等
 
@@ -45,18 +43,12 @@ bun dev
 
 - 提交时，遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/v1.0.0/) 规范。
 
-### 2.1 安装 Shadcn UI 组件
+### 2.1 格式化代码
+
+已经配置 `Biome.js` 和相关 `VSCode` 配置。默认保存时会自动格式化代码。
+
+亦可使用命令:
 
 ```
-# 切换到前端项目根目录
-cd apps/web
-
-# 安装 Shadcn UI 组件
-bunx --bun shadcn@latest add <component-name>
-
-# 例如，安装 Button 组件
-bunx --bun shadcn@latest add button
-
-# 安装后，组件会自动添加到 packages/ui/src/components 目录下
+bun format
 ```
- -->

@@ -1,26 +1,26 @@
 {
-	"name": "quzigen",
-	"private": true,
-	"scripts": {
-		"build": "turbo build",
-		"dev": "turbo dev",
-		"test": "turbo test",
-		"clean": "turbo clean && git clean -xdf node_modules .turbo",
-		"lint": "ultracite lint",
-		"format": "ultracite format"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.1.1",
-		"turbo": "^2.5.4",
-		"typescript": "5.8.3",
-		"ultracite": "^5.0.36"
-	},
-	"packageManager": "bun@1.2.18",
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
-	"dependencies": {
-		"bun": "^1.2.18"
-	}
+  "name": "quzigen",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "test": "turbo test",
+    "clean": "turbo clean && git clean -xdf node_modules .turbo",
+    "lint": "bunx ultracite lint",
+    "format": "bunx ultracite format"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.1",
+    "turbo": "^2.5.4",
+    "typescript": "5.8.3",
+    "ultracite": "5.0.36"
+  },
+  "packageManager": "bun@1.2.18",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "bun": "^1.2.18"
+  }
 }
