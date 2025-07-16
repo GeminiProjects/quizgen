@@ -1,45 +1,63 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { timestamps } from "./columns.helpers";
+import { organizations } from "./organizations";
 import { users } from "./users";
 
 /**
- * 演讲/讲座表
- * 存储每场演讲的基本信息
+ * 讲座表
+ * 存储演讲会话信息
  */
-export const lectures = pgTable("lectures", {
-	// 演讲唯一标识符
-	id: uuid("id").primaryKey().defaultRandom(),
-	// 演讲标题
-	title: text("title").notNull(),
-	// 演讲描述（可选）
-	description: text("description"),
-	// 演讲者ID（外键关联到用户表）
-	ownerId: text("owner_id")
-		.notNull()
-		.references(() => users.id, { onDelete: "cascade" }),
-	// 演讲开始时间
-	startsAt: timestamp("starts_at").notNull(),
-	// 演讲结束时间（可选）
-	endsAt: timestamp("ends_at"),
-	// 记录创建时间
-	createdAt: timestamp("created_at").notNull().defaultNow(),
-	// 记录更新时间
-	updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const lectures = pgTable(
+	"lectures",
+	{
+		// 讲座唯一标识
+		id: uuid("id").primaryKey().defaultRandom(),
+		// 讲座标题
+		title: text("title").notNull(),
+		// 讲座描述
+		description: text("description"),
+		// 创建者ID
+		owner_id: text("owner_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		// 所属组织ID（可选，NULL表示个人讲座）
+		org_id: uuid("org_id").references(() => organizations.id, {
+			onDelete: "set null",
+		}),
+		// 开始时间
+		starts_at: timestamp("starts_at").notNull(),
+		// 结束时间
+		ends_at: timestamp("ends_at"),
+		// 时间戳
+		...timestamps,
+	},
+	(table) => [
+		// 为创建者ID创建索引
+		index("lectures_owner_id_idx").on(table.owner_id),
+		// 为组织ID创建索引
+		index("lectures_org_id_idx").on(table.org_id),
+	],
+);
 
-// 演讲关系定义
+// 讲座关系定义
 export const lecturesRelations = relations(lectures, ({ one, many }) => ({
-	// 演讲者（一对一）
+	// 创建者
 	owner: one(users, {
-		fields: [lectures.ownerId],
+		fields: [lectures.owner_id],
 		references: [users.id],
 	}),
-	// 演讲材料（一对多）
+	// 所属组织
+	organization: one(organizations, {
+		fields: [lectures.org_id],
+		references: [organizations.id],
+	}),
+	// 讲座材料
 	materials: many(materials),
-	// 演讲转录文本（一对多）
+	// 转录文本
 	transcripts: many(transcripts),
-	// 演讲题目（一对多）
+	// 测验题目
 	quizItems: many(quizItems),
 }));
 
@@ -51,6 +69,7 @@ export const selectLectureSchema = createSelectSchema(lectures);
 export type Lecture = typeof lectures.$inferSelect;
 export type NewLecture = typeof lectures.$inferInsert;
 
+// 导入相关表定义
 import { materials } from "./materials";
 import { quizItems } from "./quiz_items";
 import { transcripts } from "./transcripts";
