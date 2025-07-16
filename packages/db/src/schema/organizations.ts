@@ -7,7 +7,7 @@ import { users } from './users';
 
 /**
  * 组织表
- * 用于管理系列讲座集合
+ * 用于管理系列演讲集合
  */
 export const organizations = pgTable(
   'organizations',
@@ -18,7 +18,7 @@ export const organizations = pgTable(
     name: text('name').notNull(),
     // 组织描述
     description: text('description'),
-    // 加入密码（演讲者创建讲座时需要）
+    // 加入密码（演讲者创建演讲时需要）
     password: text('password').notNull(),
     // 创建者ID
     owner_id: text('owner_id')
@@ -42,7 +42,7 @@ export const organizationsRelations = relations(
       fields: [organizations.owner_id],
       references: [users.id],
     }),
-    // 组织内的讲座
+    // 组织内的演讲
     lectures: many(lectures),
   })
 );

@@ -1,0 +1,26 @@
+{
+  "name": "@repo/ai",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "bun test",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^0.0.67",
+    "ai": "^3.5.11",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.18",
+    "@repo/tsconfig": "workspace:*"
+  }
+}

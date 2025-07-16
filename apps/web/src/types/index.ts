@@ -7,7 +7,7 @@ export interface User {
   created_at: Date;
 }
 
-// 讲座类型
+// 演讲类型
 export interface Lecture {
   id: string;
   title: string;
@@ -74,7 +74,7 @@ export interface QuizStats {
   option_distribution: number[]; // 每个选项的选择人数
 }
 
-// 讲座统计类型
+// 演讲统计类型
 export interface LectureStats {
   lecture_id: string;
   total_participants: number;

@@ -46,7 +46,7 @@ export const mockUsers: User[] = [
   },
 ];
 
-// Mock 讲座数据
+// Mock 演讲数据
 export const mockLectures: Lecture[] = [
   {
     id: 'lecture-1',
@@ -222,7 +222,7 @@ export const mockQuizStats: QuizStats[] = [
   },
 ];
 
-// Mock 讲座统计数据
+// Mock 演讲统计数据
 export const mockLectureStats: LectureStats[] = [
   {
     lecture_id: 'lecture-1',
@@ -245,23 +245,23 @@ export const mockLectureStats: LectureStats[] = [
 // 获取当前用户（模拟登录用户）
 export const getCurrentUser = (): User => mockUsers[0];
 
-// 获取用户的讲座列表
+// 获取用户的演讲列表
 export const getUserLectures = (userId: string): Lecture[] => {
   return mockLectures.filter((lecture) => lecture.owner_id === userId);
 };
 
-// 获取用户参与的讲座列表
+// 获取用户参与的演讲列表
 export const getUserParticipatedLectures = (userId: string): Lecture[] => {
-  // 简化处理，返回非本人创建的讲座
+  // 简化处理，返回非本人创建的演讲
   return mockLectures.filter((lecture) => lecture.owner_id !== userId);
 };
 
-// 获取讲座详情
+// 获取演讲详情
 export const getLectureById = (lectureId: string): Lecture | null => {
   return mockLectures.find((lecture) => lecture.id === lectureId) || null;
 };
 
-// 获取讲座的当前活跃题目
+// 获取演讲的当前活跃题目
 export const getActiveLectureQuiz = (lectureId: string): QuizItem | null => {
   return (
     mockQuizItems.find(
@@ -270,7 +270,7 @@ export const getActiveLectureQuiz = (lectureId: string): QuizItem | null => {
   );
 };
 
-// 获取讲座的所有题目
+// 获取演讲的所有题目
 export const getLectureQuizzes = (lectureId: string): QuizItem[] => {
   return mockQuizItems.filter((quiz) => quiz.lecture_id === lectureId);
 };
@@ -280,7 +280,7 @@ export const getQuizStats = (quizId: string): QuizStats | null => {
   return mockQuizStats.find((stats) => stats.quiz_id === quizId) || null;
 };
 
-// 获取讲座统计
+// 获取演讲统计
 export const getLectureStats = (lectureId: string): LectureStats | null => {
   return (
     mockLectureStats.find((stats) => stats.lecture_id === lectureId) || null

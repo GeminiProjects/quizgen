@@ -28,7 +28,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
           {/* 标题 */}
           <div className="text-center">
             <h2 className="font-bold text-2xl text-foreground">QuizGen</h2>
-            <p className="mt-2 text-muted-foreground">讲座即时智能评测系统</p>
+            <p className="mt-2 text-muted-foreground">演讲即时智能评测系统</p>
           </div>
 
           {/* 登录按钮 */}

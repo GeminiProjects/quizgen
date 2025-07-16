@@ -1,0 +1,13 @@
+[test]
+# 测试文件匹配模式
+# 支持 .test.ts, .spec.ts, .test.tsx, .spec.tsx 文件
+# 以及 __tests__ 目录下的所有文件
+preload = []
+
+# 测试超时时间（毫秒）
+# timeout = 5000
+
+# 代码覆盖率配置
+# coverage = true
+# coverageReporter = ["text", "lcov"]
+# coverageDir = "coverage"

@@ -60,7 +60,7 @@ export default function Dashboard() {
 
   const validateLectureForm = () => {
     if (!lectureTitle.trim()) {
-      setErrorMsg('讲座标题不能为空');
+      setErrorMsg('演讲标题不能为空');
       return false;
     }
     return true;
@@ -122,7 +122,7 @@ export default function Dashboard() {
     const newLecture = createLectureObject();
 
     // 这里只是演示，实际应 setState 或调用后端
-    alert(`讲座已创建: ${JSON.stringify(newLecture, null, 2)}`);
+    alert(`演讲已创建: ${JSON.stringify(newLecture, null, 2)}`);
     resetForm();
   };
 
@@ -219,7 +219,7 @@ export default function Dashboard() {
                   onClick={() => setShowCreateLectureModal(true)}
                 >
                   <Plus className="h-4 w-4" />
-                  创建讲座
+                  创建演讲
                 </Button>
                 <Button
                   onClick={handleSignOut}
@@ -244,7 +244,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div className="font-bold text-2xl">{myLectures.length}</div>
-                  <div className="text-muted-foreground text-sm">我的讲座</div>
+                  <div className="text-muted-foreground text-sm">我的演讲</div>
                 </div>
               </div>
             </CardContent>
@@ -277,7 +277,7 @@ export default function Dashboard() {
                     {participatedLectures.length}
                   </div>
                   <div className="text-muted-foreground text-sm">
-                    参与的讲座
+                    参与的演讲
                   </div>
                 </div>
               </div>
@@ -306,12 +306,12 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* 我的讲座 */}
+          {/* 我的演讲 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                我的讲座
+                我的演讲
               </CardTitle>
             </CardHeader>
             <div className="h-96 overflow-y-auto">
@@ -361,7 +361,7 @@ export default function Dashboard() {
                           {lecture.status === 'active' && (
                             <Button asChild size="sm">
                               <Link href={`/lecture/${lecture.id}`}>
-                                进入讲座
+                                进入演讲
                               </Link>
                             </Button>
                           )}
@@ -373,10 +373,10 @@ export default function Dashboard() {
                   {myLectures.length === 0 && (
                     <div className="py-8 text-center text-muted-foreground">
                       <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                      <p>还没有创建任何讲座</p>
+                      <p>还没有创建任何演讲</p>
                       <Button className="mt-4" size="sm">
                         <Plus className="mr-2 h-4 w-4" />
-                        创建第一个讲座
+                        创建第一个演讲
                       </Button>
                     </div>
                   )}
@@ -385,33 +385,33 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* 参与的讲座 */}
+          {/* 参与的演讲 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                参与的讲座
+                参与的演讲
               </CardTitle>
             </CardHeader>
-            <div className="h-96 overflow-y-auto">
+            <div className="max-h-96 overflow-y-auto lg:h-96">
               <CardContent>
                 <div className="space-y-4">
                   {participatedLectures.map((lecture) => (
                     <div
-                      className="rounded-lg border p-4 transition-colors hover:bg-accent/50 dark:hover:bg-accent/30"
+                      className="rounded-lg border p-3 transition-colors hover:bg-accent/50 sm:p-4 dark:hover:bg-accent/30"
                       key={lecture.id}
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex-1">
-                          <div className="mb-2 flex items-center gap-2">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
                             {getStatusIcon(lecture.status)}
-                            <h3 className="font-medium text-lg">
+                            <h3 className="flex-1 font-medium text-base sm:text-lg">
                               {lecture.title}
                             </h3>
                             {getStatusBadge(lecture.status)}
                           </div>
                           <div className="mb-3 flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
+                            <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
                               <AvatarImage
                                 alt={lecture.owner.display_name}
                                 src={lecture.owner.avatar_url}
@@ -420,38 +420,56 @@ export default function Dashboard() {
                                 {lecture.owner.display_name.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-muted-foreground text-sm">
+                            <span className="text-muted-foreground text-xs sm:text-sm">
                               {lecture.owner.display_name}
                             </span>
                           </div>
                           {/* 所属组织 */}
                           <div className="mb-2 flex items-center gap-1">
-                            <Users aria-label="组织" className="h-4 w-4" />
+                            <Users
+                              aria-label="组织"
+                              className="h-3 w-3 sm:h-4 sm:w-4"
+                            />
                             <span className="text-muted-foreground text-xs">
                               {lecture.organization?.name || '默认组织'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 text-muted-foreground text-sm">
+                          <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-xs sm:gap-4 sm:text-sm">
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {formatDate(lecture.starts_at)}
+                              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                              <span className="hidden sm:inline">
+                                {formatDate(lecture.starts_at)}
+                              </span>
+                              <span className="sm:hidden">
+                                {lecture.starts_at.toLocaleDateString('zh-CN', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
+                              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                               {lecture.participants_count}人
                             </div>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           {lecture.status === 'active' && (
-                            <Button asChild size="sm">
-                              <Link href={`/lecture/${lecture.id}`}>
-                                加入讲座
-                              </Link>
+                            <Button
+                              asChild
+                              className="flex-1 sm:flex-initial"
+                              size="sm"
+                            >
+                              <Link href={`/lecture/${lecture.id}`}>加入</Link>
                             </Button>
                           )}
                           {lecture.status === 'pending' && (
-                            <Button disabled size="sm" variant="outline">
+                            <Button
+                              className="flex-1 sm:flex-initial"
+                              disabled
+                              size="sm"
+                              variant="outline"
+                            >
                               等待开始
                             </Button>
                           )}
@@ -463,8 +481,8 @@ export default function Dashboard() {
                   {participatedLectures.length === 0 && (
                     <div className="py-8 text-center text-muted-foreground">
                       <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                      <p>还没有参与任何讲座</p>
-                      <p className="mt-2 text-sm">使用邀请链接加入讲座</p>
+                      <p>还没有参与任何演讲</p>
+                      <p className="mt-2 text-sm">使用邀请链接加入演讲</p>
                     </div>
                   )}
                 </div>
@@ -473,34 +491,36 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* 我的组织 */}
-        <Card className="mt-8">
+        {/* 我的组织 - 优化移动端布局 */}
+        <Card className="mt-6 lg:mt-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Users className="h-5 w-5" />
               我的组织
             </CardTitle>
           </CardHeader>
-          <div className="h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto lg:h-96">
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {myOrganizations.length > 0 ? (
                   myOrganizations.map((org) => (
                     <div
-                      className="flex items-center gap-3 rounded-lg border p-4"
+                      className="flex items-center gap-3 rounded-lg border p-3 sm:p-4"
                       key={org.id}
                     >
                       <Users
                         aria-label="组织"
-                        className="h-6 w-6 text-yellow-500"
+                        className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6"
                       />
-                      <span className="font-medium">{org.name}</span>
+                      <span className="font-medium text-sm sm:text-base">
+                        {org.name}
+                      </span>
                     </div>
                   ))
                 ) : (
                   <div className="py-8 text-center text-muted-foreground">
                     <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                    <p>还没有加入任何组织</p>
+                    <p className="text-sm sm:text-base">还没有加入任何组织</p>
                   </div>
                 )}
               </div>
@@ -510,29 +530,43 @@ export default function Dashboard() {
       </div>
 
       {showCreateLectureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="relative w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md rounded-lg bg-card p-4 shadow-lg sm:mx-0 sm:p-6">
             <button
               aria-label="关闭"
-              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
+              className="absolute top-2 right-2 rounded-sm p-1 text-muted-foreground transition-opacity hover:text-foreground hover:opacity-100"
               onClick={() => setShowCreateLectureModal(false)}
               type="button"
             >
-              ×
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6 18L18 6M6 6l12 12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                />
+              </svg>
             </button>
-            <h2 className="mb-4 font-bold text-xl">创建讲座</h2>
+            <h2 className="mb-4 font-bold text-lg sm:text-xl">创建演讲</h2>
             <div className="mb-3">
               <label
                 className="mb-1 block font-medium text-sm"
                 htmlFor="lecture-title"
               >
-                讲座标题
+                演讲标题
               </label>
               <input
-                className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 id="lecture-title"
                 onChange={(e) => setLectureTitle(e.target.value)}
-                placeholder="请输入讲座标题"
+                placeholder="请输入演讲标题"
                 value={lectureTitle}
               />
             </div>
@@ -541,20 +575,21 @@ export default function Dashboard() {
                 className="mb-1 block font-medium text-sm"
                 htmlFor="lecture-description"
               >
-                讲座描述
+                演讲描述
               </label>
               <textarea
-                className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 id="lecture-description"
                 onChange={(e) => setLectureDesc(e.target.value)}
-                placeholder="请输入讲座描述"
+                placeholder="请输入演讲描述"
+                rows={3}
                 value={lectureDesc}
               />
             </div>
             <div className="mb-3">
               <fieldset>
                 <legend className="mb-1 block font-medium text-sm">
-                  讲座类型
+                  演讲类型
                 </legend>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-1">
@@ -565,7 +600,7 @@ export default function Dashboard() {
                       type="radio"
                       value="personal"
                     />
-                    个人讲座
+                    个人演讲
                   </label>
                   <label className="flex items-center gap-1">
                     <input
@@ -590,7 +625,7 @@ export default function Dashboard() {
                     选择组织
                   </label>
                   <select
-                    className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     id="org-select"
                     onChange={(e) => setSelectedOrgId(e.target.value)}
                     value={selectedOrgId || ''}
@@ -611,7 +646,7 @@ export default function Dashboard() {
                     组织密码
                   </label>
                   <input
-                    className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     id="org-password"
                     onChange={(e) => setOrgPassword(e.target.value)}
                     placeholder="请输入组织密码"

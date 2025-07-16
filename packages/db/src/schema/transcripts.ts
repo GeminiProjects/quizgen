@@ -12,7 +12,7 @@ export const transcripts = pgTable(
   {
     // 转录唯一标识
     id: uuid('id').primaryKey().defaultRandom(),
-    // 讲座ID
+    // 演讲ID
     lecture_id: uuid('lecture_id')
       .notNull()
       .references(() => lectures.id, { onDelete: 'cascade' }),
@@ -24,7 +24,7 @@ export const transcripts = pgTable(
     created_at: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [
-    // 为讲座ID创建索引
+    // 为演讲ID创建索引
     index('transcripts_lecture_id_idx').on(table.lecture_id),
     // 为时间戳创建索引
     index('transcripts_timestamp_idx').on(table.ts),
@@ -33,7 +33,7 @@ export const transcripts = pgTable(
 
 // 转录文本关系定义
 export const transcriptsRelations = relations(transcripts, ({ one }) => ({
-  // 所属讲座
+  // 所属演讲
   lecture: one(lectures, {
     fields: [transcripts.lecture_id],
     references: [lectures.id],

@@ -21,7 +21,7 @@ export const quizItems = pgTable(
   {
     // 题目唯一标识
     id: uuid('id').primaryKey().defaultRandom(),
-    // 讲座ID
+    // 演讲ID
     lecture_id: uuid('lecture_id')
       .notNull()
       .references(() => lectures.id, { onDelete: 'cascade' }),
@@ -37,7 +37,7 @@ export const quizItems = pgTable(
     created_at: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [
-    // 为讲座ID创建索引
+    // 为演讲ID创建索引
     index('quiz_items_lecture_id_idx').on(table.lecture_id),
     // 为时间戳创建索引
     index('quiz_items_timestamp_idx').on(table.ts),
@@ -46,7 +46,7 @@ export const quizItems = pgTable(
 
 // 测验题目关系定义
 export const quizItemsRelations = relations(quizItems, ({ one, many }) => ({
-  // 所属讲座
+  // 所属演讲
   lecture: one(lectures, {
     fields: [quizItems.lecture_id],
     references: [lectures.id],

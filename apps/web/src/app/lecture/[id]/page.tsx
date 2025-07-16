@@ -143,12 +143,12 @@ const StatsDisplay = ({
   </Card>
 );
 
-// 讲座不存在错误页面
+// 演讲不存在错误页面
 const LectureNotFound = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
     <Card className="w-full max-w-md">
       <CardContent className="p-8 text-center">
-        <h2 className="mb-2 font-semibold text-xl">讲座不存在</h2>
+        <h2 className="mb-2 font-semibold text-xl">演讲不存在</h2>
         <p className="mb-4 text-muted-foreground">请检查链接是否正确</p>
         <Button asChild>
           <Link href="/">返回首页</Link>

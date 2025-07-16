@@ -6,23 +6,23 @@ import { organizations } from './organizations';
 import { users } from './users';
 
 /**
- * 讲座表
+ * 演讲表
  * 存储演讲会话信息
  */
 export const lectures = pgTable(
   'lectures',
   {
-    // 讲座唯一标识
+    // 演讲唯一标识
     id: uuid('id').primaryKey().defaultRandom(),
-    // 讲座标题
+    // 演讲标题
     title: text('title').notNull(),
-    // 讲座描述
+    // 演讲描述
     description: text('description'),
     // 创建者ID
     owner_id: text('owner_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    // 所属组织ID（可选，NULL表示个人讲座）
+    // 所属组织ID（可选，NULL表示个人演讲）
     org_id: uuid('org_id').references(() => organizations.id, {
       onDelete: 'set null',
     }),
@@ -41,7 +41,7 @@ export const lectures = pgTable(
   ]
 );
 
-// 讲座关系定义
+// 演讲关系定义
 export const lecturesRelations = relations(lectures, ({ one, many }) => ({
   // 创建者
   owner: one(users, {
@@ -53,7 +53,7 @@ export const lecturesRelations = relations(lectures, ({ one, many }) => ({
     fields: [lectures.org_id],
     references: [organizations.id],
   }),
-  // 讲座材料
+  // 演讲材料
   materials: many(materials),
   // 转录文本
   transcripts: many(transcripts),

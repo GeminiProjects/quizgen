@@ -155,8 +155,8 @@ describe('数据库表功能测试', () => {
     });
   });
 
-  describe('讲座表 (lectures)', () => {
-    test('创建讲座', async () => {
+  describe('演讲表 (lectures)', () => {
+    test('创建演讲', async () => {
       // 准备依赖数据
       const testUser: NewUser = {
         id: 'test-user-001',
@@ -177,16 +177,16 @@ describe('数据库表功能测试', () => {
         .values(testOrganization)
         .returning();
 
-      // 准备讲座数据
+      // 准备演讲数据
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
       };
 
-      // 插入讲座
+      // 插入演讲
       const [insertedLecture] = await db
         .insert(lectures)
         .values(testLecture)
@@ -198,7 +198,7 @@ describe('数据库表功能测试', () => {
       expect(insertedLecture.owner_id).toBe(testUser.id);
     });
 
-    test('更新讲座结束时间', async () => {
+    test('更新演讲结束时间', async () => {
       // 准备数据
       const testUser: NewUser = {
         id: 'test-user-001',
@@ -220,8 +220,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -267,8 +267,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -322,8 +322,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -375,8 +375,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -389,7 +389,7 @@ describe('数据库表功能测试', () => {
       // 准备题目数据
       const testQuizItem: NewQuizItem = {
         lecture_id: lecture.id,
-        question: '这个讲座的主题是什么？',
+        question: '这个演讲的主题是什么？',
         options: ['选项A', '选项B', '选项C', '选项D'],
         answer: 0,
       };
@@ -431,8 +431,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -444,7 +444,7 @@ describe('数据库表功能测试', () => {
 
       const testQuizItem: NewQuizItem = {
         lecture_id: lecture.id,
-        question: '这个讲座的主题是什么？',
+        question: '这个演讲的主题是什么？',
         options: ['选项A', '选项B', '选项C', '选项D'],
         answer: 0,
       };
@@ -496,8 +496,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -571,8 +571,8 @@ describe('数据库表功能测试', () => {
         .returning();
 
       const testLecture: NewLecture = {
-        title: '测试讲座',
-        description: '这是一个测试讲座',
+        title: '测试演讲',
+        description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
         starts_at: new Date(),
@@ -596,7 +596,7 @@ describe('数据库表功能测试', () => {
       // 删除组织
       await db.delete(organizations).where(eq(organizations.id, org.id));
 
-      // 验证级联行为：org_id 应该被设置为 null（而不是删除讲座）
+      // 验证级联行为：org_id 应该被设置为 null（而不是删除演讲）
       const [remainingLecture] = await db
         .select()
         .from(lectures)
@@ -604,7 +604,7 @@ describe('数据库表功能测试', () => {
       expect(remainingLecture).toBeDefined();
       expect(remainingLecture.org_id).toBeNull();
 
-      // 讲座还在，所以材料也应该还在
+      // 演讲还在，所以材料也应该还在
       const remainingMaterials = await db
         .select()
         .from(materials)

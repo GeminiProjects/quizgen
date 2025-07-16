@@ -70,7 +70,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <h2 className="mb-2 font-semibold text-xl">讲座不存在</h2>
+            <h2 className="mb-2 font-semibold text-xl">演讲不存在</h2>
             <p className="mb-4 text-muted-foreground">请检查链接是否正确</p>
             <Button asChild>
               <Link href="/">返回首页</Link>
@@ -81,7 +81,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
     );
   }
 
-  // 检查是否是讲座的所有者
+  // 检查是否是演讲的所有者
   if (lecture.owner_id !== currentUser.id) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -89,7 +89,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
           <CardContent className="p-8 text-center">
             <h2 className="mb-2 font-semibold text-xl">无权限访问</h2>
             <p className="mb-4 text-muted-foreground">
-              只有讲座创建者才能查看演讲者视图
+              只有演讲创建者才能查看演讲者视图
             </p>
             <Button asChild>
               <Link href={`/lecture/${resolvedParams.id}`}>进入听众视图</Link>

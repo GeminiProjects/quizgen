@@ -55,7 +55,7 @@ export default function LandingPage() {
 
           {/* 产品描述 */}
           <p className="mb-12 text-muted-foreground text-xl leading-relaxed">
-            讲座即时智能评测系统
+            演讲即时智能评测系统
           </p>
 
           {/* GitHub 登录按钮 */}

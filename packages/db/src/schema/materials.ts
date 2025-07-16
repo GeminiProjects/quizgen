@@ -13,7 +13,7 @@ export const materials = pgTable(
   {
     // 材料唯一标识
     id: uuid('id').primaryKey().defaultRandom(),
-    // 讲座ID
+    // 演讲ID
     lecture_id: uuid('lecture_id')
       .notNull()
       .references(() => lectures.id, { onDelete: 'cascade' }),
@@ -27,14 +27,14 @@ export const materials = pgTable(
     ...timestamps,
   },
   (table) => [
-    // 为讲座ID创建索引
+    // 为演讲ID创建索引
     index('materials_lecture_id_idx').on(table.lecture_id),
   ]
 );
 
 // 材料关系定义
 export const materialsRelations = relations(materials, ({ one }) => ({
-  // 所属讲座
+  // 所属演讲
   lecture: one(lectures, {
     fields: [materials.lecture_id],
     references: [lectures.id],
