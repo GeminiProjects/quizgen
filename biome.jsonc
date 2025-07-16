@@ -1,4 +1,26 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
-  "extends": ["ultracite"]
+  "extends": ["ultracite"],
+  "javascript": {
+    "globals": ["$", "_", "Bun"]
+  },
+  "files": {
+    "includes": [
+      "**/*", // 包含所有文件
+      "!packages/ui/src/components/**" // 忽略 shadcn/ui 组件
+    ]
+  },
+  "linter": {
+    "rules": {
+      "nursery": {
+        "noUnknownAtRule": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off"
+      },
+      "suspicious": {
+        "noConsole": "off"
+      }
+    }
+  }
 }
