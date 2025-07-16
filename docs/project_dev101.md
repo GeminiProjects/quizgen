@@ -1,3 +1,4 @@
+<!-- 
 # 开发指南
 
 本文旨在快速介绍本项目使用的一些技术栈，并提供一些开发、维护指南。  
@@ -58,4 +59,4 @@ bunx --bun shadcn@latest add button
 
 # 安装后，组件会自动添加到 packages/ui/src/components 目录下
 ```
-
+ -->
