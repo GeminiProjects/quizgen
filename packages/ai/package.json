@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "dev": "bun --env-file=../../.env.local run src/index.ts",
+    "run-index": "bun --env-file=../../.env.local run src/index.ts",
     "lint": "ultracite lint",
     "format": "ultracite format",
     "type-check": "tsc --noEmit"
