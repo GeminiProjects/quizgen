@@ -21,6 +21,7 @@ import {
   Play,
   Plus,
   Users,
+  Trash,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -52,6 +53,13 @@ export default function Dashboard() {
   const [orgPassword, setOrgPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // 新增：创建组织相关状态
+  const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
+  const [orgName, setOrgName] = useState('');
+  const [orgDesc, setOrgDesc] = useState('');
+  const [orgCreatePassword, setOrgCreatePassword] = useState('');
+  const [orgErrorMsg, setOrgErrorMsg] = useState('');
+
   // mock 密码校验
   const checkOrgPassword = (_orgId: string, password: string) => {
     // 假设所有组织密码都是 "123456"
@@ -82,6 +90,19 @@ export default function Dashboard() {
     return true;
   };
 
+  // 新增：创建组织表单校验
+  const validateOrgForm = () => {
+    if (!orgName.trim()) {
+      setOrgErrorMsg('组织名称不能为空');
+      return false;
+    }
+    if (!orgCreatePassword) {
+      setOrgErrorMsg('请输入组织密码');
+      return false;
+    }
+    return true;
+  };
+
   const createLectureObject = () => {
     return {
       id: Date.now().toString(),
@@ -106,6 +127,31 @@ export default function Dashboard() {
     setLectureType('personal');
     setSelectedOrgId(null);
     setOrgPassword('');
+  };
+
+  // 新增：创建组织处理
+  const handleCreateOrg = () => {
+    setOrgErrorMsg('');
+    if (!validateOrgForm()) {
+      return;
+    }
+    const newOrg = {
+      id: Date.now().toString(),
+      name: orgName,
+      description: orgDesc,
+      password: orgCreatePassword,
+    };
+    alert(`组织已创建: ${JSON.stringify(newOrg, null, 2)}`);
+    resetOrgForm();
+  };
+
+  // 新增：重置组织表单
+  const resetOrgForm = () => {
+    setShowCreateOrgModal(false);
+    setOrgName('');
+    setOrgDesc('');
+    setOrgCreatePassword('');
+    setOrgErrorMsg('');
   };
 
   const handleCreateLecture = () => {
@@ -214,13 +260,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  className="flex items-center gap-2"
-                  onClick={() => setShowCreateLectureModal(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  创建演讲
-                </Button>
+                {/* 删除“创建演讲”按钮，这里只保留登出按钮 */}
                 <Button
                   onClick={handleSignOut}
                   size="icon"
@@ -312,6 +352,15 @@ export default function Dashboard() {
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 我的演讲
+                {/* 新增：标题右侧添加“创建演讲”按钮 */}
+                <Button
+                  className="ml-2 flex items-center gap-2"
+                  onClick={() => setShowCreateLectureModal(true)}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  创建演讲
+                </Button>
               </CardTitle>
             </CardHeader>
             <div className="h-96 overflow-y-auto">
@@ -352,7 +401,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
                           <Button asChild size="sm" variant="outline">
                             <Link href={`/lecture/${lecture.id}/speaker`}>
                               演讲者视图
@@ -365,6 +414,10 @@ export default function Dashboard() {
                               </Link>
                             </Button>
                           )}
+                          {/* 删除按钮，仅展示，无功能 */}
+                          <Button size="sm" variant="outline" title="删除" aria-label="删除" type="button">
+                            <Trash className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -497,6 +550,16 @@ export default function Dashboard() {
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Users className="h-5 w-5" />
               我的组织
+              {/* 新增：标题右侧添加“创建组织”按钮 */}
+              <Button
+                className="ml-2 flex items-center gap-2"
+                size="sm"
+                onClick={() => setShowCreateOrgModal(true)}
+                type="button"
+              >
+                <Plus className="h-4 w-4" />
+                创建组织
+              </Button>
             </CardTitle>
           </CardHeader>
           <div className="max-h-96 overflow-y-auto lg:h-96">
@@ -515,6 +578,10 @@ export default function Dashboard() {
                       <span className="font-medium text-sm sm:text-base">
                         {org.name}
                       </span>
+                      {/* 删除按钮，仅展示，无功能 */}
+                      <Button size="sm" variant="outline" title="删除" aria-label="删除" type="button">
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))
                 ) : (
@@ -660,6 +727,89 @@ export default function Dashboard() {
               <div className="mb-2 text-destructive text-sm">{errorMsg}</div>
             )}
             <Button className="mt-2 w-full" onClick={handleCreateLecture}>
+              创建
+            </Button>
+          </div>
+        </div>
+      )}
+      {/* 新增：创建组织模态框 */}
+      {showCreateOrgModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md rounded-lg bg-card p-4 shadow-lg sm:mx-0 sm:p-6">
+            <button
+              aria-label="关闭"
+              className="absolute top-2 right-2 rounded-sm p-1 text-muted-foreground transition-opacity hover:text-foreground hover:opacity-100"
+              onClick={resetOrgForm}
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6 18L18 6M6 6l12 12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                />
+              </svg>
+            </button>
+            <h2 className="mb-4 font-bold text-lg sm:text-xl">创建组织</h2>
+            <div className="mb-3">
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="org-name"
+              >
+                组织名称
+              </label>
+              <input
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                id="org-name"
+                onChange={(e) => setOrgName(e.target.value)}
+                placeholder="请输入组织名称"
+                value={orgName}
+              />
+            </div>
+            <div className="mb-3">
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="org-desc"
+              >
+                组织简述
+              </label>
+              <textarea
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                id="org-desc"
+                onChange={(e) => setOrgDesc(e.target.value)}
+                placeholder="请输入组织简述"
+                rows={3}
+                value={orgDesc}
+              />
+            </div>
+            <div className="mb-3">
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="org-create-password"
+              >
+                组织密码
+              </label>
+              <input
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                id="org-create-password"
+                onChange={(e) => setOrgCreatePassword(e.target.value)}
+                placeholder="请输入组织密码"
+                type="password"
+                value={orgCreatePassword}
+              />
+            </div>
+            {orgErrorMsg && (
+              <div className="mb-2 text-destructive text-sm">{orgErrorMsg}</div>
+            )}
+            <Button className="mt-2 w-full" onClick={handleCreateOrg}>
               创建
             </Button>
           </div>
