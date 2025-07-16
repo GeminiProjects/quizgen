@@ -42,20 +42,20 @@ export const QuestionPanel = ({
   const getOptionStyle = (index: number) => {
     if (!showResult) {
       return selectedOption === index
-        ? 'bg-blue-50 border-blue-500 text-blue-700'
-        : 'bg-white border-gray-200 hover:border-gray-300';
+        ? 'bg-primary/10 border-primary text-primary'
+        : 'bg-card border-border hover:border-muted-foreground/50';
     }
 
     // 显示结果时的样式
     if (index === quiz.answer) {
-      return 'bg-green-50 border-green-500 text-green-700';
+      return 'bg-green-500/10 border-green-500 text-green-600';
     }
 
     if (userAnswer === index && userAnswer !== quiz.answer) {
-      return 'bg-red-50 border-red-500 text-red-700';
+      return 'bg-destructive/10 border-destructive text-destructive';
     }
 
-    return 'bg-gray-50 border-gray-200 text-gray-500';
+    return 'bg-muted border-border text-muted-foreground';
   };
 
   const getOptionIcon = (index: number) => {
@@ -64,11 +64,11 @@ export const QuestionPanel = ({
     }
 
     if (index === quiz.answer) {
-      return <CheckCircle className="h-5 w-5 text-green-600" />;
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
     }
 
     if (userAnswer === index && userAnswer !== quiz.answer) {
-      return <XCircle className="h-5 w-5 text-red-600" />;
+      return <XCircle className="h-5 w-5 text-destructive" />;
     }
 
     return null;
@@ -78,7 +78,7 @@ export const QuestionPanel = ({
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-gray-800 text-xl">
+          <CardTitle className="text-foreground text-xl">
             {quiz.question}
           </CardTitle>
           {!showResult && (
@@ -102,7 +102,7 @@ export const QuestionPanel = ({
             variant="outline"
           >
             <div className="flex w-full items-center">
-              <span className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 font-medium text-sm">
+              <span className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted font-medium text-sm">
                 {String.fromCharCode(65 + index)}
               </span>
               <span className="flex-1 text-left">{option}</span>
@@ -128,15 +128,15 @@ export const QuestionPanel = ({
             <div className="flex items-center justify-center gap-2">
               {isCorrect ? (
                 <>
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <span className="font-medium text-green-700 text-lg">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                  <span className="font-medium text-green-600 text-lg">
                     回答正确！
                   </span>
                 </>
               ) : (
                 <>
-                  <XCircle className="h-6 w-6 text-red-600" />
-                  <span className="font-medium text-lg text-red-700">
+                  <XCircle className="h-6 w-6 text-destructive" />
+                  <span className="font-medium text-lg text-destructive">
                     回答错误
                   </span>
                 </>

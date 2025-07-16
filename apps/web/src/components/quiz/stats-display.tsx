@@ -33,22 +33,22 @@ export const StatsDisplay = ({ stats, className = '' }: StatsDisplayProps) => {
         {/* 基本统计 */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <Users className="h-5 w-5 text-blue-600" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <div className="text-gray-600 text-sm">总答题数</div>
+              <div className="text-muted-foreground text-sm">总答题数</div>
               <div className="font-bold text-2xl">{stats.total_attempts}</div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-green-100 p-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
+            <div className="rounded-lg bg-green-500/10 p-2">
+              <TrendingUp className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <div className="text-gray-600 text-sm">正确率</div>
-              <div className="font-bold text-2xl text-green-600">
+              <div className="text-muted-foreground text-sm">正确率</div>
+              <div className="font-bold text-2xl text-green-500">
                 {accuracyPercentage}%
               </div>
             </div>
@@ -70,11 +70,11 @@ export const StatsDisplay = ({ stats, className = '' }: StatsDisplayProps) => {
 
         {/* 平均答题时间 */}
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-orange-100 p-2">
-            <Clock className="h-5 w-5 text-orange-600" />
+          <div className="rounded-lg bg-orange-500/10 p-2">
+            <Clock className="h-5 w-5 text-orange-500" />
           </div>
           <div>
-            <div className="text-gray-600 text-sm">平均答题时间</div>
+            <div className="text-muted-foreground text-sm">平均答题时间</div>
             <div className="font-semibold text-lg">
               {averageLatencySeconds}s
             </div>
@@ -83,7 +83,7 @@ export const StatsDisplay = ({ stats, className = '' }: StatsDisplayProps) => {
 
         {/* 选项分布 */}
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-700 text-sm">选项分布</h4>
+          <h4 className="font-medium text-foreground text-sm">选项分布</h4>
           <div className="space-y-2">
             {stats.option_distribution.map((count, index) => {
               const percentage =
@@ -100,7 +100,7 @@ export const StatsDisplay = ({ stats, className = '' }: StatsDisplayProps) => {
                     <span className="font-medium">
                       选项 {String.fromCharCode(65 + index)}
                     </span>
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                       {count}人 ({percentage}%)
                     </span>
                   </div>

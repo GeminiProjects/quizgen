@@ -1,0 +1,16 @@
+{
+  "name": "@repo/package_name",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "lint": "ultracite lint",
+    "format": "ultracite format"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "@repo/tsconfig": "workspace:*"
+  }
+}

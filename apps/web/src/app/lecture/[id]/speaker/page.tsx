@@ -67,11 +67,11 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
 
   if (!lecture) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <h2 className="mb-2 font-semibold text-xl">讲座不存在</h2>
-            <p className="mb-4 text-gray-600">请检查链接是否正确</p>
+            <p className="mb-4 text-muted-foreground">请检查链接是否正确</p>
             <Button asChild>
               <Link href="/">返回首页</Link>
             </Button>
@@ -84,11 +84,11 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
   // 检查是否是讲座的所有者
   if (lecture.owner_id !== currentUser.id) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <h2 className="mb-2 font-semibold text-xl">无权限访问</h2>
-            <p className="mb-4 text-gray-600">
+            <p className="mb-4 text-muted-foreground">
               只有讲座创建者才能查看演讲者视图
             </p>
             <Button asChild>
@@ -101,7 +101,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* 头部 */}
         <div className="mb-6">
@@ -115,8 +115,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
             <Badge
               className={
                 lecture.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-green-500/10 text-green-500'
+                  : 'bg-muted text-muted-foreground'
               }
             >
               {lecture.status === 'active' ? '进行中' : '已结束'}
@@ -126,13 +126,13 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-bold text-2xl text-gray-900">
+              <h1 className="font-bold text-2xl text-foreground">
                 {lecture.title}
               </h1>
-              <p className="mt-1 text-gray-600">{lecture.description}</p>
+              <p className="mt-1 text-muted-foreground">{lecture.description}</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 text-gray-600 text-sm">
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <Users className="h-4 w-4" />
                 {lecture.participants_count} 人参与
               </div>
@@ -168,11 +168,11 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                 <CardContent>
                   {activeQuiz ? (
                     <div className="space-y-4">
-                      <div className="rounded-lg bg-blue-50 p-4">
-                        <h3 className="mb-2 font-medium text-blue-900">
+                      <div className="rounded-lg bg-primary/5 p-4">
+                        <h3 className="mb-2 font-medium text-primary">
                           当前题目
                         </h3>
-                        <p className="text-blue-800">{activeQuiz.question}</p>
+                        <p className="text-primary/80">{activeQuiz.question}</p>
                       </div>
 
                       <div className="space-y-2">
@@ -180,8 +180,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                           <div
                             className={`rounded-lg border p-3 ${
                               index === activeQuiz.answer
-                                ? 'border-green-200 bg-green-50'
-                                : 'border-gray-200 bg-gray-50'
+                                ? 'border-green-500/20 bg-green-500/5'
+                                : 'border-border bg-muted/50'
                             }`}
                             key={`${activeQuiz.id}-current-option-${index}`}
                           >
@@ -191,7 +191,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                               </span>
                               <span className="flex-1">{option}</span>
                               {index === activeQuiz.answer && (
-                                <Badge className="bg-green-100 text-green-800">
+                                <Badge className="bg-green-500/10 text-green-500">
                                   正确答案
                                 </Badge>
                               )}
@@ -222,8 +222,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                     </div>
                   ) : (
                     <div className="py-8 text-center">
-                      <MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                      <p className="text-gray-500">暂无活跃题目</p>
+                      <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                      <p className="text-muted-foreground">暂无活跃题目</p>
                       <Button className="mt-4" size="sm">
                         <MessageCircle className="mr-2 h-4 w-4" />
                         发布新题目
@@ -247,16 +247,16 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                       {/* 基本统计 */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                          <div className="font-bold text-3xl text-green-600">
+                          <div className="font-bold text-3xl text-green-500">
                             {Math.round(activeQuizStats.accuracy_rate * 100)}%
                           </div>
-                          <div className="text-gray-600 text-sm">正确率</div>
+                          <div className="text-muted-foreground text-sm">正确率</div>
                         </div>
                         <div className="text-center">
-                          <div className="font-bold text-3xl text-blue-600">
+                          <div className="font-bold text-3xl text-primary">
                             {activeQuizStats.total_attempts}
                           </div>
-                          <div className="text-gray-600 text-sm">参与人数</div>
+                          <div className="text-muted-foreground text-sm">参与人数</div>
                         </div>
                       </div>
 
@@ -312,8 +312,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                     </div>
                   ) : (
                     <div className="py-8 text-center">
-                      <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                      <p className="text-gray-500">暂无统计数据</p>
+                      <BarChart3 className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                      <p className="text-muted-foreground">暂无统计数据</p>
                     </div>
                   )}
                 </CardContent>
@@ -329,14 +329,14 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-100 p-2">
-                        <Users className="h-5 w-5 text-blue-600" />
+                      <div className="rounded-lg bg-primary/10 p-2">
+                        <Users className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <div className="font-bold text-2xl">
                           {lecture.participants_count}
                         </div>
-                        <div className="text-gray-600 text-sm">参与人数</div>
+                        <div className="text-muted-foreground text-sm">参与人数</div>
                       </div>
                     </div>
                   </CardContent>
@@ -345,14 +345,14 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-green-100 p-2">
-                        <MessageCircle className="h-5 w-5 text-green-600" />
+                      <div className="rounded-lg bg-green-500/10 p-2">
+                        <MessageCircle className="h-5 w-5 text-green-500" />
                       </div>
                       <div>
                         <div className="font-bold text-2xl">
                           {allQuizzes.length}
                         </div>
-                        <div className="text-gray-600 text-sm">题目总数</div>
+                        <div className="text-muted-foreground text-sm">题目总数</div>
                       </div>
                     </div>
                   </CardContent>
@@ -361,8 +361,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-purple-100 p-2">
-                        <Target className="h-5 w-5 text-purple-600" />
+                      <div className="rounded-lg bg-purple-500/10 p-2">
+                        <Target className="h-5 w-5 text-purple-500" />
                       </div>
                       <div>
                         <div className="font-bold text-2xl">
@@ -371,7 +371,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                             : 0}
                           %
                         </div>
-                        <div className="text-gray-600 text-sm">总体正确率</div>
+                        <div className="text-muted-foreground text-sm">总体正确率</div>
                       </div>
                     </div>
                   </CardContent>
@@ -380,8 +380,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-orange-100 p-2">
-                        <TrendingUp className="h-5 w-5 text-orange-600" />
+                      <div className="rounded-lg bg-orange-500/10 p-2">
+                        <TrendingUp className="h-5 w-5 text-orange-500" />
                       </div>
                       <div>
                         <div className="font-bold text-2xl">
@@ -390,7 +390,7 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                             : 0}
                           %
                         </div>
-                        <div className="text-gray-600 text-sm">参与率</div>
+                        <div className="text-muted-foreground text-sm">参与率</div>
                       </div>
                     </div>
                   </CardContent>
@@ -421,8 +421,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                               <Badge
                                 className={
                                   quiz.is_active
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-green-500/10 text-green-500'
+                                    : 'bg-muted text-muted-foreground'
                                 }
                               >
                                 {quiz.is_active ? '进行中' : '已结束'}
@@ -431,20 +431,20 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
                             <h3 className="mb-2 font-medium">
                               {quiz.question}
                             </h3>
-                            <p className="text-gray-500 text-sm">
+                            <p className="text-muted-foreground text-sm">
                               发布时间: {quiz.ts.toLocaleString('zh-CN')}
                             </p>
                           </div>
                           <div className="text-right">
                             {stats && (
                               <div className="space-y-1">
-                                <div className="text-gray-600 text-sm">
+                                <div className="text-muted-foreground text-sm">
                                   正确率:{' '}
                                   <span className="font-medium">
                                     {Math.round(stats.accuracy_rate * 100)}%
                                   </span>
                                 </div>
-                                <div className="text-gray-600 text-sm">
+                                <div className="text-muted-foreground text-sm">
                                   参与:{' '}
                                   <span className="font-medium">
                                     {stats.total_attempts}人
@@ -460,8 +460,8 @@ export default function SpeakerView({ params }: SpeakerViewProps) {
 
                   {allQuizzes.length === 0 && (
                     <div className="py-8 text-center">
-                      <MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                      <p className="text-gray-500">还没有发布任何题目</p>
+                      <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                      <p className="text-muted-foreground">还没有发布任何题目</p>
                     </div>
                   )}
                 </div>

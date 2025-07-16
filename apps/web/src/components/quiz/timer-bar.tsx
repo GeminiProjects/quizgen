@@ -50,22 +50,22 @@ export const TimerBar = ({
 
   const getProgressColor = () => {
     if (isDanger) {
-      return 'bg-red-500';
+      return 'bg-destructive';
     }
     if (isWarning) {
       return 'bg-yellow-500';
     }
-    return 'bg-blue-500';
+    return 'bg-primary';
   };
 
   const getTextColor = () => {
     if (isDanger) {
-      return 'text-red-600';
+      return 'text-destructive';
     }
     if (isWarning) {
       return 'text-yellow-600';
     }
-    return 'text-blue-600';
+    return 'text-primary';
   };
 
   const getIcon = () => {
@@ -76,7 +76,7 @@ export const TimerBar = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl rounded-lg border bg-white p-4 shadow-sm">
+    <div className="mx-auto w-full max-w-2xl rounded-lg border bg-card p-4 shadow-sm">
       <div className="mb-2 flex items-center justify-between">
         <div className={`flex items-center gap-2 ${getTextColor()}`}>
           {getIcon()}
@@ -85,7 +85,7 @@ export const TimerBar = ({
           </span>
         </div>
 
-        <div className="text-gray-500 text-sm">
+        <div className="text-muted-foreground text-sm">
           {isPaused ? '已暂停' : isActive ? '进行中' : '未开始'}
         </div>
       </div>
@@ -99,7 +99,7 @@ export const TimerBar = ({
       </div>
 
       {isDanger && !isTimeUp && (
-        <div className="mt-2 animate-pulse font-medium text-red-600 text-sm">
+        <div className="mt-2 animate-pulse font-medium text-destructive text-sm">
           请尽快作答！
         </div>
       )}

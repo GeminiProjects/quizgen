@@ -42,27 +42,27 @@ const StatusIndicator = ({
     switch (quizStatus) {
       case 'waiting':
         return {
-          icon: <Clock className="h-5 w-5 text-blue-600" />,
+          icon: <Clock className="h-5 w-5 text-primary" />,
           text: '等待演讲者发布题目...',
-          className: 'text-blue-600',
+          className: 'text-primary',
         };
       case 'active':
         return {
-          icon: <MessageCircle className="h-5 w-5 text-green-600" />,
+          icon: <MessageCircle className="h-5 w-5 text-green-500" />,
           text: '请回答下面的问题',
-          className: 'text-green-600',
+          className: 'text-green-500',
         };
       case 'submitted':
         return {
-          icon: <MessageCircle className="h-5 w-5 text-purple-600" />,
+          icon: <MessageCircle className="h-5 w-5 text-purple-500" />,
           text: isCorrect ? '回答正确！' : '回答错误，正确答案已显示',
-          className: 'text-purple-600',
+          className: 'text-purple-500',
         };
       case 'expired':
         return {
-          icon: <Clock className="h-5 w-5 text-red-600" />,
+          icon: <Clock className="h-5 w-5 text-destructive" />,
           text: '时间已到，正确答案已显示',
-          className: 'text-red-600',
+          className: 'text-destructive',
         };
       default:
         return null;
@@ -93,18 +93,18 @@ const WaitingPlaceholder = () => (
   <Card className="mx-auto w-full max-w-2xl">
     <CardContent className="p-12 text-center">
       <div className="space-y-4">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-          <MessageCircle className="h-8 w-8 text-blue-600" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <MessageCircle className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h3 className="font-medium text-gray-900 text-lg">等待题目发布</h3>
-          <p className="mt-1 text-gray-600">演讲者将在适当的时候发布互动问题</p>
+          <h3 className="font-medium text-foreground text-lg">等待题目发布</h3>
+          <p className="mt-1 text-muted-foreground">演讲者将在适当的时候发布互动问题</p>
         </div>
         <div className="animate-pulse">
           <div className="flex justify-center gap-1">
-            <div className="h-2 w-2 rounded-full bg-blue-600" />
-            <div className="animation-delay-75 h-2 w-2 rounded-full bg-blue-600" />
-            <div className="animation-delay-150 h-2 w-2 rounded-full bg-blue-600" />
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            <div className="animation-delay-75 h-2 w-2 rounded-full bg-primary" />
+            <div className="animation-delay-150 h-2 w-2 rounded-full bg-primary" />
           </div>
         </div>
       </div>
@@ -125,16 +125,16 @@ const StatsDisplay = ({
     <CardContent>
       <div className="grid grid-cols-2 gap-4 text-center">
         <div>
-          <div className="font-bold text-2xl text-green-600">
+          <div className="font-bold text-2xl text-green-500">
             {Math.round(quizStats.accuracy_rate * 100)}%
           </div>
-          <div className="text-gray-600 text-sm">正确率</div>
+          <div className="text-muted-foreground text-sm">正确率</div>
         </div>
         <div>
-          <div className="font-bold text-2xl text-blue-600">
+          <div className="font-bold text-2xl text-primary">
             {quizStats.total_attempts}
           </div>
-          <div className="text-gray-600 text-sm">参与人数</div>
+          <div className="text-muted-foreground text-sm">参与人数</div>
         </div>
       </div>
     </CardContent>
@@ -143,11 +143,11 @@ const StatsDisplay = ({
 
 // 讲座不存在错误页面
 const LectureNotFound = () => (
-  <div className="flex min-h-screen items-center justify-center bg-gray-50">
+  <div className="flex min-h-screen items-center justify-center bg-background">
     <Card className="w-full max-w-md">
       <CardContent className="p-8 text-center">
         <h2 className="mb-2 font-semibold text-xl">讲座不存在</h2>
-        <p className="mb-4 text-gray-600">请检查链接是否正确</p>
+        <p className="mb-4 text-muted-foreground">请检查链接是否正确</p>
         <Button asChild>
           <Link href="/">返回首页</Link>
         </Button>
@@ -204,7 +204,7 @@ export default function AudienceView({ params }: AudienceViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-4xl px-4 py-6">
         {/* 头部 */}
         <div className="mb-6">
@@ -218,8 +218,8 @@ export default function AudienceView({ params }: AudienceViewProps) {
             <Badge
               className={
                 lecture.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-green-500/10 text-green-500'
+                  : 'bg-muted text-muted-foreground'
               }
             >
               {lecture.status === 'active' ? '进行中' : '已结束'}
@@ -228,10 +228,10 @@ export default function AudienceView({ params }: AudienceViewProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-bold text-2xl text-gray-900">
+              <h1 className="font-bold text-2xl text-foreground">
                 {lecture.title}
               </h1>
-              <p className="mt-1 text-gray-600">{lecture.description}</p>
+              <p className="mt-1 text-muted-foreground">{lecture.description}</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -248,10 +248,10 @@ export default function AudienceView({ params }: AudienceViewProps) {
                   <div className="font-medium text-sm">
                     {lecture.owner.display_name}
                   </div>
-                  <div className="text-gray-500 text-xs">演讲者</div>
+                  <div className="text-muted-foreground text-xs">演讲者</div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 text-gray-600 text-sm">
+              <div className="flex items-center gap-1 text-muted-foreground text-sm">
                 <Users className="h-4 w-4" />
                 {lecture.participants_count} 人参与
               </div>

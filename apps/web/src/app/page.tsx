@@ -1,148 +1,115 @@
 'use client';
 
-import { Button } from '@repo/ui/components/button';
-import { Card, CardContent } from '@repo/ui/components/card';
-import { MessageCircle, Sparkles, Users, Zap } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import { LoginModal } from '@/components/auth/login-modal';
-import { UserSession } from '@/components/auth/user-session';
+import { ArrowRight, Github } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { GitHubLogin } from '@/components/auth/github-login';
+import { useSession } from '@/lib/auth-client';
 
 export default function LandingPage() {
-  const [showLogin, setShowLogin] = useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { theme, systemTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // 确保客户端渲染完成
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 获取当前主题
+  const currentTheme = theme === 'system' ? systemTheme : theme;
+  const logoSrc = currentTheme === 'dark' ? '/logo-dark-mode.png' : '/logo.png';
+
+  // 已登录用户自动跳转到 dashboard
+  useEffect(() => {
+    if (session) {
+      router.push('/dashboard');
+    }
+  }, [session, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 导航栏 */}
-      <nav className="border-b bg-white">
-        <div className="container mx-auto max-w-7xl px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <span className="font-bold text-gray-900 text-xl">QuizGen</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <UserSession />
-              <Button
-                className="bg-blue-600 text-white hover:bg-blue-700"
-                onClick={() => setShowLogin(true)}
-              >
-                登录
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-background">
       {/* 主要内容区域 */}
-      <main>
-        {/* 英雄区域 */}
-        <section className="container mx-auto max-w-7xl px-4 py-20">
-          <div className="text-center">
-            <h1 className="mb-6 font-bold text-4xl text-gray-900 sm:text-5xl lg:text-6xl">
-              校园演讲即时测评系统
-            </h1>
-            <p className="mx-auto mb-8 max-w-2xl text-gray-600 text-lg">
-              通过AI生成的互动问答，让您的演讲更加生动有趣
-            </p>
-            <div className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-              <Button
-                className="w-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto"
-                onClick={() => setShowLogin(true)}
-                size="lg"
-              >
-                开始使用
-              </Button>
-              <Button
-                asChild
-                className="w-full sm:w-auto"
-                size="lg"
-                variant="outline"
-              >
-                <Link href="#features">了解更多</Link>
-              </Button>
-            </div>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          {/* Logo */}
+          <div className="mb-8 flex items-center justify-center">
+            {mounted && (
+              <Image
+                alt="QuizGen Logo"
+                className="h-24 w-24"
+                height={96}
+                src={logoSrc}
+                width={96}
+              />
+            )}
           </div>
-        </section>
 
-        {/* 功能特性 - 简化版 */}
-        <section className="py-20" id="features">
-          <div className="container mx-auto max-w-7xl px-4">
-            <div className="mb-16 text-center">
-              <h2 className="mb-4 font-bold text-3xl text-gray-900">
-                核心功能
-              </h2>
-            </div>
+          {/* 产品名 */}
+          <h1 className="mb-4 font-bold text-5xl text-foreground tracking-tight">
+            QuizGen
+          </h1>
 
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {/* 实时问答 */}
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="mb-4 flex items-center justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                      <MessageCircle className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 font-semibold text-lg">实时问答</h3>
-                  <p className="text-gray-600 text-sm">
-                    AI生成的智能问答，让听众即时参与互动
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* 多人协作 */}
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="mb-4 flex items-center justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
-                      <Users className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 font-semibold text-lg">多人协作</h3>
-                  <p className="text-gray-600 text-sm">
-                    支持组织管理，多个演讲者共同管理讲座
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* 即时反馈 */}
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="mb-4 flex items-center justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                      <Zap className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                  <h3 className="mb-2 font-semibold text-lg">即时反馈</h3>
-                  <p className="text-gray-600 text-sm">
-                    听众答题后立即显示结果，实时调整演讲节奏
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* 简洁页脚 */}
-      <footer className="border-t bg-white py-8">
-        <div className="container mx-auto max-w-7xl px-4 text-center">
-          <div className="mb-4 flex items-center justify-center space-x-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold text-gray-900">QuizGen</span>
-          </div>
-          <p className="text-gray-500 text-sm">
-            © 2024 QuizGen. 让演讲更具互动性的智能平台
+          {/* 产品描述 */}
+          <p className="mb-12 text-muted-foreground text-xl leading-relaxed">
+            校园演讲即时测评系统
           </p>
-        </div>
-      </footer>
 
-      {/* 登录弹窗 */}
-      <LoginModal onOpenChange={setShowLogin} open={showLogin} />
+          {/* GitHub 登录按钮 */}
+          <div className="space-y-4">
+            <GitHubLogin className="w-full">
+              <Github className="mr-2 h-5 w-5" />
+              使用 GitHub 登录
+            </GitHubLogin>
+
+            {/* <p className="text-gray-500 text-sm dark:text-gray-500">
+              这是一个开源项目。
+            </p> */}
+          </div>
+
+          {/* 功能特点 */}
+          <div className="mt-16 grid grid-cols-1 gap-6 text-left">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ArrowRight className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">实时生成测评</h3>
+                <p className="text-muted-foreground text-sm">
+                  基于演讲内容智能生成互动题目
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-500">
+                <ArrowRight className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">即时互动反馈</h3>
+                <p className="text-muted-foreground text-sm">
+                  观众实时参与，获得即时反馈
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
+                <ArrowRight className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">数据分析洞察</h3>
+                <p className="text-muted-foreground text-sm">
+                  全面的参与度和理解度分析报告
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

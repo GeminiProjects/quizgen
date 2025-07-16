@@ -1,15 +1,10 @@
 /**
  * 登录弹窗组件
- * 简洁的 GitHub 登录弹窗
+ * 纯净的 GitHub 登录弹窗
  */
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@repo/ui/components/dialog';
+import { Dialog, DialogContent } from '@repo/ui/components/dialog';
 import { Sparkles } from 'lucide-react';
 import { GitHubLogin } from './github-login';
 
@@ -21,26 +16,27 @@ interface LoginModalProps {
 export function LoginModal({ open, onOpenChange }: LoginModalProps) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2 text-center">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <Sparkles className="h-5 w-5" />
+      <DialogContent className="border-0 shadow-2xl sm:max-w-sm">
+        <div className="space-y-8 py-6">
+          {/* 纯净 Logo */}
+          <div className="flex items-center justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
+              <Sparkles className="h-8 w-8" />
             </div>
-            <span>登录 QuizGen</span>
-          </DialogTitle>
-        </DialogHeader>
+          </div>
 
-        <div className="space-y-4 py-4">
-          <p className="text-center text-gray-600 text-sm">
-            校园演讲即时测评系统
-          </p>
+          {/* 标题 */}
+          <div className="text-center">
+            <h2 className="font-bold text-2xl text-gray-900">QuizGen</h2>
+            <p className="mt-2 text-gray-600">校园演讲即时测评系统</p>
+          </div>
 
+          {/* 登录按钮 */}
           <GitHubLogin
             callbackURL="/dashboard"
-            className="w-full bg-gray-900 text-white hover:bg-gray-800"
+            className="h-12 w-full bg-gray-900 text-white hover:bg-gray-800 focus:ring-4 focus:ring-gray-200"
           >
-            <div className="flex items-center justify-center space-x-2">
+            <div className="flex items-center justify-center space-x-3">
               <svg
                 aria-label="GitHub"
                 className="h-5 w-5"
@@ -53,10 +49,6 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
               <span>使用 GitHub 登录</span>
             </div>
           </GitHubLogin>
-
-          <p className="text-center text-gray-500 text-xs">
-            登录即表示您同意我们的服务条款
-          </p>
         </div>
       </DialogContent>
     </Dialog>

@@ -17,12 +17,14 @@ import {
   Calendar,
   CheckCircle,
   Clock,
+  LogOut,
   Play,
   Plus,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { signOut } from '@/lib/auth-client';
 import {
   getCurrentUser,
   getUserLectures,
@@ -124,23 +126,32 @@ export default function Dashboard() {
     resetForm();
   };
 
+  // 处理登出
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('登出失败:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+          <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
             进行中
           </Badge>
         );
       case 'pending':
         return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
             待开始
           </Badge>
         );
       case 'completed':
         return (
-          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+          <Badge className="bg-muted text-muted-foreground hover:bg-muted/80">
             已结束
           </Badge>
         );
@@ -152,13 +163,13 @@ export default function Dashboard() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <Play className="h-4 w-4 text-green-600" />;
+        return <Play className="h-4 w-4 text-green-500" />;
       case 'pending':
-        return <Clock className="h-4 w-4 text-blue-600" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-gray-600" />;
+        return <CheckCircle className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-gray-600" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -173,16 +184,16 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl px-4 py-8">
         {/* 头部 */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-bold text-3xl text-gray-900">
+              <h1 className="font-bold text-3xl text-foreground">
                 QuizGen Dashboard
               </h1>
-              <p className="mt-1 text-gray-600">智能演讲互动平台</p>
+              <p className="mt-1 text-muted-foreground">智能演讲互动平台</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
@@ -197,18 +208,28 @@ export default function Dashboard() {
                 </Avatar>
                 <div>
                   <div className="font-medium">{currentUser.display_name}</div>
-                  <div className="text-gray-500 text-sm">
+                  <div className="text-muted-foreground text-sm">
                     {currentUser.email}
                   </div>
                 </div>
               </div>
-              <Button
-                className="flex items-center gap-2"
-                onClick={() => setShowCreateLectureModal(true)}
-              >
-                <Plus className="h-4 w-4" />
-                创建讲座
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={() => setShowCreateLectureModal(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  创建讲座
+                </Button>
+                <Button
+                  onClick={handleSignOut}
+                  size="icon"
+                  title="登出"
+                  variant="outline"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -218,12 +239,12 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-blue-100 p-3">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="rounded-lg bg-primary/10 p-3">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <div className="font-bold text-2xl">{myLectures.length}</div>
-                  <div className="text-gray-600 text-sm">我的讲座</div>
+                  <div className="text-muted-foreground text-sm">我的讲座</div>
                 </div>
               </div>
             </CardContent>
@@ -232,14 +253,14 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-green-100 p-3">
-                  <Play className="h-6 w-6 text-green-600" />
+                <div className="rounded-lg bg-green-500/10 p-3">
+                  <Play className="h-6 w-6 text-green-500" />
                 </div>
                 <div>
                   <div className="font-bold text-2xl">
                     {myLectures.filter((l) => l.status === 'active').length}
                   </div>
-                  <div className="text-gray-600 text-sm">进行中</div>
+                  <div className="text-muted-foreground text-sm">进行中</div>
                 </div>
               </div>
             </CardContent>
@@ -248,14 +269,16 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-purple-100 p-3">
-                  <Calendar className="h-6 w-6 text-purple-600" />
+                <div className="rounded-lg bg-purple-500/10 p-3">
+                  <Calendar className="h-6 w-6 text-purple-500" />
                 </div>
                 <div>
                   <div className="font-bold text-2xl">
                     {participatedLectures.length}
                   </div>
-                  <div className="text-gray-600 text-sm">参与的讲座</div>
+                  <div className="text-muted-foreground text-sm">
+                    参与的讲座
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -265,17 +288,17 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-yellow-100 p-3">
+                <div className="rounded-lg bg-yellow-500/10 p-3">
                   <Users
                     aria-label="组织"
-                    className="h-6 w-6 text-yellow-600"
+                    className="h-6 w-6 text-yellow-500"
                   />
                 </div>
                 <div>
                   <div className="font-bold text-2xl">
                     {myOrganizations.length}
                   </div>
-                  <div className="text-gray-600 text-sm">组织</div>
+                  <div className="text-muted-foreground text-sm">组织</div>
                 </div>
               </div>
             </CardContent>
@@ -296,7 +319,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {myLectures.map((lecture) => (
                     <div
-                      className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                      className="rounded-lg border p-4 transition-colors hover:bg-accent"
                       key={lecture.id}
                     >
                       <div className="flex items-start justify-between">
@@ -308,17 +331,17 @@ export default function Dashboard() {
                             </h3>
                             {getStatusBadge(lecture.status)}
                           </div>
-                          <p className="mb-3 text-gray-600 text-sm">
+                          <p className="mb-3 text-muted-foreground text-sm">
                             {lecture.description}
                           </p>
                           {/* 所属组织 */}
                           <div className="mb-2 flex items-center gap-1">
                             <Users aria-label="组织" className="h-4 w-4" />
-                            <span className="text-gray-500 text-xs">
+                            <span className="text-muted-foreground text-xs">
                               {lecture.organization?.name || '默认组织'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 text-gray-500 text-sm">
+                          <div className="flex items-center gap-4 text-muted-foreground text-sm">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               {formatDate(lecture.starts_at)}
@@ -348,8 +371,8 @@ export default function Dashboard() {
                   ))}
 
                   {myLectures.length === 0 && (
-                    <div className="py-8 text-center text-gray-500">
-                      <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                    <div className="py-8 text-center text-muted-foreground">
+                      <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
                       <p>还没有创建任何讲座</p>
                       <Button className="mt-4" size="sm">
                         <Plus className="mr-2 h-4 w-4" />
@@ -375,7 +398,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {participatedLectures.map((lecture) => (
                     <div
-                      className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                      className="rounded-lg border p-4 transition-colors hover:bg-accent"
                       key={lecture.id}
                     >
                       <div className="flex items-start justify-between">
@@ -397,18 +420,18 @@ export default function Dashboard() {
                                 {lecture.owner.display_name.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-gray-600 text-sm">
+                            <span className="text-muted-foreground text-sm">
                               {lecture.owner.display_name}
                             </span>
                           </div>
                           {/* 所属组织 */}
                           <div className="mb-2 flex items-center gap-1">
                             <Users aria-label="组织" className="h-4 w-4" />
-                            <span className="text-gray-500 text-xs">
+                            <span className="text-muted-foreground text-xs">
                               {lecture.organization?.name || '默认组织'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 text-gray-500 text-sm">
+                          <div className="flex items-center gap-4 text-muted-foreground text-sm">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               {formatDate(lecture.starts_at)}
@@ -438,8 +461,8 @@ export default function Dashboard() {
                   ))}
 
                   {participatedLectures.length === 0 && (
-                    <div className="py-8 text-center text-gray-500">
-                      <Users className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                    <div className="py-8 text-center text-muted-foreground">
+                      <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
                       <p>还没有参与任何讲座</p>
                       <p className="mt-2 text-sm">使用邀请链接加入讲座</p>
                     </div>
@@ -469,14 +492,14 @@ export default function Dashboard() {
                     >
                       <Users
                         aria-label="组织"
-                        className="h-6 w-6 text-yellow-600"
+                        className="h-6 w-6 text-yellow-500"
                       />
                       <span className="font-medium">{org.name}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="py-8 text-center text-gray-500">
-                    <Users className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                  <div className="py-8 text-center text-muted-foreground">
+                    <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
                     <p>还没有加入任何组织</p>
                   </div>
                 )}
@@ -488,10 +511,10 @@ export default function Dashboard() {
 
       {showCreateLectureModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+          <div className="relative w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
             <button
               aria-label="关闭"
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
               onClick={() => setShowCreateLectureModal(false)}
               type="button"
             >
@@ -506,7 +529,7 @@ export default function Dashboard() {
                 讲座标题
               </label>
               <input
-                className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 id="lecture-title"
                 onChange={(e) => setLectureTitle(e.target.value)}
                 placeholder="请输入讲座标题"
@@ -521,7 +544,7 @@ export default function Dashboard() {
                 讲座描述
               </label>
               <textarea
-                className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                 id="lecture-description"
                 onChange={(e) => setLectureDesc(e.target.value)}
                 placeholder="请输入讲座描述"
@@ -567,7 +590,7 @@ export default function Dashboard() {
                     选择组织
                   </label>
                   <select
-                    className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                    className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     id="org-select"
                     onChange={(e) => setSelectedOrgId(e.target.value)}
                     value={selectedOrgId || ''}
@@ -588,7 +611,7 @@ export default function Dashboard() {
                     组织密码
                   </label>
                   <input
-                    className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                    className="w-full rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
                     id="org-password"
                     onChange={(e) => setOrgPassword(e.target.value)}
                     placeholder="请输入组织密码"
@@ -599,7 +622,7 @@ export default function Dashboard() {
               </>
             )}
             {errorMsg && (
-              <div className="mb-2 text-red-500 text-sm">{errorMsg}</div>
+              <div className="mb-2 text-destructive text-sm">{errorMsg}</div>
             )}
             <Button className="mt-2 w-full" onClick={handleCreateLecture}>
               创建
