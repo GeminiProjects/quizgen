@@ -11,7 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { quizItems } from './quiz_items';
+import { quizItems } from './quiz-items';
 import { users } from './users';
 
 /**

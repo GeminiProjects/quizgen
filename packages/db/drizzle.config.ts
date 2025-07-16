@@ -3,10 +3,10 @@ import { defineConfig } from 'drizzle-kit';
 
 dotenv.config({ path: '.env.local' });
 
-const databaseUrl = process.env.NEON_POSTGRES_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error('NEON_POSTGRES_URL is required');
+  throw new Error('DATABASE_URL is required');
 }
 
 export default defineConfig({

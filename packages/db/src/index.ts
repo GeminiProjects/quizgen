@@ -14,10 +14,4 @@ if (!databaseUrl) {
 export const db = drizzle(neon(databaseUrl), { casing: 'snake_case' });
 
 // 导出所有数据表模式
-export * from './schema/attempts'; // 答题记录表
-export * from './schema/lectures'; // 讲座表
-export * from './schema/materials'; // 材料表
-export * from './schema/organizations'; // 组织表
-export * from './schema/quiz_items'; // 测验题目表
-export * from './schema/transcripts'; // 转录文本表
-export * from './schema/users'; // 用户表
+export * from './schema/index';

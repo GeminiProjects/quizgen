@@ -71,5 +71,5 @@ export type NewLecture = typeof lectures.$inferInsert;
 
 // 导入相关表定义
 import { materials } from './materials';
-import { quizItems } from './quiz_items';
+import { quizItems } from './quiz-items';
 import { transcripts } from './transcripts';
