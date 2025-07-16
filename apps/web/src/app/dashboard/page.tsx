@@ -42,6 +42,14 @@ export default function Dashboard() {
     (l) => ({ ...l, organization: { name: '默认组织' } })
   );
   const myOrganizations = [{ id: 1, name: '默认组织' }]; // mock 组织数据
+  // mock: 区分我创建的组织和我加入的组织
+  const myCreatedOrganizations = [
+    { id: 1, name: '默认组织' },
+    { id: 2, name: 'AI 俱乐部' },
+  ];
+  const myJoinedOrganizations = [
+    { id: 3, name: '前端联盟' },
+  ];
 
   const [showCreateLectureModal, setShowCreateLectureModal] = useState(false);
   const [lectureTitle, setLectureTitle] = useState('');
@@ -52,6 +60,13 @@ export default function Dashboard() {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [orgPassword, setOrgPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+ 
+  // 新增：公开性与进入密码
+  const [lectureVisibility, setLectureVisibility] = useState<'public' | 'private'>('public');
+  const [lectureEntryPassword, setLectureEntryPassword] = useState('');
+
+  // 新增：演讲时间
+  const [lectureStartTime, setLectureStartTime] = useState('');
 
   // 新增：创建组织相关状态
   const [showCreateOrgModal, setShowCreateOrgModal] = useState(false);
@@ -70,6 +85,28 @@ export default function Dashboard() {
     if (!lectureTitle.trim()) {
       setErrorMsg('演讲标题不能为空');
       return false;
+    }
+    if (!lectureStartTime) {
+      setErrorMsg('请选择演讲时间');
+      return false;
+    }
+    if (lectureVisibility === 'private' && !lectureEntryPassword) {
+      setErrorMsg('不公开演讲需设置进入密码');
+      return false;
+    }
+    if (lectureType === 'org') {
+      if (!selectedOrgId) {
+        setErrorMsg('请选择组织');
+        return false;
+      }
+      if (!orgPassword) {
+        setErrorMsg('请输入组织密码');
+        return false;
+      }
+      if (!checkOrgPassword(selectedOrgId, orgPassword)) {
+        setErrorMsg('组织密码错误');
+        return false;
+      }
     }
     return true;
   };
@@ -109,7 +146,7 @@ export default function Dashboard() {
       title: lectureTitle,
       description: lectureDesc,
       status: 'pending',
-      starts_at: new Date(),
+      starts_at: new Date(lectureStartTime),
       participants_count: 0,
       owner: currentUser,
       organization:
@@ -117,6 +154,8 @@ export default function Dashboard() {
           ? myOrganizations.find((o) => o.id.toString() === selectedOrgId)
           : undefined,
       org_id: lectureType === 'org' ? selectedOrgId : null,
+      visibility: lectureVisibility,
+      entryPassword: lectureVisibility === 'private' ? lectureEntryPassword : undefined,
     };
   };
 
@@ -127,6 +166,9 @@ export default function Dashboard() {
     setLectureType('personal');
     setSelectedOrgId(null);
     setOrgPassword('');
+    setLectureVisibility('public');
+    setLectureEntryPassword('');
+    setLectureStartTime('');
   };
 
   // 新增：创建组织处理
@@ -227,6 +269,19 @@ export default function Dashboard() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  // 删除确认弹框相关状态
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'lecture' | 'createdOrg' | 'joinedOrg'; id: string | number } | null>(null);
+
+  // 删除弹框提示语
+  const getDeleteConfirmText = () => {
+    if (!deleteTarget) return '';
+    if (deleteTarget.type === 'createdOrg') return '确认要解散该组织吗？';
+    if (deleteTarget.type === 'joinedOrg') return '确认要脱离该组织吗？';
+    if (deleteTarget.type === 'lecture') return '确认要删除该演讲吗？';
+    return '确认要删除吗？';
   };
 
   return (
@@ -415,7 +470,17 @@ export default function Dashboard() {
                             </Button>
                           )}
                           {/* 删除按钮，仅展示，无功能 */}
-                          <Button size="sm" variant="outline" title="删除" aria-label="删除" type="button">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            title="删除"
+                            aria-label="删除"
+                            type="button"
+                            onClick={() => {
+                              setDeleteTarget({ type: 'lecture', id: lecture.id });
+                              setShowDeleteConfirmModal(true);
+                            }}
+                          >
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
@@ -438,12 +503,12 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* 参与的演讲 */}
+          {/* 预约的演讲 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                参与的演讲
+                预约的演讲
               </CardTitle>
             </CardHeader>
             <div className="max-h-96 overflow-y-auto lg:h-96">
@@ -544,56 +609,118 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* 我的组织 - 优化移动端布局 */}
-        <Card className="mt-6 lg:mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Users className="h-5 w-5" />
-              我的组织
-              {/* 新增：标题右侧添加“创建组织”按钮 */}
-              <Button
-                className="ml-2 flex items-center gap-2"
-                size="sm"
-                onClick={() => setShowCreateOrgModal(true)}
-                type="button"
-              >
-                <Plus className="h-4 w-4" />
-                创建组织
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <div className="max-h-96 overflow-y-auto lg:h-96">
-            <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {myOrganizations.length > 0 ? (
-                  myOrganizations.map((org) => (
-                    <div
-                      className="flex items-center gap-3 rounded-lg border p-3 sm:p-4"
-                      key={org.id}
-                    >
-                      <Users
-                        aria-label="组织"
-                        className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6"
-                      />
-                      <span className="font-medium text-sm sm:text-base">
-                        {org.name}
-                      </span>
-                      {/* 删除按钮，仅展示，无功能 */}
-                      <Button size="sm" variant="outline" title="删除" aria-label="删除" type="button">
-                        <Trash className="h-4 w-4" />
-                      </Button>
+        {/* 我创建的组织 & 我加入的组织 - 并列布局 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 lg:mt-8">
+          {/* 我创建的组织 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Users className="h-5 w-5" />
+                我创建的组织
+                <Button
+                  className="ml-2 flex items-center gap-2"
+                  size="sm"
+                  onClick={() => setShowCreateOrgModal(true)}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  创建组织
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <div className="max-h-96 overflow-y-auto lg:h-96">
+              <CardContent>
+                <div className="space-y-3 sm:space-y-4">
+                  {myCreatedOrganizations.length > 0 ? (
+                    myCreatedOrganizations.map((org) => (
+                      <div
+                        className="flex items-center gap-3 rounded-lg border p-3 sm:p-4"
+                        key={org.id}
+                      >
+                        <Users
+                          aria-label="组织"
+                          className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6"
+                        />
+                        <span className="font-medium text-sm sm:text-base">
+                          {org.name}
+                        </span>
+                        {/* 删除按钮，仅展示，无功能 */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="删除"
+                          aria-label="删除"
+                          type="button"
+                          onClick={() => {
+                            setDeleteTarget({ type: 'createdOrg', id: org.id });
+                            setShowDeleteConfirmModal(true);
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                      <p className="text-sm sm:text-base">还没有创建任何组织</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
-                    <p className="text-sm sm:text-base">还没有加入任何组织</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </div>
-        </Card>
+                  )}
+                </div>
+              </CardContent>
+            </div>
+          </Card>
+          {/* 我加入的组织 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Users className="h-5 w-5" />
+                我加入的组织
+              </CardTitle>
+            </CardHeader>
+            <div className="max-h-96 overflow-y-auto lg:h-96">
+              <CardContent>
+                <div className="space-y-3 sm:space-y-4">
+                  {myJoinedOrganizations.length > 0 ? (
+                    myJoinedOrganizations.map((org) => (
+                      <div
+                        className="flex items-center gap-3 rounded-lg border p-3 sm:p-4"
+                        key={org.id}
+                      >
+                        <Users
+                          aria-label="组织"
+                          className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6"
+                        />
+                        <span className="font-medium text-sm sm:text-base">
+                          {org.name}
+                        </span>
+                        {/* 删除按钮，仅展示，无功能 */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="删除"
+                          aria-label="删除"
+                          type="button"
+                          onClick={() => {
+                            setDeleteTarget({ type: 'joinedOrg', id: org.id });
+                            setShowDeleteConfirmModal(true);
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+                      <p className="text-sm sm:text-base">还没有加入任何组织</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </div>
+          </Card>
+        </div>
       </div>
 
       {showCreateLectureModal && (
@@ -655,9 +782,7 @@ export default function Dashboard() {
             </div>
             <div className="mb-3">
               <fieldset>
-                <legend className="mb-1 block font-medium text-sm">
-                  演讲类型
-                </legend>
+                <legend className="mb-1 block font-medium text-sm">演讲类型</legend>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-1">
                     <input
@@ -667,7 +792,7 @@ export default function Dashboard() {
                       type="radio"
                       value="personal"
                     />
-                    个人演讲
+                    个人
                   </label>
                   <label className="flex items-center gap-1">
                     <input
@@ -677,7 +802,7 @@ export default function Dashboard() {
                       type="radio"
                       value="org"
                     />
-                    加入组织
+                    组织
                   </label>
                 </div>
               </fieldset>
@@ -723,6 +848,67 @@ export default function Dashboard() {
                 </div>
               </>
             )}
+            <div className="mb-3">
+              <fieldset>
+                <legend className="mb-1 block font-medium text-sm">公开性</legend>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-1">
+                    <input
+                      checked={lectureVisibility === 'public'}
+                      name="lectureVisibility"
+                      onChange={() => setLectureVisibility('public')}
+                      type="radio"
+                      value="public"
+                    />
+                    公开
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <input
+                      checked={lectureVisibility === 'private'}
+                      name="lectureVisibility"
+                      onChange={() => setLectureVisibility('private')}
+                      type="radio"
+                      value="private"
+                    />
+                    不公开
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+            {lectureVisibility === 'private' && (
+              <div className="mb-3">
+                <label
+                  className="mb-1 block font-medium text-sm"
+                  htmlFor="lecture-entry-password"
+                >
+                  进入密码
+                </label>
+                <input
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                  id="lecture-entry-password"
+                  onChange={(e) => setLectureEntryPassword(e.target.value)}
+                  placeholder="请输入进入密码"
+                  type="password"
+                  value={lectureEntryPassword}
+                />
+              </div>
+            )}
+            <div className="mb-3">
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="lecture-start-time"
+              >
+                演讲时间
+              </label>
+              <input
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring"
+                id="lecture-start-time"
+                type="datetime-local"
+                value={lectureStartTime}
+                onChange={(e) => setLectureStartTime(e.target.value)}
+                required
+              />
+            </div>
             {errorMsg && (
               <div className="mb-2 text-destructive text-sm">{errorMsg}</div>
             )}
@@ -812,6 +998,52 @@ export default function Dashboard() {
             <Button className="mt-2 w-full" onClick={handleCreateOrg}>
               创建
             </Button>
+          </div>
+        </div>
+      )}
+      {/* 删除确认弹框 */}
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-md rounded-lg bg-card p-4 sm:p-6 shadow-lg sm:mx-0">
+            <button
+              aria-label="关闭"
+              className="absolute top-2 right-2 rounded-sm p-1 text-muted-foreground transition-opacity hover:text-foreground hover:opacity-100"
+              onClick={() => setShowDeleteConfirmModal(false)}
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6 18L18 6M6 6l12 12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                />
+              </svg>
+            </button>
+            <h2 className="mb-4 font-bold text-lg sm:text-xl text-center">{getDeleteConfirmText()}</h2>
+            <div className="flex justify-center gap-4 mt-2">
+              <Button
+                variant="destructive"
+                className="w-24"
+                onClick={() => setShowDeleteConfirmModal(false)}
+              >
+                确定
+              </Button>
+              <Button
+                variant="outline"
+                className="w-24"
+                onClick={() => setShowDeleteConfirmModal(false)}
+              >
+                取消
+              </Button>
+            </div>
           </div>
         </div>
       )}
