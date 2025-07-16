@@ -3,18 +3,16 @@
   "private": true,
   "type": "module",
   "version": "0.0.0",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "lint": "ultracite lint",
     "format": "ultracite format",
-    "test": "bun test --preload tests/setup.ts",
-    "db:reset": "bun exec --env-file .env.local 'bunx neonctl branch reset dev/local --parent --project-id $NEON_PROJECT_ID' && bun db:push",
-    "db:push": "bunx drizzle-kit push",
-    "db:pull": "bunx drizzle-kit pull",
-    "db:generate": "bunx drizzle-kit generate",
-    "db:migrate": "bunx drizzle-kit migrate",
-    "db:studio": "bunx drizzle-kit studio"
+    "test": "bun test --preload tests/setup.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
