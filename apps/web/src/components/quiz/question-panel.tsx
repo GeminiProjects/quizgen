@@ -42,7 +42,7 @@ export const QuestionPanel = ({
   const getOptionStyle = (index: number) => {
     if (!showResult) {
       return selectedOption === index
-        ? 'bg-primary/10 border-primary text-primary'
+        ? 'bg-primary/20 border-primary border-2 text-primary dark:bg-primary/30'
         : 'bg-card border-border hover:border-muted-foreground/50';
     }
 
@@ -102,7 +102,7 @@ export const QuestionPanel = ({
             variant="outline"
           >
             <div className="flex w-full items-center">
-              <span className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted font-medium text-sm">
+              <span className="mr-3 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted font-medium text-muted-foreground text-sm">
                 {String.fromCharCode(65 + index)}
               </span>
               <span className="flex-1 text-left">{option}</span>
@@ -136,7 +136,7 @@ export const QuestionPanel = ({
               ) : (
                 <>
                   <XCircle className="h-6 w-6 text-destructive" />
-                  <span className="font-medium text-lg text-destructive">
+                  <span className="font-medium text-destructive text-lg">
                     回答错误
                   </span>
                 </>

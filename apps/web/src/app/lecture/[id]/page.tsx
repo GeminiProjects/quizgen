@@ -98,7 +98,9 @@ const WaitingPlaceholder = () => (
         </div>
         <div>
           <h3 className="font-medium text-foreground text-lg">等待题目发布</h3>
-          <p className="mt-1 text-muted-foreground">演讲者将在适当的时候发布互动问题</p>
+          <p className="mt-1 text-muted-foreground">
+            演讲者将在适当的时候发布互动问题
+          </p>
         </div>
         <div className="animate-pulse">
           <div className="flex justify-center gap-1">
@@ -231,7 +233,9 @@ export default function AudienceView({ params }: AudienceViewProps) {
               <h1 className="font-bold text-2xl text-foreground">
                 {lecture.title}
               </h1>
-              <p className="mt-1 text-muted-foreground">{lecture.description}</p>
+              <p className="mt-1 text-muted-foreground">
+                {lecture.description}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">

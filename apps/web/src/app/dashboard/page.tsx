@@ -319,7 +319,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {myLectures.map((lecture) => (
                     <div
-                      className="rounded-lg border p-4 transition-colors hover:bg-accent"
+                      className="rounded-lg border p-4 transition-colors hover:bg-accent/50 dark:hover:bg-accent/30"
                       key={lecture.id}
                     >
                       <div className="flex items-start justify-between">
@@ -398,7 +398,7 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {participatedLectures.map((lecture) => (
                     <div
-                      className="rounded-lg border p-4 transition-colors hover:bg-accent"
+                      className="rounded-lg border p-4 transition-colors hover:bg-accent/50 dark:hover:bg-accent/30"
                       key={lecture.id}
                     >
                       <div className="flex items-start justify-between">

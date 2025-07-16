@@ -20,21 +20,21 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
         <div className="space-y-8 py-6">
           {/* 纯净 Logo */}
           <div className="flex items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
               <Sparkles className="h-8 w-8" />
             </div>
           </div>
 
           {/* 标题 */}
           <div className="text-center">
-            <h2 className="font-bold text-2xl text-gray-900">QuizGen</h2>
-            <p className="mt-2 text-gray-600">校园演讲即时测评系统</p>
+            <h2 className="font-bold text-2xl text-foreground">QuizGen</h2>
+            <p className="mt-2 text-muted-foreground">讲座即时智能评测系统</p>
           </div>
 
           {/* 登录按钮 */}
           <GitHubLogin
             callbackURL="/dashboard"
-            className="h-12 w-full bg-gray-900 text-white hover:bg-gray-800 focus:ring-4 focus:ring-gray-200"
+            className="h-12 w-full bg-foreground text-background hover:bg-foreground/90 focus:ring-4 focus:ring-ring"
           >
             <div className="flex items-center justify-center space-x-3">
               <svg
