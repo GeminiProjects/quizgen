@@ -117,7 +117,10 @@ const generateSummary = async (): Promise<void> => {
   try {
     console.log('正在获取今天的提交记录...');
 
-    const commits = await getTodayCommits();
+    const commits = (await getTodayCommits()).filter(
+      (commit) => !commit.message.includes('Merge')
+    );
+
     const repoUrl = await getGitHubRepoUrl();
 
     if (commits.length === 0) {

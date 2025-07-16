@@ -2,6 +2,8 @@
 # Local
 .local
 
+tools/git-sum/sum.md
+
 # Operating System
 .DS_Store
 
