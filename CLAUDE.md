@@ -8,6 +8,14 @@ QuizGen (演讲即时智能评测系统) is a real-time assessment system for ca
 
 - 参考 [docs/project_design.md](./docs/project_design.md) 了解项目设计
 
+常用指令
+```
+# 检查类型错误
+bun typecheck
+# 检查代码质量
+bun lint
+```
+
 ## Tech Stack
 
 - **Frontend**: Next.js 15 with React 19, TailwindCSS v4, Shadcn/ui components

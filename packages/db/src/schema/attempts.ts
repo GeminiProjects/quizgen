@@ -10,7 +10,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
 import { quizItems } from './quiz-items';
 import { users } from './users';
 
@@ -63,12 +62,7 @@ export const attemptsRelations = relations(attempts, ({ one }) => ({
 }));
 
 // Zod 模式验证
-export const insertAttemptSchema = createInsertSchema(attempts, {
-  // 选择答案必须为0-3
-  selected: z.number().min(0).max(3),
-  // 答题耗时必须为正数
-  latency_ms: z.number().positive(),
-});
+export const insertAttemptSchema = createInsertSchema(attempts);
 export const selectAttemptSchema = createSelectSchema(attempts);
 
 // TypeScript 类型导出
