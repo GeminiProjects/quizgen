@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'QuizGen - 校园演讲即时测评系统',
-  description: 'AI赋能的校园演讲即时测评系统，演讲者一键生成问答题，听众实时互动答题，组织者统计教学效果。',
+  description:
+    'AI赋能的校园演讲即时测评系统，演讲者一键生成问答题，听众实时互动答题，组织者统计教学效果。',
   icons: {
     icon: '/favicon.png',
   },

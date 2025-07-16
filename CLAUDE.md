@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 QuizGen (校园演讲即时测评系统) is a real-time assessment system for campus presentations. It enables speakers to generate AI-powered quizzes during presentations, audiences to answer questions with instant feedback, and organizers to manage lecture series with participation metrics.
 
-参考 [docs/project_design.md](./docs/project_design.md) 了解项目设计
+- 参考 [docs/project_design.md](./docs/project_design.md) 了解项目设计
 
 ## Tech Stack
 
@@ -84,23 +84,4 @@ Key entities:
    - Use snake_case for all database fields
    - Define relations in schema files
    - Use Drizzle's query builder for type-safe queries
-
-## Current Implementation Status
-
-- ✅ Basic UI structure (dashboard, speaker/audience views)
-- ✅ Database schema defined
-- ✅ Frontend component library setup
-- ⏳ Backend API implementation pending
-- ⏳ Authentication integration pending
-- ⏳ Real-time features pending
-- ⏳ AI quiz generation pending
-
-## Environment Variables
-
-Required environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `BETTER_AUTH_SECRET` - Authentication secret
-
-## Testing Approach
-
-Currently no test framework is configured. When implementing tests, use `bun test` with Bun's built-in test runner.
+4. **Design Style**: Follow the design style in [docs/guide/design_style.txt](./docs/guide/design_style.txt)

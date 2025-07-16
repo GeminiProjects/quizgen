@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { use, useState } from 'react';
-import { StatsDisplay } from '@/components/quiz/StatsDisplay';
+import { StatsDisplay } from '@/components/quiz/stats-display';
 import {
   getActiveLectureQuiz,
   getCurrentUser,

@@ -56,28 +56,32 @@ export default function Dashboard() {
     return password === '123456';
   };
 
-  const handleCreateLecture = () => {
-    setErrorMsg('');
+  const validateLectureForm = () => {
     if (!lectureTitle.trim()) {
       setErrorMsg('讲座标题不能为空');
-      return;
+      return false;
     }
-    if (lectureType === 'org') {
-      if (!selectedOrgId) {
-        setErrorMsg('请选择组织');
-        return;
-      }
-      if (!orgPassword) {
-        setErrorMsg('请输入组织密码');
-        return;
-      }
-      if (!checkOrgPassword(selectedOrgId, orgPassword)) {
-        setErrorMsg('组织密码错误');
-        return;
-      }
+    return true;
+  };
+
+  const validateOrgLecture = () => {
+    if (!selectedOrgId) {
+      setErrorMsg('请选择组织');
+      return false;
     }
-    // mock 新讲座
-    const newLecture = {
+    if (!orgPassword) {
+      setErrorMsg('请输入组织密码');
+      return false;
+    }
+    if (!checkOrgPassword(selectedOrgId, orgPassword)) {
+      setErrorMsg('组织密码错误');
+      return false;
+    }
+    return true;
+  };
+
+  const createLectureObject = () => {
+    return {
       id: Date.now().toString(),
       title: lectureTitle,
       description: lectureDesc,
@@ -91,14 +95,33 @@ export default function Dashboard() {
           : undefined,
       org_id: lectureType === 'org' ? selectedOrgId : null,
     };
-    // 这里只是演示，实际应 setState 或调用后端
-    alert(`讲座已创建: ${JSON.stringify(newLecture, null, 2)}`);
+  };
+
+  const resetForm = () => {
     setShowCreateLectureModal(false);
     setLectureTitle('');
     setLectureDesc('');
     setLectureType('personal');
     setSelectedOrgId(null);
     setOrgPassword('');
+  };
+
+  const handleCreateLecture = () => {
+    setErrorMsg('');
+
+    if (!validateLectureForm()) {
+      return;
+    }
+
+    if (lectureType === 'org' && !validateOrgLecture()) {
+      return;
+    }
+
+    const newLecture = createLectureObject();
+
+    // 这里只是演示，实际应 setState 或调用后端
+    alert(`讲座已创建: ${JSON.stringify(newLecture, null, 2)}`);
+    resetForm();
   };
 
   const getStatusBadge = (status: string) => {
@@ -470,61 +493,82 @@ export default function Dashboard() {
               aria-label="关闭"
               className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
               onClick={() => setShowCreateLectureModal(false)}
+              type="button"
             >
               ×
             </button>
             <h2 className="mb-4 font-bold text-xl">创建讲座</h2>
             <div className="mb-3">
-              <label className="mb-1 block font-medium text-sm">讲座标题</label>
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="lecture-title"
+              >
+                讲座标题
+              </label>
               <input
                 className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                id="lecture-title"
                 onChange={(e) => setLectureTitle(e.target.value)}
                 placeholder="请输入讲座标题"
                 value={lectureTitle}
               />
             </div>
             <div className="mb-3">
-              <label className="mb-1 block font-medium text-sm">讲座描述</label>
+              <label
+                className="mb-1 block font-medium text-sm"
+                htmlFor="lecture-description"
+              >
+                讲座描述
+              </label>
               <textarea
                 className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                id="lecture-description"
                 onChange={(e) => setLectureDesc(e.target.value)}
                 placeholder="请输入讲座描述"
                 value={lectureDesc}
               />
             </div>
             <div className="mb-3">
-              <label className="mb-1 block font-medium text-sm">讲座类型</label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1">
-                  <input
-                    checked={lectureType === 'personal'}
-                    name="lectureType"
-                    onChange={() => setLectureType('personal')}
-                    type="radio"
-                    value="personal"
-                  />
-                  个人讲座
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    checked={lectureType === 'org'}
-                    name="lectureType"
-                    onChange={() => setLectureType('org')}
-                    type="radio"
-                    value="org"
-                  />
-                  加入组织
-                </label>
-              </div>
+              <fieldset>
+                <legend className="mb-1 block font-medium text-sm">
+                  讲座类型
+                </legend>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-1">
+                    <input
+                      checked={lectureType === 'personal'}
+                      name="lectureType"
+                      onChange={() => setLectureType('personal')}
+                      type="radio"
+                      value="personal"
+                    />
+                    个人讲座
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <input
+                      checked={lectureType === 'org'}
+                      name="lectureType"
+                      onChange={() => setLectureType('org')}
+                      type="radio"
+                      value="org"
+                    />
+                    加入组织
+                  </label>
+                </div>
+              </fieldset>
             </div>
             {lectureType === 'org' && (
               <>
                 <div className="mb-3">
-                  <label className="mb-1 block font-medium text-sm">
+                  <label
+                    className="mb-1 block font-medium text-sm"
+                    htmlFor="org-select"
+                  >
                     选择组织
                   </label>
                   <select
                     className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                    id="org-select"
                     onChange={(e) => setSelectedOrgId(e.target.value)}
                     value={selectedOrgId || ''}
                   >
@@ -537,11 +581,15 @@ export default function Dashboard() {
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="mb-1 block font-medium text-sm">
+                  <label
+                    className="mb-1 block font-medium text-sm"
+                    htmlFor="org-password"
+                  >
                     组织密码
                   </label>
                   <input
                     className="w-full rounded border px-3 py-2 text-sm focus:border-blue-300 focus:outline-none focus:ring"
+                    id="org-password"
                     onChange={(e) => setOrgPassword(e.target.value)}
                     placeholder="请输入组织密码"
                     type="password"

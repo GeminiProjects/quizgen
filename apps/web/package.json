@@ -6,7 +6,8 @@
     "dev": "bun --env-file ../../.env.local next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {

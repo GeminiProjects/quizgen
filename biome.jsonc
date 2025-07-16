@@ -20,6 +20,9 @@
       },
       "suspicious": {
         "noConsole": "off"
+      },
+      "style": {
+        "noNestedTernary": "off"
       }
     }
   }
