@@ -3,7 +3,7 @@
  * 处理组织的创建、查询操作
  */
 
-import { and, count, db, eq, ilike, organizations } from '@repo/db';
+import { and, count, db, eq, ilike, organizations, users } from '@repo/db';
 import type { NextRequest } from 'next/server';
 import {
   createErrorResponse,
@@ -103,7 +103,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const whereClause =
       conditions.length > 1 ? and(...conditions) : conditions[0];
 
-    // 查询组织列表
+    // 查询组织列表（包含 owner 信息）
     const [organizationList, totalCount] = await Promise.all([
       db
         .select({
@@ -114,8 +114,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           owner_id: organizations.owner_id,
           created_at: organizations.created_at,
           updated_at: organizations.updated_at,
+          owner: {
+            id: users.id,
+            email: users.email,
+            name: users.name,
+            avatar_url: users.image,
+          },
         })
         .from(organizations)
+        .innerJoin(users, eq(organizations.owner_id, users.id))
         .where(whereClause)
         .limit(limit)
         .offset((page - 1) * limit)

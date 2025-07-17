@@ -1,6 +1,20 @@
 'use client';
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@repo/ui/components/avatar';
 import { Button } from '@repo/ui/components/button';
+import { Calendar } from '@repo/ui/components/calendar';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@repo/ui/components/command';
 import {
   Dialog,
   DialogContent,
@@ -11,35 +25,21 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/ui/components/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@repo/ui/components/popover';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback, useEffect, useState } from 'react';
+import { cn } from '@repo/ui/lib/utils';
+import { CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-interface Lecture {
-  id: string;
-  title: string;
-  description: string | null;
-  status: 'not_started' | 'in_progress' | 'paused' | 'ended';
-  join_code: string;
-  starts_at: string;
-  ends_at: string | null;
-  created_at: string;
-  updated_at: string;
-  org_id: string | null;
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  description: string | null;
-  password: string;
-}
+import {
+  type CreateLectureData,
+  type Lecture,
+  useLectureActions,
+} from '@/hooks/use-lectures';
+import { useOrganizations } from '@/hooks/use-organizations';
 
 interface CreateLectureDialogProps {
   open: boolean;
@@ -57,42 +57,50 @@ export default function CreateLectureDialog({
   onSuccess,
 }: CreateLectureDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [formData, setFormData] = useState({
+  const { organizations, isLoading: orgsLoading } = useOrganizations();
+  const { createLecture } = useLectureActions();
+  const [formData, setFormData] = useState<CreateLectureData>({
     title: '',
     description: '',
-    org_id: '',
-    org_password: '',
+    org_id: null,
+    org_password: null,
     starts_at: '',
   });
+  const [orgPassword, setOrgPassword] = useState('');
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [orgPickerOpen, setOrgPickerOpen] = useState(false);
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState('10:30:00');
 
-  // 获取用户创建的组织列表
-  const fetchOrganizations = useCallback(async () => {
-    try {
-      const response = await fetch('/api/organizations');
-      const result = await response.json();
-
-      if (result.success) {
-        setOrganizations(result.data.data);
-      }
-    } catch {
-      console.error('获取组织列表失败');
-    }
-  }, []);
-
-  // 对话框打开时获取组织列表
+  // 对话框打开时设置默认时间
   useEffect(() => {
     if (open) {
-      fetchOrganizations();
-      // 设置默认的开始时间为当前时间
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      // 设置默认的开始时间为明天当前时间
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setDate(tomorrow);
+      const hours = tomorrow.getHours().toString().padStart(2, '0');
+      const minutes = tomorrow.getMinutes().toString().padStart(2, '0');
+      setTime(`${hours}:${minutes}:00`);
+
+      // 设置默认的 starts_at
+      const isoString = tomorrow.toISOString();
       setFormData((prev) => ({
         ...prev,
-        starts_at: now.toISOString().slice(0, 16),
+        starts_at: isoString,
       }));
+    } else {
+      // 对话框关闭时重置表单
+      setFormData({
+        title: '',
+        description: '',
+        org_id: null,
+        org_password: null,
+        starts_at: '',
+      });
+      setOrgPassword('');
     }
-  }, [open, fetchOrganizations]);
+  }, [open]);
 
   // 验证表单数据
   const validateForm = () => {
@@ -107,7 +115,7 @@ export default function CreateLectureDialog({
     }
 
     // 如果选择了组织，必须输入组织密码
-    if (formData.org_id && !formData.org_password.trim()) {
+    if (formData.org_id && !orgPassword.trim()) {
       toast.error('请输入组织密码');
       return false;
     }
@@ -126,38 +134,27 @@ export default function CreateLectureDialog({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/lectures', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          org_id: formData.org_id || null,
-          org_password: formData.org_password.trim() || null,
-          starts_at: formData.starts_at,
-        }),
-      });
+      // 准备提交的数据
+      const submitData: CreateLectureData = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() || null,
+        org_id: formData.org_id,
+        org_password: formData.org_id ? orgPassword.trim() : null,
+        starts_at: formData.starts_at,
+      };
 
-      const result = await response.json();
+      const result = await createLecture(submitData);
 
       if (result.success) {
         toast.success('演讲创建成功');
         onSuccess(result.data);
-        // 重置表单
-        setFormData({
-          title: '',
-          description: '',
-          org_id: '',
-          org_password: '',
-          starts_at: '',
-        });
-      } else {
-        toast.error(result.message || '创建演讲失败');
+        onOpenChange(false);
       }
-    } catch {
-      toast.error('网络错误，请稍后重试');
+    } catch (error) {
+      // 错误已经在 hook 中处理，这里显示错误消息
+      const errorMessage =
+        error instanceof Error ? error.message : '创建演讲失败';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -196,30 +193,122 @@ export default function CreateLectureDialog({
               }
               placeholder="请输入演讲描述（可选）"
               rows={3}
-              value={formData.description}
+              value={formData.description || ''}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="org_id">所属组织（可选）</Label>
-            <Select
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, org_id: value }))
-              }
-              value={formData.org_id}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="选择组织（个人演讲可跳过）" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">个人演讲</SelectItem>
-                {organizations.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover onOpenChange={setOrgPickerOpen} open={orgPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  className="w-full justify-between font-normal"
+                  id="org_id"
+                  variant="outline"
+                >
+                  {formData.org_id ? (
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const selectedOrg = organizations.find(
+                          (org) => org.id === formData.org_id
+                        );
+                        return selectedOrg?.owner ? (
+                          <>
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage
+                                src={selectedOrg.owner.avatar_url || ''}
+                              />
+                              <AvatarFallback>
+                                {selectedOrg.owner.email
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate">{selectedOrg.name}</span>
+                          </>
+                        ) : null;
+                      })()}
+                    </div>
+                  ) : (
+                    '选择组织（个人演讲可跳过）'
+                  )}
+                  <ChevronDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="搜索组织..." />
+                  <CommandList>
+                    <CommandEmpty>没有找到组织</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        onSelect={() => {
+                          setFormData((prev) => ({ ...prev, org_id: null }));
+                          setOrgPassword('');
+                          setOrgPickerOpen(false);
+                        }}
+                        value="personal"
+                      >
+                        <CheckIcon
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            formData.org_id ? 'opacity-0' : 'opacity-100'
+                          )}
+                        />
+                        个人演讲
+                      </CommandItem>
+                      {organizations.map((org) => (
+                        <CommandItem
+                          key={org.id}
+                          onSelect={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              org_id: org.id,
+                            }));
+                            setOrgPickerOpen(false);
+                          }}
+                          value={`${org.name} ${org.owner?.email || ''}`}
+                        >
+                          <CheckIcon
+                            className={cn(
+                              'mr-2 h-4 w-4',
+                              formData.org_id === org.id
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                            )}
+                          />
+                          <div className="flex flex-1 items-center gap-2">
+                            {org.owner && (
+                              <>
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage
+                                    src={org.owner.avatar_url || ''}
+                                  />
+                                  <AvatarFallback>
+                                    {org.owner.email.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex min-w-0 flex-1 flex-col">
+                                  <div className="font-medium">{org.name}</div>
+                                  <div className="truncate text-muted-foreground text-xs">
+                                    {org.owner.email}
+                                  </div>
+                                  {org.description && (
+                                    <div className="mt-0.5 truncate text-muted-foreground text-xs">
+                                      {org.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {formData.org_id && (
@@ -227,31 +316,85 @@ export default function CreateLectureDialog({
               <Label htmlFor="org_password">组织密码 *</Label>
               <Input
                 id="org_password"
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    org_password: e.target.value,
-                  }))
-                }
+                onChange={(e) => setOrgPassword(e.target.value)}
                 placeholder="请输入组织密码"
                 required
                 type="password"
-                value={formData.org_password}
+                value={orgPassword}
               />
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="starts_at">开始时间 *</Label>
-            <Input
-              id="starts_at"
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, starts_at: e.target.value }))
-              }
-              required
-              type="datetime-local"
-              value={formData.starts_at}
-            />
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="date-picker">日期 *</Label>
+              <Popover onOpenChange={setDatePickerOpen} open={datePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    className="w-32 justify-between font-normal"
+                    id="date-picker"
+                    variant="outline"
+                  >
+                    {date ? date.toLocaleDateString() : '选择日期'}
+                    <ChevronDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-auto overflow-hidden p-0"
+                >
+                  <Calendar
+                    mode="single"
+                    onSelect={(selectedDate) => {
+                      setDate(selectedDate);
+                      if (selectedDate && time) {
+                        const [hours, minutes] = time.split(':');
+                        selectedDate.setHours(
+                          Number.parseInt(hours, 10),
+                          Number.parseInt(minutes, 10),
+                          0
+                        );
+                        const isoString = selectedDate.toISOString();
+                        setFormData((prev) => ({
+                          ...prev,
+                          starts_at: isoString,
+                        }));
+                      }
+                      setDatePickerOpen(false);
+                    }}
+                    selected={date}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="time-picker">时间 *</Label>
+              <Input
+                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                id="time-picker"
+                onChange={(e) => {
+                  const newTime = `${e.target.value}:00`;
+                  setTime(newTime);
+                  if (date) {
+                    const [hours, minutes] = newTime.split(':');
+                    const newDate = new Date(date);
+                    newDate.setHours(
+                      Number.parseInt(hours, 10),
+                      Number.parseInt(minutes, 10),
+                      0
+                    );
+                    const isoString = newDate.toISOString();
+                    setFormData((prev) => ({
+                      ...prev,
+                      starts_at: isoString,
+                    }));
+                  }
+                }}
+                step="60"
+                type="time"
+                value={time.slice(0, 5)}
+              />
+            </div>
           </div>
 
           <DialogFooter>
@@ -262,7 +405,7 @@ export default function CreateLectureDialog({
             >
               取消
             </Button>
-            <Button disabled={loading} type="submit">
+            <Button disabled={loading || orgsLoading} type="submit">
               {loading ? '创建中...' : '创建演讲'}
             </Button>
           </DialogFooter>

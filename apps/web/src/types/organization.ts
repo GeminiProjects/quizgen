@@ -13,6 +13,12 @@ export interface Organization
   extends Omit<DBOrganization, 'created_at' | 'updated_at'> {
   created_at: string;
   updated_at: string;
+  owner?: {
+    id: string;
+    email: string;
+    name: string | null;
+    avatar_url: string | null;
+  };
   _count?: {
     lectures: number;
   };

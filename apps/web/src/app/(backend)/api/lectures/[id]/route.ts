@@ -70,9 +70,9 @@ export const GET = withErrorHandler(
 
 /**
  * 更新演讲信息
- * PUT /api/lectures/[id]
+ * PATCH /api/lectures/[id]
  */
-export const PUT = withErrorHandler(
+export const PATCH = withErrorHandler(
   async (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }

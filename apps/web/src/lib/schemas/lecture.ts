@@ -14,9 +14,13 @@ export const lectureCreateSchema = z.object({
     .string()
     .min(1, '演讲标题不能为空')
     .max(200, '标题不能超过200个字符'),
-  description: z.string().max(1000, '描述不能超过1000个字符').optional(),
+  description: z
+    .string()
+    .max(1000, '描述不能超过1000个字符')
+    .nullable()
+    .optional(),
   org_id: z.string().uuid('无效的组织ID').nullable().optional(),
-  org_password: z.string().optional(), // 加入组织时需要的密码
+  org_password: z.string().nullable().optional(), // 加入组织时需要的密码
   starts_at: z.string().datetime('无效的开始时间格式'),
 });
 

@@ -10,9 +10,12 @@ import {
   eq,
   generateLectureCode,
   ilike,
+  lectureParticipants,
   lectures,
   or,
   organizations,
+  quizItems,
+  sql,
 } from '@repo/db';
 import type { NextRequest } from 'next/server';
 import {
@@ -184,7 +187,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const whereClause =
       conditions.length > 1 ? and(...conditions) : conditions[0];
 
-    // 查询演讲列表
+    // 查询演讲列表（包含统计信息）
     const [lectureList, totalCount] = await Promise.all([
       db
         .select({
@@ -199,8 +202,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           ends_at: lectures.ends_at,
           created_at: lectures.created_at,
           updated_at: lectures.updated_at,
+          // 组织信息
+          organization: organizations,
+          // 统计信息
+          _count: {
+            quiz_items: sql<number>`(select count(*) from ${quizItems} where ${quizItems.lecture_id} = ${lectures.id})`,
+            participants: sql<number>`(select count(distinct user_id) from ${lectureParticipants} where ${lectureParticipants.lecture_id} = ${lectures.id})`,
+          },
         })
         .from(lectures)
+        .leftJoin(organizations, eq(lectures.org_id, organizations.id))
         .where(whereClause)
         .limit(limit)
         .offset((page - 1) * limit)

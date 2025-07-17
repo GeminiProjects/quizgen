@@ -1,92 +1,113 @@
-import { Card, CardContent, CardHeader } from '@repo/ui/components/card';
 import { Skeleton } from '@repo/ui/components/skeleton';
-import { Tabs, TabsContent, TabsList } from '@repo/ui/components/tabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@repo/ui/components/tabs';
 
 /**
- * 组织详情页面骨架屏
- * 用于组织详情页面完整内容加载时的占位显示
+ * 组织详情页骨架屏组件
+ * 用于组织详情页面的完整加载状态
  */
-export default function OrganizationDetailSkeleton() {
+export function OrganizationDetailSkeleton() {
   return (
     <div className="min-h-screen pb-24 md:pb-0">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* 面包屑导航 skeleton */}
+        {/* 面包屑导航 */}
         <div className="mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm">
             <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-4" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-4" />
+            <span className="text-muted-foreground">/</span>
             <Skeleton className="h-4 w-24" />
           </div>
         </div>
 
-        {/* 页面头部 skeleton */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            <Skeleton className="h-12 w-12 rounded-lg" />
-            <div>
-              <Skeleton className="mb-2 h-8 w-48 md:h-9" />
-              <Skeleton className="h-5 w-64" />
+        {/* 头部信息 */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="mb-4 flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div>
+                  <Skeleton className="mb-2 h-8 w-64" />
+                  <Skeleton className="h-5 w-48" />
+                </div>
+              </div>
+              <Skeleton className="mb-2 h-4 w-full max-w-2xl" />
+              <Skeleton className="h-4 w-3/4 max-w-2xl" />
+            </div>
+            {/* 操作按钮 */}
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-10" />
             </div>
           </div>
-          <Skeleton className="h-9 w-9 rounded-md" />
         </div>
 
-        {/* 统计卡片 skeleton */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-6 w-12" />
-                    <Skeleton className="h-3 w-20" />
-                  </div>
-                  <Skeleton className="h-8 w-8 rounded-md" />
-                </div>
-              </CardContent>
-            </Card>
+        {/* 统计卡片 */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map(() => (
+            <div
+              className="relative overflow-hidden rounded-lg border bg-card p-6"
+              key={Math.random()}
+            >
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="mt-4">
+                <Skeleton className="h-8 w-16" />
+              </div>
+              <div className="mt-2">
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* 标签页 skeleton */}
-        <Tabs className="space-y-6" defaultValue="info">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+        {/* 标签页 */}
+        <Tabs className="space-y-6" defaultValue="lectures">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="lectures">演讲会话</TabsTrigger>
+            <TabsTrigger value="analytics">数据分析</TabsTrigger>
+            <TabsTrigger value="settings">组织设置</TabsTrigger>
           </TabsList>
 
-          <TabsContent className="space-y-4" value="info">
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <Skeleton className="mb-2 h-6 w-24" />
-                    <Skeleton className="h-4 w-48" />
+          <TabsContent className="space-y-4" value="lectures">
+            {/* 搜索和过滤栏 */}
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Skeleton className="h-10 flex-1" />
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+
+            {/* 演讲列表 */}
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map(() => (
+                <div
+                  className="flex items-center justify-between rounded-lg border bg-card p-4"
+                  key={Math.random()}
+                >
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-48" />
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </div>
                   </div>
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4 rounded-lg border p-4">
-                  <div>
-                    <Skeleton className="mb-1 h-4 w-20" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <div>
-                    <Skeleton className="mb-1 h-4 w-20" />
-                    <Skeleton className="h-5 w-full" />
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-9 w-20 rounded-md" />
                   </div>
                 </div>
-                <div className="rounded-lg border p-4">
-                  <Skeleton className="mb-2 h-4 w-20" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </div>

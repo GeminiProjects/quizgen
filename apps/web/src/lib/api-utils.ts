@@ -61,7 +61,7 @@ export async function validateRequestBody<T>(
       return {
         success: false,
         error: `请求参数验证失败: ${result.error.issues
-          .map((e) => e.message)
+          .map((e) => `${e.path.join('.')}: ${e.message}`)
           .join(', ')}`,
       };
     }

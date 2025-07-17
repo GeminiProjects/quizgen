@@ -1,18 +1,21 @@
 import { Skeleton } from '@repo/ui/components/skeleton';
 
 /**
- * 组织控件骨架屏
- * 用于搜索框和排序控件加载时的占位显示
+ * 组织控件骨架屏组件
+ * 用于搜索和排序控件的加载状态
  */
-export default function OrganizationControlsSkeleton() {
+export function OrganizationControlsSkeleton() {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row">
-      <div className="relative flex-1">
-        <Skeleton className="h-10 w-full rounded-md" />
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* 搜索框 */}
+      <div className="max-w-md flex-1">
+        <Skeleton className="h-10 w-full" />
       </div>
-      <div className="flex gap-2">
-        <Skeleton className="h-10 w-[140px] rounded-md" />
-        <Skeleton className="h-10 w-10 rounded-md" />
+
+      {/* 排序选择器 */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-10 w-32" />
       </div>
     </div>
   );

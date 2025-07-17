@@ -13,6 +13,7 @@ import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useOrganizationActions } from '@/hooks/use-organizations';
 import type { Organization } from '@/types/organization';
 
 interface CreateOrganizationDialogProps {
@@ -36,6 +37,7 @@ export default function CreateOrganizationDialog({
     description: '',
     password: '',
   });
+  const { createOrganization } = useOrganizationActions();
 
   // 生成随机密码
   const generatePassword = () => {
@@ -69,32 +71,22 @@ export default function CreateOrganizationDialog({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/organizations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          password: formData.password.trim(),
-        }),
+      const result = await createOrganization({
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        password: formData.password.trim(),
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('组织创建成功');
-        onSuccess(result.data);
-        // 重置表单
-        setFormData({
-          name: '',
-          description: '',
-          password: '',
-        });
-      } else {
-        toast.error(`创建组织失败, 错误: ${result.error}`);
-      }
-    } catch {
-      toast.error('网络错误，请稍后重试');
+      toast.success('组织创建成功');
+      onSuccess(result.data);
+      // 重置表单
+      setFormData({
+        name: '',
+        description: '',
+        password: '',
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '创建组织失败');
     } finally {
       setLoading(false);
     }

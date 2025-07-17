@@ -75,6 +75,7 @@ export function useOrganizationActions() {
   const createOrganization = async (data: {
     name: string;
     description?: string;
+    password?: string;
   }) => {
     const response = await fetch('/api/organizations', {
       method: 'POST',
