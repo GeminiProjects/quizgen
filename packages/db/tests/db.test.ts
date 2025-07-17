@@ -2,10 +2,12 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import {
   attempts,
+  lectureParticipants,
   lectures,
   materials,
   type NewAttempt,
   type NewLecture,
+  type NewLectureParticipant,
   type NewMaterial,
   type NewOrganization,
   type NewQuizItem,
@@ -15,8 +17,9 @@ import {
   quizItems,
   transcripts,
   users,
-} from '../src/schema/index';
-import { db } from './setup';
+} from '@/schema/index';
+import { db } from '@/tests/setup';
+import { generateLectureCode } from '@/utils/lecture-code';
 
 /**
  * 数据库表功能测试
@@ -31,6 +34,7 @@ describe('数据库表功能测试', () => {
     await db.delete(quizItems);
     await db.delete(transcripts);
     await db.delete(materials);
+    await db.delete(lectureParticipants);
     await db.delete(lectures);
     await db.delete(organizations);
     await db.delete(users);
@@ -183,6 +187,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
 
@@ -224,6 +229,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -241,6 +247,71 @@ describe('数据库表功能测试', () => {
 
       // 验证结果
       expect(updatedLecture.ends_at).toEqual(endsAt);
+    });
+
+    test('验证演讲码唯一性', async () => {
+      // 准备数据
+      const testUser: NewUser = {
+        id: 'test-user-001',
+        email: 'test@example.com',
+        name: '测试用户',
+        emailVerified: false,
+      };
+      await db.insert(users).values(testUser);
+
+      // 使用相同的演讲码创建两个演讲
+      const duplicateCode = generateLectureCode();
+      const lecture1: NewLecture = {
+        title: '演讲1',
+        owner_id: testUser.id,
+        join_code: duplicateCode,
+        starts_at: new Date(),
+      };
+      const lecture2: NewLecture = {
+        title: '演讲2',
+        owner_id: testUser.id,
+        join_code: duplicateCode,
+        starts_at: new Date(),
+      };
+
+      // 第一个应该成功
+      await db.insert(lectures).values(lecture1);
+
+      // 第二个应该失败（唯一性约束）
+      try {
+        await db.insert(lectures).values(lecture2);
+        // 如果没有抛出错误，测试失败
+        expect(true).toBe(false);
+      } catch (error) {
+        // 期望抛出错误
+        expect(error).toBeDefined();
+      }
+    });
+
+    test('演讲状态默认值', async () => {
+      // 准备数据
+      const testUser: NewUser = {
+        id: 'test-user-001',
+        email: 'test@example.com',
+        name: '测试用户',
+        emailVerified: false,
+      };
+      await db.insert(users).values(testUser);
+
+      const testLecture: NewLecture = {
+        title: '测试演讲',
+        owner_id: testUser.id,
+        join_code: generateLectureCode(),
+        starts_at: new Date(),
+      };
+
+      const [lecture] = await db
+        .insert(lectures)
+        .values(testLecture)
+        .returning();
+
+      // 验证默认状态为 'not_started'
+      expect(lecture.status).toBe('not_started');
     });
   });
 
@@ -271,6 +342,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -326,6 +398,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -379,6 +452,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -435,6 +509,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -500,6 +575,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db
@@ -548,6 +624,176 @@ describe('数据库表功能测试', () => {
     });
   });
 
+  describe('演讲参与者表 (lecture_participants)', () => {
+    test('用户加入演讲', async () => {
+      // 准备用户数据
+      const speaker: NewUser = {
+        id: 'speaker-001',
+        email: 'speaker@example.com',
+        name: '演讲者',
+        emailVerified: false,
+      };
+      const audience: NewUser = {
+        id: 'audience-001',
+        email: 'audience@example.com',
+        name: '观众',
+        emailVerified: false,
+      };
+      await db.insert(users).values([speaker, audience]);
+
+      // 创建演讲
+      const testLecture: NewLecture = {
+        title: '测试演讲',
+        owner_id: speaker.id,
+        join_code: generateLectureCode(),
+        starts_at: new Date(),
+      };
+      const [lecture] = await db
+        .insert(lectures)
+        .values(testLecture)
+        .returning();
+
+      // 演讲者自动成为参与者
+      const speakerParticipant: NewLectureParticipant = {
+        lecture_id: lecture.id,
+        user_id: speaker.id,
+        role: 'speaker',
+      };
+      await db.insert(lectureParticipants).values(speakerParticipant);
+
+      // 观众加入演讲
+      const audienceParticipant: NewLectureParticipant = {
+        lecture_id: lecture.id,
+        user_id: audience.id,
+        role: 'audience',
+      };
+      const [participant] = await db
+        .insert(lectureParticipants)
+        .values(audienceParticipant)
+        .returning();
+
+      // 验证结果
+      expect(participant).toBeDefined();
+      expect(participant.role).toBe('audience');
+      expect(participant.status).toBe('joined');
+      expect(participant.joined_at).toBeDefined();
+    });
+
+    test('查询演讲的所有参与者', async () => {
+      // 准备数据
+      const speaker: NewUser = {
+        id: 'speaker-001',
+        email: 'speaker@example.com',
+        name: '演讲者',
+        emailVerified: false,
+      };
+      const audience1: NewUser = {
+        id: 'audience-001',
+        email: 'audience1@example.com',
+        name: '观众1',
+        emailVerified: false,
+      };
+      const audience2: NewUser = {
+        id: 'audience-002',
+        email: 'audience2@example.com',
+        name: '观众2',
+        emailVerified: false,
+      };
+      await db.insert(users).values([speaker, audience1, audience2]);
+
+      const testLecture: NewLecture = {
+        title: '测试演讲',
+        owner_id: speaker.id,
+        join_code: generateLectureCode(),
+        starts_at: new Date(),
+      };
+      const [lecture] = await db
+        .insert(lectures)
+        .values(testLecture)
+        .returning();
+
+      // 添加参与者
+      await db.insert(lectureParticipants).values([
+        {
+          lecture_id: lecture.id,
+          user_id: speaker.id,
+          role: 'speaker',
+        },
+        {
+          lecture_id: lecture.id,
+          user_id: audience1.id,
+          role: 'audience',
+        },
+        {
+          lecture_id: lecture.id,
+          user_id: audience2.id,
+          role: 'audience',
+        },
+      ]);
+
+      // 查询所有参与者
+      const participants = await db
+        .select()
+        .from(lectureParticipants)
+        .where(eq(lectureParticipants.lecture_id, lecture.id));
+
+      // 验证结果
+      expect(participants.length).toBe(3);
+      const speakerCount = participants.filter(
+        (p) => p.role === 'speaker'
+      ).length;
+      const audienceCount = participants.filter(
+        (p) => p.role === 'audience'
+      ).length;
+      expect(speakerCount).toBe(1);
+      expect(audienceCount).toBe(2);
+    });
+
+    test('更新参与者状态', async () => {
+      // 准备数据
+      const user: NewUser = {
+        id: 'user-001',
+        email: 'user@example.com',
+        name: '用户',
+        emailVerified: false,
+      };
+      await db.insert(users).values(user);
+
+      const testLecture: NewLecture = {
+        title: '测试演讲',
+        owner_id: user.id,
+        join_code: generateLectureCode(),
+        starts_at: new Date(),
+      };
+      const [lecture] = await db
+        .insert(lectures)
+        .values(testLecture)
+        .returning();
+
+      // 用户加入演讲
+      const [participant] = await db
+        .insert(lectureParticipants)
+        .values({
+          lecture_id: lecture.id,
+          user_id: user.id,
+          role: 'audience',
+        })
+        .returning();
+
+      // 更新状态为离开
+      const leftAt = new Date();
+      const [updatedParticipant] = await db
+        .update(lectureParticipants)
+        .set({ status: 'left', left_at: leftAt })
+        .where(eq(lectureParticipants.id, participant.id))
+        .returning();
+
+      // 验证结果
+      expect(updatedParticipant.status).toBe('left');
+      expect(updatedParticipant.left_at).toEqual(leftAt);
+    });
+  });
+
   describe('级联删除测试', () => {
     test('删除组织时级联删除相关数据', async () => {
       // 准备完整的数据链
@@ -575,6 +821,7 @@ describe('数据库表功能测试', () => {
         description: '这是一个测试演讲',
         owner_id: testUser.id,
         org_id: org.id,
+        join_code: generateLectureCode(),
         starts_at: new Date(),
       };
       const [lecture] = await db

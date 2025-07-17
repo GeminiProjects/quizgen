@@ -1,9 +1,26 @@
 import { relations } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { timestamps } from './columns.helpers';
 import { organizations } from './organizations';
 import { users } from './users';
+
+/**
+ * 演讲状态枚举
+ */
+export const lectureStatusEnum = pgEnum('lecture_status', [
+  'not_started', // 未开始
+  'in_progress', // 进行中
+  'paused', // 暂停
+  'ended', // 已结束
+]);
 
 /**
  * 演讲表
@@ -26,6 +43,10 @@ export const lectures = pgTable(
     org_id: uuid('org_id').references(() => organizations.id, {
       onDelete: 'set null',
     }),
+    // 演讲码（用于观众加入演讲）
+    join_code: text('join_code').notNull().unique(),
+    // 演讲状态
+    status: lectureStatusEnum('status').notNull().default('not_started'),
     // 开始时间
     starts_at: timestamp('starts_at').notNull(),
     // 结束时间
@@ -38,6 +59,8 @@ export const lectures = pgTable(
     index('lectures_owner_id_idx').on(table.owner_id),
     // 为组织ID创建索引
     index('lectures_org_id_idx').on(table.org_id),
+    // 为演讲码创建索引（提高查询性能）
+    index('lectures_join_code_idx').on(table.join_code),
   ]
 );
 
@@ -59,6 +82,8 @@ export const lecturesRelations = relations(lectures, ({ one, many }) => ({
   transcripts: many(transcripts),
   // 测验题目
   quizItems: many(quizItems),
+  // 参与者
+  participants: many(lectureParticipants),
 }));
 
 // Zod 模式验证
@@ -70,6 +95,7 @@ export type Lecture = typeof lectures.$inferSelect;
 export type NewLecture = typeof lectures.$inferInsert;
 
 // 导入相关表定义
+import { lectureParticipants } from './lecture-participants';
 import { materials } from './materials';
 import { quizItems } from './quiz-items';
 import { transcripts } from './transcripts';

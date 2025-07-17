@@ -14,7 +14,8 @@
   "linter": {
     "rules": {
       "nursery": {
-        "noUnknownAtRule": "off"
+        "noUnknownAtRule": "off",
+        "noAwaitInLoop": "off"
       },
       "performance": {
         "noNamespaceImport": "off"

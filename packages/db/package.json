@@ -3,11 +3,6 @@
   "private": true,
   "type": "module",
   "version": "0.0.0",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
-  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -19,6 +14,7 @@
     "@neondatabase/serverless": "^1.0.1",
     "drizzle-orm": "^0.44.2",
     "drizzle-zod": "^0.5.1",
+    "nanoid": "^5.1.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

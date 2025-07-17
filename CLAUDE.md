@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 QuizGen (演讲即时智能评测系统) is a real-time assessment system for campus presentations. It enables speakers to generate AI-powered quizzes during presentations, audiences to answer questions with instant feedback, and organizers to manage lecture series with participation metrics.
 
 - 参考 [docs/project_design.md](./docs/project_design.md) 了解项目设计
+- 模块的前缀是 `@repo/`
+- 总是参考 tsconfig.json 中的 paths 配置，优先使用别名，例如使用 `'@/schema/index'` 而不是 `'../../src/schema/index'`
 
 常用指令
 ```

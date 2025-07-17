@@ -1,0 +1,28 @@
+{
+  "extends": "@repo/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "types": [
+      "@cloudflare/workers-types",
+      "bun"
+    ],
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

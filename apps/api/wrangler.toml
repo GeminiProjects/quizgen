@@ -1,0 +1,45 @@
+# Cloudflare Workers 配置文件
+name = "quizgen-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+node_compat = true
+
+# 账户 ID（需要替换为你的 Cloudflare 账户 ID）
+# account_id = "your-account-id"
+
+# Workers 路由（可选，用于自定义域名）
+# routes = [
+#   { pattern = "api.quizgen.com/*", zone_name = "quizgen.com" }
+# ]
+
+# 环境变量（开发环境）
+[vars]
+# 这里可以添加非敏感的环境变量
+
+# 敏感环境变量使用 secrets
+# 运行 `wrangler secret put DATABASE_URL` 来设置
+# DATABASE_URL = "你的数据库连接字符串"
+
+# KV 命名空间（如果需要）
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
+
+# D1 数据库（如果使用 Cloudflare D1）
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "quizgen"
+# database_id = "your-d1-database-id"
+
+# 本地开发配置
+[dev]
+port = 3001
+local_protocol = "http"
+
+# 构建配置
+[build]
+command = "bun run build"
+
+# 兼容性标志
+[compatibility_flags]
+nodejs_compat = true
