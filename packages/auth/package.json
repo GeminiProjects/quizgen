@@ -5,11 +5,14 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "generate": "bunx @better-auth/cli@latest generate",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "check": "tsc --noEmit --emitDeclarationOnly false && ultracite lint",
+    "format": "ultracite format"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

@@ -10,9 +10,8 @@
   },
   "scripts": {
     "run-index": "bun --env-file=../../.env.local run src/index.ts",
-    "lint": "ultracite lint",
-    "format": "ultracite format",
-    "type-check": "tsc --noEmit"
+    "check": "tsc --noEmit && ultracite lint",
+    "format": "ultracite format"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.0-beta.8",

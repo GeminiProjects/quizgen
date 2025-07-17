@@ -6,9 +6,8 @@
     "dev": "bun --env-file=../../.env.local next dev --turbopack",
     "build": "bun --env-file=../../.env.local next build",
     "start": "next start",
-    "lint": "ultracite lint",
-    "format": "ultracite format",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "check": "tsc --noEmit --emitDeclarationOnly false && ultracite lint",
+    "format": "ultracite format"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",

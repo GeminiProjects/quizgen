@@ -4,11 +4,11 @@
  */
 'use client';
 
+import { signIn } from '@repo/auth/client';
 import { Button } from '@repo/ui/components/button';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
-import { signIn } from '@/lib/auth-client';
 
 interface GitHubLoginProps {
   // 登录成功后的回调 URL
