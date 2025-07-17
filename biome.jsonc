@@ -24,7 +24,8 @@
         "noConsole": "off"
       },
       "style": {
-        "noNestedTernary": "off"
+        "noNestedTernary": "off",
+        "noParameterProperties": "off"
       }
     }
   }

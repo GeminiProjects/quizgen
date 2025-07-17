@@ -4,7 +4,7 @@
  */
 
 import { db } from '@repo/db';
-import { betterAuth } from 'better-auth';
+import { betterAuth, type Session, type User } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { authTables } from './schema';
 
@@ -35,3 +35,11 @@ export const auth = betterAuth({
 
 // 导出类型
 export type Auth = typeof auth;
+
+// 导出 Better Auth 相关类型
+export type { Session, User } from 'better-auth';
+
+export type SessionResponse = {
+  session: Session;
+  user: User;
+};

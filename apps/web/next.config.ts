@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
     }
     return await Promise.resolve([]);
   },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.com',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

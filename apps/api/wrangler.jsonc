@@ -1,9 +1,0 @@
-{
-  "name": "quizgen-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-07-15",
-  "dev": {
-    "port": 3001,
-    "local_protocol": "http"
-  }
-}

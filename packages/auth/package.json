@@ -5,17 +5,15 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./schema": "./src/schema.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "generate": "bunx @better-auth/cli@latest generate",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "better-auth": "^1.2.12",
-    "@repo/db": "workspace:*"
+    "@repo/db": "workspace:*",
+    "better-auth": "^1.2.12"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0",
