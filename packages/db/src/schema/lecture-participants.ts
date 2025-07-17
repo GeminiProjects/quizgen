@@ -38,7 +38,7 @@ export const participantRoleEnum = pgEnum('participant_role', [
 export const lectureParticipants = pgTable(
   'lecture_participants',
   {
-    // 参与记录唯一标识
+    // 参与演讲唯一标识
     id: uuid('id').primaryKey().defaultRandom(),
     // 演讲ID
     lecture_id: uuid('lecture_id')

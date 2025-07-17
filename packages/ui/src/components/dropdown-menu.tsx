@@ -6,9 +6,10 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import type * as React from "react";
 
 function DropdownMenu({
+	modal = true,
 	...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-	return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+	return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />;
 }
 
 function DropdownMenuPortal({

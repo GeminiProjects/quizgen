@@ -1,6 +1,5 @@
 'use client';
 
-import type { SessionResponse } from '@repo/auth';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -12,7 +11,7 @@ import {
 } from '@repo/ui/components/card';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { Plus, Presentation, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import OrganizationStatsCard from '../components/organization-stats-card';
 import CreateOrganizationDialog from '../dialogs/create-organization-dialog';
@@ -30,21 +29,17 @@ interface Organization {
   };
 }
 
-interface OrganizationsTabProps {
-  session: SessionResponse;
-}
-
 /**
  * 组织管理标签页
  * 显示用户创建的组织列表，支持创建、管理组织
  */
-export default function OrganizationsTab({ session }: OrganizationsTabProps) {
+export default function OrganizationsTab() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // 获取组织列表
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async () => {
     try {
       const response = await fetch('/api/organizations');
       const result = await response.json();
@@ -54,17 +49,17 @@ export default function OrganizationsTab({ session }: OrganizationsTabProps) {
       } else {
         toast.error(result.message || '获取组织列表失败');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('网络错误，请稍后重试');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 页面加载时获取数据
   useEffect(() => {
     fetchOrganizations();
-  }, []);
+  }, [fetchOrganizations]);
 
   // 格式化时间
   const formatDateTime = (dateStr: string) => {
@@ -83,7 +78,7 @@ export default function OrganizationsTab({ session }: OrganizationsTabProps) {
     try {
       await navigator.clipboard.writeText(password);
       toast.success('密码已复制到剪贴板');
-    } catch (error) {
+    } catch (_error) {
       toast.error('复制失败，请手动复制');
     }
   };
@@ -112,7 +107,7 @@ export default function OrganizationsTab({ session }: OrganizationsTabProps) {
       {/* 页面头部 */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold text-2xl">我的组织</h2>
+          <h2 className="font-bold text-2xl text-warning">我的组织</h2>
           <p className="text-muted-foreground">
             管理您创建的组织，查看组织内演讲活动
           </p>

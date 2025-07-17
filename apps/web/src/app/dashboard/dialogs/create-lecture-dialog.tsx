@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@repo/ui/components/select';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Lecture {
@@ -67,7 +67,7 @@ export default function CreateLectureDialog({
   });
 
   // 获取用户创建的组织列表
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async () => {
     try {
       const response = await fetch('/api/organizations');
       const result = await response.json();
@@ -78,7 +78,7 @@ export default function CreateLectureDialog({
     } catch {
       console.error('获取组织列表失败');
     }
-  };
+  }, []);
 
   // 对话框打开时获取组织列表
   useEffect(() => {
@@ -92,25 +92,34 @@ export default function CreateLectureDialog({
         starts_at: now.toISOString().slice(0, 16),
       }));
     }
-  }, [open]);
+  }, [open, fetchOrganizations]);
 
-  // 表单提交
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // 验证表单数据
+  const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error('请输入演讲标题');
-      return;
+      return false;
     }
 
     if (!formData.starts_at) {
       toast.error('请选择开始时间');
-      return;
+      return false;
     }
 
     // 如果选择了组织，必须输入组织密码
     if (formData.org_id && !formData.org_password.trim()) {
       toast.error('请输入组织密码');
+      return false;
+    }
+
+    return true;
+  };
+
+  // 表单提交
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
@@ -155,7 +164,7 @@ export default function CreateLectureDialog({
   };
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog modal={false} onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>创建新演讲</DialogTitle>

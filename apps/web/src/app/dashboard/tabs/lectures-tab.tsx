@@ -1,6 +1,5 @@
 'use client';
 
-import type { SessionResponse } from '@repo/auth';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -12,7 +11,7 @@ import {
 } from '@repo/ui/components/card';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { Eye, Pause, Play, Plus, Presentation, Square } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import LectureStatsCard from '../components/lecture-stats-card';
 import CreateLectureDialog from '../dialogs/create-lecture-dialog';
@@ -30,22 +29,18 @@ interface Lecture {
   org_id: string | null;
 }
 
-interface LecturesTabProps {
-  session: SessionResponse;
-}
-
 /**
  * 演讲管理标签页
  * 显示用户创建的演讲列表，支持创建、管理演讲
  */
-export default function LecturesTab({ session }: LecturesTabProps) {
+export default function LecturesTab() {
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
+  const [_selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
 
   // 获取演讲列表
-  const fetchLectures = async () => {
+  const fetchLectures = useCallback(async () => {
     try {
       const response = await fetch('/api/lectures');
       const result = await response.json();
@@ -55,17 +50,17 @@ export default function LecturesTab({ session }: LecturesTabProps) {
       } else {
         toast.error(result.message || '获取演讲列表失败');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('网络错误，请稍后重试');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 页面加载时获取数据
   useEffect(() => {
     fetchLectures();
-  }, []);
+  }, [fetchLectures]);
 
   // 获取状态显示文本和颜色
   const getStatusBadge = (status: Lecture['status']) => {
@@ -114,7 +109,7 @@ export default function LecturesTab({ session }: LecturesTabProps) {
       {/* 页面头部 */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold text-2xl">我的演讲</h2>
+          <h2 className="font-bold text-2xl text-info">我的演讲</h2>
           <p className="text-muted-foreground">
             管理您创建的演讲，查看演讲状态和参与情况
           </p>

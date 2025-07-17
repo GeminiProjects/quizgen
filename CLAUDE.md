@@ -104,3 +104,52 @@ const session = await auth.api.getSession({ headers: await headers() });
 - 类型安全的会话获取
 
 参考 [docs/project_design.md](./docs/project_design.md) 了解完整项目设计
+
+## 前端设计规范
+
+### 颜色 + Icon 样式设计语言
+使用 CSS 变量系统，支持 dark/light 模式自动切换：
+
+```typescript
+// 主色调 - 使用 primary 颜色系统
+<div className="bg-primary/10 text-primary">
+  <Sparkles className="h-4 w-4" />
+</div>
+
+// 成功/积极色调 - 使用 success 颜色系统
+<div className="bg-success/10 text-success">
+  <MessageSquare className="h-4 w-4" />
+</div>
+
+// 信息/数据色调 - 使用 info 颜色系统
+<div className="bg-info/10 text-info">
+  <ChartBar className="h-4 w-4" />
+</div>
+
+// 警告色调 - 使用 warning 颜色系统
+<div className="bg-warning/10 text-warning">
+  <AlertTriangle className="h-4 w-4" />
+</div>
+
+// 错误/删除色调 - 使用 destructive 颜色系统
+<div className="bg-destructive/10 text-destructive">
+  <Trash2 className="h-4 w-4" />
+</div>
+
+// 辅助色调 - 使用 secondary 颜色系统
+<div className="bg-secondary/10 text-secondary-foreground">
+  <Settings className="h-4 w-4" />
+</div>
+
+// 强调色调 - 使用 accent 颜色系统
+<div className="bg-accent/10 text-accent-foreground">
+  <Star className="h-4 w-4" />
+</div>
+```
+
+设计原则：
+- 图标容器使用 `flex h-9 w-9 items-center justify-center rounded-lg` 或 `h-10 w-10`
+- 背景色使用 `/10` 透明度，文字色使用对应的实色变量
+- 图标尺寸通常为 `h-4 w-4` 或 `h-5 w-5`
+- 优先使用 lucide-react 图标库保持一致性
+- 使用 CSS 变量确保 dark/light 模式自动适配

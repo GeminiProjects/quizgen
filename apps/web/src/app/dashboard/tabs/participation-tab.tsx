@@ -1,6 +1,5 @@
 'use client';
 
-import type { SessionResponse } from '@repo/auth';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -13,7 +12,7 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { ArrowRight, Mic, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import ParticipationStatsCard from '../components/participation-stats-card';
 import JoinLectureDialog from '../dialogs/join-lecture-dialog';
@@ -29,15 +28,11 @@ interface ParticipationRecord {
   accuracy_rate: number;
 }
 
-interface ParticipationTabProps {
-  session: SessionResponse;
-}
-
 /**
- * 参与记录标签页
+ * 参与演讲标签页
  * 显示用户参与的演讲记录，支持通过演讲码加入新演讲
  */
-export default function ParticipationTab({ session }: ParticipationTabProps) {
+export default function ParticipationTab() {
   const [participationRecords, setParticipationRecords] = useState<
     ParticipationRecord[]
   >([]);
@@ -46,7 +41,7 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
   const [joinCode, setJoinCode] = useState('');
 
   // 获取参与记录
-  const fetchParticipationRecords = async () => {
+  const fetchParticipationRecords = useCallback(() => {
     try {
       // 这里应该调用 API 获取用户参与的演讲记录
       // 暂时使用模拟数据
@@ -74,17 +69,17 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
       ];
 
       setParticipationRecords(mockData);
-    } catch (error) {
+    } catch (_error) {
       toast.error('获取参与记录失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 页面加载时获取数据
   useEffect(() => {
     fetchParticipationRecords();
-  }, []);
+  }, [fetchParticipationRecords]);
 
   // 格式化时间
   const formatDateTime = (dateStr: string) => {
@@ -93,8 +88,12 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
 
   // 获取准确率颜色
   const getAccuracyColor = (rate: number) => {
-    if (rate >= 80) return 'text-green-600';
-    if (rate >= 60) return 'text-yellow-600';
+    if (rate >= 80) {
+      return 'text-green-600';
+    }
+    if (rate >= 60) {
+      return 'text-yellow-600';
+    }
     return 'text-red-600';
   };
 
@@ -124,7 +123,7 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
       } else {
         toast.error(result.message || '加入演讲失败');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('网络错误，请稍后重试');
     }
   };
@@ -151,14 +150,19 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-bold text-2xl">参与记录</h2>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-bold text-success text-xl sm:text-2xl">
+            参与记录
+          </h2>
+          <p className="text-muted-foreground text-sm sm:text-base">
             查看您参与的演讲记录和答题表现
           </p>
         </div>
-        <Button onClick={() => setShowJoinDialog(true)}>
+        <Button
+          className="w-full sm:w-auto"
+          onClick={() => setShowJoinDialog(true)}
+        >
           <ArrowRight className="mr-2 h-4 w-4" />
           加入演讲
         </Button>
@@ -227,7 +231,7 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="mb-4 grid grid-cols-3 gap-4">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                   <div>
                     <p className="text-muted-foreground text-sm">参与时间</p>
                     <p className="text-sm">
@@ -248,13 +252,21 @@ export default function ParticipationTab({ session }: ParticipationTabProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    className="w-full sm:w-auto"
+                    size="sm"
+                    variant="outline"
+                  >
                     <Search className="mr-1 h-4 w-4" />
                     查看详情
                   </Button>
 
-                  <Button size="sm" variant="outline">
+                  <Button
+                    className="w-full sm:w-auto"
+                    size="sm"
+                    variant="outline"
+                  >
                     <ArrowRight className="mr-1 h-4 w-4" />
                     再次加入
                   </Button>

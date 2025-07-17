@@ -79,7 +79,7 @@ export default function JoinLectureDialog({
   };
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
+    <Dialog modal={false} onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>加入演讲</DialogTitle>
