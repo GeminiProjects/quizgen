@@ -27,7 +27,11 @@ import { quizItemSchemas } from '@/lib/schemas';
  * GET /api/quiz-items/[id]
  */
 export const GET = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -50,7 +54,7 @@ export const GET = withErrorHandler(
         })
         .from(quizItems)
         .innerJoin(lectures, eq(quizItems.lecture_id, lectures.id))
-        .where(eq(quizItems.id, params.id))
+        .where(eq(quizItems.id, id))
         .limit(1);
 
       if (!quizItem) {
@@ -99,7 +103,11 @@ export const GET = withErrorHandler(
  * PUT /api/quiz-items/[id]
  */
 export const PUT = withErrorHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -130,7 +138,7 @@ export const PUT = withErrorHandler(
         })
         .from(quizItems)
         .innerJoin(lectures, eq(quizItems.lecture_id, lectures.id))
-        .where(eq(quizItems.id, params.id))
+        .where(eq(quizItems.id, id))
         .limit(1);
 
       if (!existingQuizItem) {
@@ -154,7 +162,7 @@ export const PUT = withErrorHandler(
           options,
           answer,
         })
-        .where(eq(quizItems.id, params.id))
+        .where(eq(quizItems.id, id))
         .returning({
           id: quizItems.id,
           lecture_id: quizItems.lecture_id,
@@ -177,7 +185,11 @@ export const PUT = withErrorHandler(
  * DELETE /api/quiz-items/[id]
  */
 export const DELETE = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -196,7 +208,7 @@ export const DELETE = withErrorHandler(
         })
         .from(quizItems)
         .innerJoin(lectures, eq(quizItems.lecture_id, lectures.id))
-        .where(eq(quizItems.id, params.id))
+        .where(eq(quizItems.id, id))
         .limit(1);
 
       if (!existingQuizItem) {
@@ -213,7 +225,7 @@ export const DELETE = withErrorHandler(
       }
 
       // 删除题目
-      await db.delete(quizItems).where(eq(quizItems.id, params.id));
+      await db.delete(quizItems).where(eq(quizItems.id, id));
 
       return createSuccessResponse(null, '题目删除成功');
     } catch (error) {

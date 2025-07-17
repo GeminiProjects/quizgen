@@ -3,6 +3,7 @@
 import type { SessionResponse } from '@repo/auth';
 import { Tabs, TabsContent } from '@repo/ui/components/tabs';
 import { Mic, Presentation, Users } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BottomNav } from './components/bottom-nav';
 import LecturesTab from './tabs/lectures-tab';
@@ -18,12 +19,31 @@ interface DashboardTabsProps {
  * 根据用户角色展示不同的管理功能
  */
 export default function DashboardTabs({ session }: DashboardTabsProps) {
-  const [activeTab, setActiveTab] = useState('participation');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // 从 URL 参数中获取初始标签页，默认为 'participation'
+  const initialTab = searchParams.get('tab') || 'participation';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [tabsLoaded, setTabsLoaded] = useState({
     participation: false,
     lectures: false,
     organizations: false,
   });
+
+  // 更新 URL 参数
+  const updateTabInUrl = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  // 处理标签页切换
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    updateTabInUrl(value);
+  };
 
   // 预加载所有标签页的数据
   useEffect(() => {
@@ -38,7 +58,11 @@ export default function DashboardTabs({ session }: DashboardTabsProps) {
   return (
     <>
       <div className="w-full">
-        <Tabs className="w-full" onValueChange={setActiveTab} value={activeTab}>
+        <Tabs
+          className="w-full"
+          onValueChange={handleTabChange}
+          value={activeTab}
+        >
           {/* 桌面端标签页按钮 */}
           <div className="mb-6 hidden w-full grid-cols-1 gap-4 sm:grid-cols-3 md:grid">
             <button
@@ -47,7 +71,7 @@ export default function DashboardTabs({ session }: DashboardTabsProps) {
                   ? 'border-success bg-success/10'
                   : 'hover:border-success/50'
               }`}
-              onClick={() => setActiveTab('participation')}
+              onClick={() => handleTabChange('participation')}
               type="button"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success">
@@ -67,7 +91,7 @@ export default function DashboardTabs({ session }: DashboardTabsProps) {
                   ? 'border-info bg-info/10'
                   : 'hover:border-info/50'
               }`}
-              onClick={() => setActiveTab('lectures')}
+              onClick={() => handleTabChange('lectures')}
               type="button"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info/10 text-info">
@@ -87,7 +111,7 @@ export default function DashboardTabs({ session }: DashboardTabsProps) {
                   ? 'border-warning bg-warning/10'
                   : 'hover:border-warning/50'
               }`}
-              onClick={() => setActiveTab('organizations')}
+              onClick={() => handleTabChange('organizations')}
               type="button"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 text-warning">
@@ -121,7 +145,7 @@ export default function DashboardTabs({ session }: DashboardTabsProps) {
       {/* 移动端底部导航栏 */}
       <BottomNav
         currentTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         userInfo={{
           avatar: session.user.image || undefined,
           name: session.user.name || undefined,

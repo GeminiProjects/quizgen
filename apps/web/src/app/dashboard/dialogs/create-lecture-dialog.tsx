@@ -164,7 +164,7 @@ export default function CreateLectureDialog({
   };
 
   return (
-    <Dialog modal={false} onOpenChange={onOpenChange} open={open}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>创建新演讲</DialogTitle>

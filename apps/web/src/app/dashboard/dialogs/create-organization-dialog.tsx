@@ -13,16 +13,7 @@ import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
-interface Organization {
-  id: string;
-  name: string;
-  description: string | null;
-  password: string;
-  owner_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Organization } from '@/types/organization';
 
 interface CreateOrganizationDialogProps {
   open: boolean;
@@ -50,7 +41,7 @@ export default function CreateOrganizationDialog({
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let password = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 18; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setFormData((prev) => ({ ...prev, password }));
@@ -80,12 +71,10 @@ export default function CreateOrganizationDialog({
     try {
       const response = await fetch('/api/organizations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name.trim(),
-          description: formData.description.trim() || null,
+          description: formData.description.trim() || undefined,
           password: formData.password.trim(),
         }),
       });
@@ -102,7 +91,7 @@ export default function CreateOrganizationDialog({
           password: '',
         });
       } else {
-        toast.error(result.message || '创建组织失败');
+        toast.error(`创建组织失败, 错误: ${result.error}`);
       }
     } catch {
       toast.error('网络错误，请稍后重试');
@@ -112,7 +101,7 @@ export default function CreateOrganizationDialog({
   };
 
   return (
-    <Dialog modal={false} onOpenChange={onOpenChange} open={open}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>创建新组织</DialogTitle>

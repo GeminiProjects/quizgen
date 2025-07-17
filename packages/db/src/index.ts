@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
 
 // 从环境变量获取数据库连接字符串
 const databaseUrl = process.env.DATABASE_URL;
@@ -11,7 +12,10 @@ if (!databaseUrl) {
 
 // 创建数据库连接实例
 // 使用 snake_case 命名约定
-export const db = drizzle(neon(databaseUrl), { casing: 'snake_case' });
+export const db = drizzle(neon(databaseUrl), {
+  casing: 'snake_case',
+  schema,
+});
 
 // 导出 Drizzle ORM 常用工具
 export {

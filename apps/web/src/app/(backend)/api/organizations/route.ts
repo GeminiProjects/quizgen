@@ -110,6 +110,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           id: organizations.id,
           name: organizations.name,
           description: organizations.description,
+          password: organizations.password,
           owner_id: organizations.owner_id,
           created_at: organizations.created_at,
           updated_at: organizations.updated_at,

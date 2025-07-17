@@ -20,7 +20,11 @@ import { organizationSchemas } from '@/lib/schemas';
  * GET /api/organizations/[id]
  */
 export const GET = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -35,12 +39,13 @@ export const GET = withErrorHandler(
           id: organizations.id,
           name: organizations.name,
           description: organizations.description,
+          password: organizations.password,
           owner_id: organizations.owner_id,
           created_at: organizations.created_at,
           updated_at: organizations.updated_at,
         })
         .from(organizations)
-        .where(eq(organizations.id, params.id))
+        .where(eq(organizations.id, id))
         .limit(1);
 
       if (!organization) {
@@ -64,7 +69,11 @@ export const GET = withErrorHandler(
  * PUT /api/organizations/[id]
  */
 export const PUT = withErrorHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -92,7 +101,7 @@ export const PUT = withErrorHandler(
           owner_id: organizations.owner_id,
         })
         .from(organizations)
-        .where(eq(organizations.id, params.id))
+        .where(eq(organizations.id, id))
         .limit(1);
 
       if (!existingOrganization) {
@@ -110,11 +119,12 @@ export const PUT = withErrorHandler(
           ...updateData,
           updated_at: new Date(),
         })
-        .where(eq(organizations.id, params.id))
+        .where(eq(organizations.id, id))
         .returning({
           id: organizations.id,
           name: organizations.name,
           description: organizations.description,
+          password: organizations.password,
           owner_id: organizations.owner_id,
           created_at: organizations.created_at,
           updated_at: organizations.updated_at,
@@ -132,7 +142,11 @@ export const PUT = withErrorHandler(
  * DELETE /api/organizations/[id]
  */
 export const DELETE = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -148,7 +162,7 @@ export const DELETE = withErrorHandler(
           owner_id: organizations.owner_id,
         })
         .from(organizations)
-        .where(eq(organizations.id, params.id))
+        .where(eq(organizations.id, id))
         .limit(1);
 
       if (!existingOrganization) {
@@ -160,7 +174,7 @@ export const DELETE = withErrorHandler(
       }
 
       // 删除组织
-      await db.delete(organizations).where(eq(organizations.id, params.id));
+      await db.delete(organizations).where(eq(organizations.id, id));
 
       return createSuccessResponse(null, '组织删除成功');
     } catch (error) {

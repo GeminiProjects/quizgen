@@ -79,13 +79,3 @@ export {
   transcripts,
   transcriptsRelations,
 } from './transcripts';
-
-// 用户表
-export {
-  insertUserSchema,
-  type NewUser,
-  selectUserSchema,
-  type User,
-  users,
-  usersRelations,
-} from './users';

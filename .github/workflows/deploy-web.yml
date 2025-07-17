@@ -20,12 +20,8 @@ jobs:
         run: bun install
       - name: ⚙️ 拉取 Vercel 环境信息
         run: bunx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: 🔍 运行类型检查
-        run: bun run typecheck
-      - name: 🔍 运行 lint
-        run: bun run lint
-      # - name: 🧪 运行测试
-      #   run: bun run test
+      - name: 🔍 运行类型检查和代码质量检测
+        run: bun check
       - name: 🔨 构建项目产物
         run: bunx vercel build --token=${{ secrets.VERCEL_TOKEN }} --prod
       - name: ✅ 部署项目产物到 Vercel

@@ -20,7 +20,11 @@ import { organizationSchemas } from '@/lib/schemas';
  * POST /api/organizations/[id]/verify
  */
 export const POST = withErrorHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -49,7 +53,7 @@ export const POST = withErrorHandler(
           password: organizations.password,
         })
         .from(organizations)
-        .where(eq(organizations.id, params.id))
+        .where(eq(organizations.id, id))
         .limit(1);
 
       if (!organization) {

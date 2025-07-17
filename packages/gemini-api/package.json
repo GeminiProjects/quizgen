@@ -1,0 +1,24 @@
+{
+  "name": "@repo/gemini-api",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "run-index": "bun --env-file=../../.env.local run src/index.ts",
+    "check": "tsc --noEmit && ultracite lint",
+    "format": "ultracite format"
+  },
+  "dependencies": {
+    "@google/genai": "^1.10.0",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.18",
+    "@repo/tsconfig": "workspace:*"
+  }
+}

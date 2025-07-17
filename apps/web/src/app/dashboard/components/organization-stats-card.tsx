@@ -4,15 +4,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
-
-interface Organization {
-  id: string;
-  name: string;
-  created_at: string;
-  _count?: {
-    lectures: number;
-  };
-}
+import { Building2, Calendar, LayoutGrid, TrendingUp } from 'lucide-react';
+import type { Organization } from '@/types/organization';
 
 interface OrganizationStatsCardProps {
   organizations: Organization[];
@@ -46,39 +39,53 @@ export default function OrganizationStatsCard({
       title: '总组织数',
       value: totalOrganizations,
       description: '您创建的所有组织',
+      icon: Building2,
+      color: 'primary',
     },
     {
       title: '总演讲数',
       value: totalLectures,
       description: '组织内的所有演讲',
+      icon: LayoutGrid,
+      color: 'success',
     },
     {
       title: '平均演讲数',
       value: avgLecturesPerOrg,
       description: '每个组织的平均演讲数',
+      icon: TrendingUp,
+      color: 'info',
     },
     {
       title: '本月新建',
       value: thisMonthCount,
       description: '过去30天创建的组织',
+      icon: Calendar,
+      color: 'accent',
     },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">{stat.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">{stat.value}</div>
-            <p className="mt-1 text-muted-foreground text-xs">
-              {stat.description}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="font-normal text-sm">
+                {stat.title}
+              </CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="font-bold text-2xl">{stat.value}</div>
+              <p className="text-muted-foreground text-xs">
+                {stat.description}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

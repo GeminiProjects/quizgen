@@ -64,6 +64,19 @@ export const authVerification = pgTable('auth_verification', {
   updatedAt: timestamp('updated_at').$defaultFn(() => new Date()),
 });
 
+// 类型定义
+export type User = typeof authUser.$inferSelect;
+export type NewUser = typeof authUser.$inferInsert;
+export type Session = typeof authSession.$inferSelect;
+export type NewSession = typeof authSession.$inferInsert;
+export type Account = typeof authAccount.$inferSelect;
+export type NewAccount = typeof authAccount.$inferInsert;
+export type Verification = typeof authVerification.$inferSelect;
+export type NewVerification = typeof authVerification.$inferInsert;
+
+// 为了向后兼容，导出 users 表的别名
+export const users = authUser;
+
 // 导出所有表
 export const authTables = {
   user: authUser,

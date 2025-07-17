@@ -1,3 +1,4 @@
+import { authUser } from '@repo/auth/schema';
 import { relations } from 'drizzle-orm';
 import {
   index,
@@ -10,7 +11,6 @@ import {
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { timestamps } from './columns.helpers';
 import { organizations } from './organizations';
-import { users } from './users';
 
 /**
  * 演讲状态枚举
@@ -38,7 +38,7 @@ export const lectures = pgTable(
     // 创建者ID
     owner_id: text('owner_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => authUser.id, { onDelete: 'cascade' }),
     // 所属组织ID（可选，NULL表示个人演讲）
     org_id: uuid('org_id').references(() => organizations.id, {
       onDelete: 'set null',
@@ -67,9 +67,9 @@ export const lectures = pgTable(
 // 演讲关系定义
 export const lecturesRelations = relations(lectures, ({ one, many }) => ({
   // 创建者
-  owner: one(users, {
+  owner: one(authUser, {
     fields: [lectures.owner_id],
-    references: [users.id],
+    references: [authUser.id],
   }),
   // 所属组织
   organization: one(organizations, {

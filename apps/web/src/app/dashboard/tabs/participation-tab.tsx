@@ -159,13 +159,15 @@ export default function ParticipationTab() {
             查看您参与的演讲记录和答题表现
           </p>
         </div>
-        <Button
-          className="w-full sm:w-auto"
-          onClick={() => setShowJoinDialog(true)}
-        >
-          <ArrowRight className="mr-2 h-4 w-4" />
-          加入演讲
-        </Button>
+        {participationRecords.length > 0 && (
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => setShowJoinDialog(true)}
+          >
+            <ArrowRight className="mr-2 h-4 w-4" />
+            加入演讲
+          </Button>
+        )}
       </div>
 
       {/* 快速加入演讲 */}
@@ -189,9 +191,6 @@ export default function ParticipationTab() {
           </div>
         </CardContent>
       </Card>
-
-      {/* 参与统计 */}
-      <ParticipationStatsCard records={participationRecords} />
 
       {/* 参与记录列表 */}
       <div className="grid gap-4">
@@ -276,6 +275,9 @@ export default function ParticipationTab() {
           ))
         )}
       </div>
+
+      {/* 参与统计 */}
+      <ParticipationStatsCard records={participationRecords} />
 
       {/* 加入演讲对话框 */}
       <JoinLectureDialog

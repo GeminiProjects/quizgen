@@ -114,14 +114,13 @@ export default function LecturesTab() {
             管理您创建的演讲，查看演讲状态和参与情况
           </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          创建演讲
-        </Button>
+        {lectures.length > 0 && (
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            创建演讲
+          </Button>
+        )}
       </div>
-
-      {/* 演讲统计 */}
-      <LectureStatsCard lectures={lectures} />
 
       {/* 演讲列表 */}
       <div className="grid gap-4">
@@ -220,6 +219,9 @@ export default function LecturesTab() {
           ))
         )}
       </div>
+
+      {/* 演讲统计 */}
+      <LectureStatsCard lectures={lectures} />
 
       {/* 创建演讲对话框 */}
       <CreateLectureDialog

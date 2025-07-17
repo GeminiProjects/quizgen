@@ -20,7 +20,11 @@ import { lectureSchemas } from '@/lib/schemas';
  * GET /api/lectures/[id]
  */
 export const GET = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -45,7 +49,7 @@ export const GET = withErrorHandler(
           updated_at: lectures.updated_at,
         })
         .from(lectures)
-        .where(eq(lectures.id, params.id))
+        .where(eq(lectures.id, id))
         .limit(1);
 
       if (!lecture) {
@@ -69,7 +73,11 @@ export const GET = withErrorHandler(
  * PUT /api/lectures/[id]
  */
 export const PUT = withErrorHandler(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -98,7 +106,7 @@ export const PUT = withErrorHandler(
           status: lectures.status,
         })
         .from(lectures)
-        .where(eq(lectures.id, params.id))
+        .where(eq(lectures.id, id))
         .limit(1);
 
       if (!existingLecture) {
@@ -143,7 +151,7 @@ export const PUT = withErrorHandler(
       const [updatedLecture] = await db
         .update(lectures)
         .set(updateValues)
-        .where(eq(lectures.id, params.id))
+        .where(eq(lectures.id, id))
         .returning({
           id: lectures.id,
           title: lectures.title,
@@ -170,7 +178,11 @@ export const PUT = withErrorHandler(
  * DELETE /api/lectures/[id]
  */
 export const DELETE = withErrorHandler(
-  async (_request: NextRequest, { params }: { params: { id: string } }) => {
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
     // 验证用户身份
     const session = await getServerSideSession();
 
@@ -187,7 +199,7 @@ export const DELETE = withErrorHandler(
           status: lectures.status,
         })
         .from(lectures)
-        .where(eq(lectures.id, params.id))
+        .where(eq(lectures.id, id))
         .limit(1);
 
       if (!existingLecture) {
@@ -204,7 +216,7 @@ export const DELETE = withErrorHandler(
       }
 
       // 删除演讲
-      await db.delete(lectures).where(eq(lectures.id, params.id));
+      await db.delete(lectures).where(eq(lectures.id, id));
 
       return createSuccessResponse(null, '演讲删除成功');
     } catch (error) {
