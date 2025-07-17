@@ -234,6 +234,8 @@ export default function Dashboard() {
   const handleSignOut = async () => {
     try {
       await signOut();
+      // 登出成功后重定向到首页
+      window.location.href = '/';
     } catch (error) {
       console.error('登出失败:', error);
     }

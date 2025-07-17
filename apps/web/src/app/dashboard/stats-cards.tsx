@@ -1,6 +1,6 @@
-import React from 'react';
 import { Card, CardContent } from '@repo/ui/components/card';
-import { Users, Play, Calendar } from 'lucide-react';
+import { Calendar, Play, Users } from 'lucide-react';
+import type React from 'react';
 
 type StatsCardsProps = {
   myLecturesCount: number;
@@ -50,7 +50,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({
               <Calendar className="h-6 w-6 text-purple-500" />
             </div>
             <div>
-              <div className="font-bold text-2xl">{participatedLecturesCount}</div>
+              <div className="font-bold text-2xl">
+                {participatedLecturesCount}
+              </div>
               <div className="text-muted-foreground text-sm">参与的演讲</div>
             </div>
           </div>
@@ -73,4 +75,4 @@ const StatsCards: React.FC<StatsCardsProps> = ({
   );
 };
 
-export default StatsCards; 
+export default StatsCards;

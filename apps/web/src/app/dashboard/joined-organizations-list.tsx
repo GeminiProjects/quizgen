@@ -1,7 +1,12 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui/components/card';
 import { Button } from '@repo/ui/components/button';
-import { Users, Trash } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui/components/card';
+import { Trash, Users } from 'lucide-react';
+import type React from 'react';
 
 type Organization = {
   id: string | number;
@@ -30,16 +35,24 @@ const JoinedOrganizationsList: React.FC<JoinedOrganizationsListProps> = ({
           <div className="space-y-3 sm:space-y-4">
             {organizations.length > 0 ? (
               organizations.map((org) => (
-                <div className="flex items-center gap-3 rounded-lg border p-3 sm:p-4" key={org.id}>
-                  <Users aria-label="组织" className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6" />
-                  <span className="font-medium text-sm sm:text-base">{org.name}</span>
+                <div
+                  className="flex items-center gap-3 rounded-lg border p-3 sm:p-4"
+                  key={org.id}
+                >
+                  <Users
+                    aria-label="组织"
+                    className="h-5 w-5 text-yellow-500 sm:h-6 sm:w-6"
+                  />
+                  <span className="font-medium text-sm sm:text-base">
+                    {org.name}
+                  </span>
                   <Button
-                    size="sm"
-                    variant="outline"
-                    title="删除"
                     aria-label="删除"
-                    type="button"
                     onClick={() => onDeleteOrg(org.id)}
+                    size="sm"
+                    title="删除"
+                    type="button"
+                    variant="outline"
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
@@ -58,4 +71,4 @@ const JoinedOrganizationsList: React.FC<JoinedOrganizationsListProps> = ({
   );
 };
 
-export default JoinedOrganizationsList; 
+export default JoinedOrganizationsList;
