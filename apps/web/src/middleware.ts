@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(signinUrl);
   }
 
-  // 已登录用户访问登录页 -> 重定向到参与记录页
+  // 已登录用户访问登录页 -> 重定向到参加演讲页
   if (isAuthenticated && isAuthPath) {
     // 优先使用 callbackUrl 参数
     const callbackUrl = searchParams.get('callbackUrl');
@@ -50,7 +50,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/participation', request.url));
   }
 
-  // 已登录用户访问根路径 -> 重定向到参与记录页
+  // 已登录用户访问根路径 -> 重定向到参加演讲页
   if (isAuthenticated && pathname === '/') {
     return NextResponse.redirect(new URL('/participation', request.url));
   }

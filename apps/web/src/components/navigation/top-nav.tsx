@@ -7,7 +7,7 @@ import { TopNavLink } from './top-nav-link';
 const navItems = [
   {
     id: 'participation',
-    label: '参与记录',
+    label: '参加演讲',
     iconName: 'Users' as const,
     href: '/participation',
     color: 'success' as const,

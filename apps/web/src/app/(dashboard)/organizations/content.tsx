@@ -135,7 +135,6 @@ export default function OrganizationsContent() {
     // 刷新组织列表
     mutate();
     setShowCreateDialog(false);
-    toast.success('组织创建成功');
   };
 
   /**

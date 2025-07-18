@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   {
     id: 'participation',
-    label: '参与',
+    label: '听众',
     icon: Users,
     href: '/participation',
     color: 'success' as const,

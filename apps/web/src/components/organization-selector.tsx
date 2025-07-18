@@ -104,6 +104,7 @@ export function OrganizationSelector({
                   <CommandGroup>
                     {organizations.map((org) => (
                       <CommandItem
+                        className="cursor-pointer p-3"
                         key={org.id}
                         onSelect={() => {
                           onChange(org.id);
@@ -111,14 +112,14 @@ export function OrganizationSelector({
                         }}
                         value={org.id}
                       >
-                        <div className="flex w-full items-start gap-3">
+                        <div className="flex w-full items-start gap-4">
                           {/* 创建者头像 */}
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-12 w-12 flex-shrink-0">
                             <AvatarImage
                               alt={org.owner.name || org.owner.email}
                               src={org.owner.image || undefined}
                             />
-                            <AvatarFallback>
+                            <AvatarFallback className="text-lg">
                               {(org.owner.name || org.owner.email)
                                 .charAt(0)
                                 .toUpperCase()}
@@ -126,35 +127,42 @@ export function OrganizationSelector({
                           </Avatar>
 
                           {/* 组织信息 */}
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{org.name}</p>
+                          <div className="min-w-0 flex-1 space-y-2">
+                            {/* 组织名称和选中标记 */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-base leading-tight">
+                                  {org.name}
+                                </h4>
+                                {/* 组织描述 */}
+                                {org.description && (
+                                  <p className="mt-1 line-clamp-2 text-muted-foreground text-sm leading-relaxed">
+                                    {org.description}
+                                  </p>
+                                )}
+                              </div>
                               {value === org.id && (
-                                <Check className="h-4 w-4 text-primary" />
+                                <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
                               )}
                             </div>
 
-                            {/* 组织描述 */}
-                            {org.description && (
-                              <p className="line-clamp-2 text-muted-foreground text-sm">
-                                {org.description}
-                              </p>
-                            )}
-
-                            {/* 创建者信息 */}
-                            <div className="flex items-center gap-4 text-muted-foreground text-xs">
-                              <div className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                <span>{org.owner.name || '未设置名称'}</span>
+                            {/* 底部信息 */}
+                            <div className="flex items-center justify-between gap-2">
+                              {/* 创建者信息 */}
+                              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                <Users className="h-3.5 w-3.5" />
+                                <span className="font-medium">
+                                  {org.owner.name || 'Anonymous'}
+                                </span>
+                                <span className="text-xs">
+                                  {org.owner.email.slice(0, 22)}
+                                </span>
                               </div>
-                              <span>{org.owner.email}</span>
-                            </div>
 
-                            {/* 标签 */}
-                            <div className="flex items-center gap-2">
+                              {/* 需要密码标签 */}
                               <Badge
                                 className="gap-1 text-xs"
-                                variant="secondary"
+                                variant="outline"
                               >
                                 <Lock className="h-3 w-3" />
                                 需要密码

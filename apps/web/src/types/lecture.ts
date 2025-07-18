@@ -53,7 +53,7 @@ export const lectureStatusConfig: Record<
   LectureStatus,
   {
     label: string;
-    variant: 'default' | 'secondary' | 'success' | 'warning';
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
     className: string;
   }
 > = {
@@ -64,17 +64,17 @@ export const lectureStatusConfig: Record<
   },
   in_progress: {
     label: '进行中',
-    variant: 'success',
+    variant: 'default',
     className: 'bg-success/10 text-success',
   },
   paused: {
     label: '已暂停',
-    variant: 'warning',
+    variant: 'secondary',
     className: 'bg-warning/10 text-warning',
   },
   ended: {
     label: '已结束',
-    variant: 'default',
+    variant: 'outline',
     className: 'bg-muted text-muted-foreground',
   },
 };
