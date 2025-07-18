@@ -94,7 +94,7 @@ export class FileProcessor {
 
       console.log(`开始提取文本内容: ${fileName}`);
       const result = await this.client.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-pro',
         contents: [
           {
             role: 'user',
@@ -173,30 +173,8 @@ export class FileProcessor {
     const typeSpecificPrompts: Record<string, string> = {
       'application/pdf': `${basePrompt}
 如果是演示文稿或文档，请保持章节和段落结构。
-如果包含表格，请以文本形式清晰呈现表格内容。`,
-
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': `${basePrompt}
-请按幻灯片顺序整理内容，每张幻灯片用明确的分隔标记。
-包括幻灯片标题、正文内容和备注（如果有）。
-格式示例：
-=== 第1页 ===
-[标题]
-[内容]
-[备注]`,
-
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': `${basePrompt}
-保持文档的标题层级结构。
-保留重要的格式信息（如列表、表格等）。`,
-
-      'audio/mpeg': `${basePrompt}
-请提供完整、准确的音频转录文本。
-如果能识别说话人，请标注说话人。
-包括重要的非语言信息（如掌声、音乐等）。`,
-
-      'video/mp4': `${basePrompt}
-请提供视频中的完整语音转录。
-如果有多个说话人，请尽可能区分标注。
-包括重要的视觉信息描述（如演示内容、关键画面等）。`,
+如果包含表格，请以文本形式清晰呈现表格内容。
+如果是扫描版PDF，请尽可能准确识别文字。`,
 
       'text/plain': `${basePrompt}
 直接返回文件的完整内容，保持原有格式。`,

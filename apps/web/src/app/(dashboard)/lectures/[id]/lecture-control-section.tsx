@@ -12,8 +12,11 @@ import { Input } from '@repo/ui/components/input';
 import { Copy, Eye, EyeOff, Pause, Play, QrCode, Timer } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import QRCodeDialog from './qrcode-dialog';
+import TranscriptPanel from './transcript-panel';
 
 interface LectureControlSectionProps {
+  lectureId: string;
   joinCode: string;
   status: 'not_started' | 'in_progress' | 'paused' | 'ended';
   loading: boolean;
@@ -24,12 +27,14 @@ interface LectureControlSectionProps {
  * 演讲控制部分组件
  */
 export default function LectureControlSection({
+  lectureId,
   joinCode,
   status,
   loading,
   onStatusChange,
 }: LectureControlSectionProps) {
   const [showJoinCode, setShowJoinCode] = useState(false);
+  const [showQRDialog, setShowQRDialog] = useState(false);
 
   /**
    * 复制加入码到剪贴板
@@ -82,7 +87,11 @@ export default function LectureControlSection({
                 </Button>
               </div>
             </div>
-            <Button size="icon" variant="outline">
+            <Button
+              onClick={() => setShowQRDialog(true)}
+              size="icon"
+              variant="outline"
+            >
               <QrCode className="h-4 w-4" />
             </Button>
           </div>
@@ -161,6 +170,21 @@ export default function LectureControlSection({
           )}
         </CardContent>
       </Card>
+
+      {/* 实时转录面板 */}
+      {(status === 'in_progress' || status === 'paused') && (
+        <TranscriptPanel
+          isActive={status === 'in_progress'}
+          lectureId={lectureId}
+        />
+      )}
+
+      {/* 二维码弹窗 */}
+      <QRCodeDialog
+        joinCode={joinCode}
+        onOpenChange={setShowQRDialog}
+        open={showQRDialog}
+      />
     </>
   );
 }

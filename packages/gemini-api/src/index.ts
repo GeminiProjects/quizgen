@@ -17,5 +17,6 @@ export type {
 
 export {
   MAX_FILE_SIZE,
+  MIME_TYPE_EXTENSIONS,
   SUPPORTED_MIME_TYPES,
 } from './types';

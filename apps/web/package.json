@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "bun --env-file=../../.env.local next dev --turbopack",
     "build": "bun --env-file=../../.env.local next build",
-    "start": "next start",
+    "start": "bun --env-file=../../.env.local next start",
     "check": "tsc --noEmit --emitDeclarationOnly false && ultracite lint",
     "format": "ultracite format"
   },
@@ -13,6 +13,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@repo/db": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@repo/gemini-api": "workspace:*",
     "framer-motion": "^12.23.6",
     "next": "15.3.5",
     "next-themes": "^0.4.6",

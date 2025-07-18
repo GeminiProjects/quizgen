@@ -39,7 +39,7 @@ export const materials = pgTable(
     // 错误信息
     error_message: text('error_message'),
     // 创建者ID
-    created_by: uuid('created_by'),
+    created_by: text('created_by'),
     // 时间戳
     ...timestamps,
   },

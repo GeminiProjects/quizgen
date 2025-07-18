@@ -26,6 +26,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "bun": "^1.2.18"
+    "bun": "^1.2.18",
+    "react-dropzone": "^14.3.8"
   }
 }

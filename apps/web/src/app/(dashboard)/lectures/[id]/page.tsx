@@ -1,12 +1,15 @@
 import {
   and,
+  attempts,
   count,
   db,
   desc,
   eq,
   lectureParticipants,
   lectures,
+  materials,
   quizItems,
+  transcripts,
 } from '@repo/db';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
@@ -44,7 +47,14 @@ async function getLectureData(lectureId: string, userId: string) {
     .limit(10);
 
   // 获取统计数据
-  const [participantStats, quizStats] = await Promise.all([
+  const [
+    participantStats,
+    quizStats,
+    transcriptStats,
+    materialStats,
+    contextStats,
+    responseTimeStats,
+  ] = await Promise.all([
     db
       .select({
         totalParticipants: count(lectureParticipants.id),
@@ -57,6 +67,57 @@ async function getLectureData(lectureId: string, userId: string) {
       })
       .from(quizItems)
       .where(eq(quizItems.lecture_id, lectureId)),
+    db
+      .select({
+        totalTranscripts: count(transcripts.id),
+      })
+      .from(transcripts)
+      .where(eq(transcripts.lecture_id, lectureId)),
+    db
+      .select({
+        totalMaterials: count(materials.id),
+      })
+      .from(materials)
+      .where(eq(materials.lecture_id, lectureId)),
+    // 获取上下文大小（材料文本 + 转录文本的字符数）
+    Promise.all([
+      db.select().from(materials).where(eq(materials.lecture_id, lectureId)),
+      db
+        .select()
+        .from(transcripts)
+        .where(eq(transcripts.lecture_id, lectureId)),
+    ]).then(([materialsList, transcriptsList]) => {
+      const materialTextLength = materialsList.reduce(
+        (sum, m) => sum + (m.text_content?.length || 0),
+        0
+      );
+      const transcriptTextLength = transcriptsList.reduce(
+        (sum, t) => sum + (t.text?.length || 0),
+        0
+      );
+      return {
+        totalLength: materialTextLength + transcriptTextLength,
+      };
+    }),
+    // 获取平均答题时间
+    db
+      .select()
+      .from(attempts)
+      .innerJoin(quizItems, eq(attempts.quiz_id, quizItems.id))
+      .where(eq(quizItems.lecture_id, lectureId))
+      .then((attemptsList) => {
+        if (attemptsList.length === 0) {
+          return { avgLatency: 0, totalAttempts: 0 };
+        }
+        const totalLatency = attemptsList.reduce(
+          (sum, a) => sum + (a.attempts.latency_ms || 0),
+          0
+        );
+        return {
+          avgLatency: totalLatency,
+          totalAttempts: attemptsList.length,
+        };
+      }),
   ]);
 
   return {
@@ -67,6 +128,15 @@ async function getLectureData(lectureId: string, userId: string) {
     stats: {
       totalParticipants: participantStats[0]?.totalParticipants || 0,
       totalQuizItems: quizStats[0]?.totalQuizItems || 0,
+      totalTranscripts: transcriptStats[0]?.totalTranscripts || 0,
+      totalMaterials: materialStats[0]?.totalMaterials || 0,
+      contextSize: contextStats.totalLength || 0,
+      avgResponseTime:
+        responseTimeStats.totalAttempts && responseTimeStats.avgLatency
+          ? responseTimeStats.avgLatency /
+            responseTimeStats.totalAttempts /
+            1000
+          : 0,
     },
   };
 }

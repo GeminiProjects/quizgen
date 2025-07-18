@@ -30,6 +30,9 @@
       "style": {
         "noNestedTernary": "off",
         "noParameterProperties": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off"
       }
     }
   }
