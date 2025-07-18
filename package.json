@@ -15,10 +15,10 @@
     "db:studio": "cd packages/db && bunx drizzle-kit studio"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.1",
+    "@biomejs/biome": "2.1.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3",
-    "ultracite": "5.0.36"
+    "ultracite": "5.0.39"
   },
   "packageManager": "bun@1.2.18",
   "workspaces": [
