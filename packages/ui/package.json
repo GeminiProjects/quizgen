@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "check": "tsc --noEmit --emitDeclarationOnly false",
+    "format": "ultracite format"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

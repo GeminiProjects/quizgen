@@ -1,3 +1,4 @@
+import { authUser } from '@repo/auth/schema';
 import { relations } from 'drizzle-orm';
 import {
   boolean,
@@ -11,7 +12,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { quizItems } from './quiz-items';
-import { users } from './users';
 
 /**
  * 答题记录表
@@ -27,7 +27,7 @@ export const attempts = pgTable(
     // 用户ID
     user_id: text('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => authUser.id, { onDelete: 'cascade' }),
     // 选择答案（0-3）
     selected: integer('selected').notNull(),
     // 是否正确
@@ -50,9 +50,9 @@ export const attempts = pgTable(
 // 答题记录关系定义
 export const attemptsRelations = relations(attempts, ({ one }) => ({
   // 答题用户
-  user: one(users, {
+  user: one(authUser, {
     fields: [attempts.user_id],
-    references: [users.id],
+    references: [authUser.id],
   }),
   // 答题题目
   quizItem: one(quizItems, {

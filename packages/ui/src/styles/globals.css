@@ -31,6 +31,12 @@
   --chart-3: oklch(0.72 0 0);
   --chart-4: oklch(0.92 0 0);
   --chart-5: oklch(0.56 0 0);
+  --success: oklch(0.64 0.16 161.1);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.74 0.15 85.87);
+  --warning-foreground: oklch(0 0 0);
+  --info: oklch(0.63 0.19 232.05);
+  --info-foreground: oklch(1 0 0);
   --sidebar: oklch(0.99 0 0);
   --sidebar-foreground: oklch(0 0 0);
   --sidebar-primary: oklch(0 0 0);
@@ -85,6 +91,12 @@
   --chart-3: oklch(0.56 0 0);
   --chart-4: oklch(0.44 0 0);
   --chart-5: oklch(0.92 0 0);
+  --success: oklch(0.64 0.16 161.1);
+  --success-foreground: oklch(0 0 0);
+  --warning: oklch(0.84 0.15 85.87);
+  --warning-foreground: oklch(0 0 0);
+  --info: oklch(0.63 0.19 232.05);
+  --info-foreground: oklch(0 0 0);
   --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0);
@@ -137,6 +149,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -172,4 +190,20 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+/* Chrome, Safari, Edge */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* IE 10+ */
+* {
+  -ms-overflow-style: none;
 }

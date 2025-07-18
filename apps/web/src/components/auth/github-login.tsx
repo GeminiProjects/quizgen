@@ -4,11 +4,11 @@
  */
 'use client';
 
+import { signIn } from '@repo/auth/client';
 import { Button } from '@repo/ui/components/button';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
-import { signIn } from '@/lib/auth-client';
 
 interface GitHubLoginProps {
   // 登录成功后的回调 URL
@@ -21,7 +21,7 @@ interface GitHubLoginProps {
 
 // 内部组件，包含 useSearchParams 逻辑
 function GitHubLoginInner({
-  callbackURL = '/dashboard',
+  callbackURL = '/participation',
   children = '使用 GitHub 登录',
   className,
 }: GitHubLoginProps) {
@@ -54,12 +54,7 @@ function GitHubLoginInner({
   };
 
   return (
-    <Button
-      className={className}
-      disabled={isLoading}
-      onClick={handleLogin}
-      variant="outline"
-    >
+    <Button className={className} disabled={isLoading} onClick={handleLogin}>
       <svg
         aria-hidden="true"
         className="mr-2 h-5 w-5"

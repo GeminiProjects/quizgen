@@ -7,14 +7,19 @@
   "files": {
     "includes": [
       "**/*", // 包含所有文件
-      "!.*/*", // 忽略所有 . 开头文件夹
+      "!**/.*", // 忽略所有点开头的文件
+      "!**/.*/**", // 忽略所有点开头的文件夹及其内容
+      "!**/node_modules/**", // 忽略依赖包
+      "!**/dist/**", // 忽略构建输出
+      "!**/build/**", // 忽略构建输出
       "!packages/ui/src/components/**" // 忽略 shadcn/ui 组件
     ]
   },
   "linter": {
     "rules": {
       "nursery": {
-        "noUnknownAtRule": "off"
+        "noUnknownAtRule": "off",
+        "noAwaitInLoop": "off"
       },
       "performance": {
         "noNamespaceImport": "off"
@@ -23,7 +28,11 @@
         "noConsole": "off"
       },
       "style": {
-        "noNestedTernary": "off"
+        "noNestedTernary": "off",
+        "noParameterProperties": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off"
       }
     }
   }

@@ -1,8 +1,11 @@
-
 # Local
 .local
 
 tools/git-sum/sum.md
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
 
 # Operating System
 .DS_Store
@@ -22,6 +25,7 @@ node_modules/
 
 # Environment variables
 .env*
+!.env.example
 next-env.d.ts
 
 # Build outputs

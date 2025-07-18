@@ -2,94 +2,154 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## 项目概述
 
-QuizGen (演讲即时智能评测系统) is a real-time assessment system for campus presentations. It enables speakers to generate AI-powered quizzes during presentations, audiences to answer questions with instant feedback, and organizers to manage lecture series with participation metrics.
+QuizGen 是一个演讲即时智能评测系统，基于 Turborepo monorepo 架构。核心功能包括：
+- 演讲者一键生成四选一选择题并推送给听众
+- 听众实时答题获得即时反馈
+- 演讲者查看全场正确率，判断讲述效果
+- 组织者管理系列演讲，查看整体参与度
 
-- 参考 [docs/project_design.md](./docs/project_design.md) 了解项目设计
+技术栈：Next.js 19 + React Server Components、Better Auth、Drizzle ORM + PostgreSQL、Vercel AI SDK + Gemini Pro
 
-常用指令
+## 项目架构
+
+### Workspace 结构
 ```
-# 检查类型错误
-bun typecheck
-# 检查代码质量
-bun lint
-```
-
-## Tech Stack
-
-- **Frontend**: Next.js 15 with React 19, TailwindCSS v4, Shadcn/ui components
-- **Database**: PostgreSQL (Neon Serverless) with Drizzle ORM
-- **Package Manager**: Bun (v1.2.18) - ALWAYS use `bun` instead of `npm`, `yarn`, or `pnpm`
-- **Build System**: Turborepo monorepo
-- **Code Quality**: Ultracite for linting/formatting
-
-## Monorepo Structure
-
-```
-/apps/web          - Next.js frontend application
-/packages/db       - Database layer with Drizzle ORM
-/packages/ui       - Shared UI components library (Shadcn/ui)
-/packages/tsconfig - Shared TypeScript configurations
-/packages/auth     - Authentication package (Better Auth)
-/tools/git-sum     - Git statistics utility
+apps/
+  web/              # Next.js 前端应用
+packages/
+  auth/             # Better Auth 身份认证
+  db/               # Drizzle ORM 数据库层
+  ui/               # shadcn/ui 组件库
+  ai/               # AI 相关功能
 ```
 
-## Common Commands
+### 导入规范
+```typescript
+// 包导入 - 通过 index.ts 导出所有内容
+import { ... } from '@repo/auth'; 
+import { ... } from '@repo/db';
 
-### Development
+// UI 组件导入 - 通过 components 目录导入指定组件
+import { ... } from '@repo/ui/components/xxx';
+
+// 应用内导入 - 使用路径别名
+import { ... } from '@/components/xxx';
+```
+
+## 开发工作流
+
+### 常用命令
 ```bash
-bun dev              # Start all dev servers
-bun dev --filter=web # Start only web app
-bun build           # Build all packages
-bun test            # Run all tests
-bun lint            # Run Ultracite linting
-bun format          # Format code with Ultracite
+# 根目录 - 全局命令
+bun dev                    # 启动开发服务器
+bun build                  # 构建所有包
+bun check                  # 类型检查 + 代码检查所有包
+bun format                 # 格式化代码
+
+# 数据库相关
+bun db:generate            # 生成数据库迁移
+bun db:push                # 推送数据库变更
+bun db:studio              # 打开数据库管理界面
+
+# 特定包开发
+cd apps/web && bun dev     # 启动 web 应用
+cd packages/db && bun test # 运行数据库测试
 ```
 
-### Database Operations (from packages/db)
-```bash
-bun db:push      # Push schema changes to database
-bun db:generate  # Generate migration files
-bun db:migrate   # Run pending migrations
-bun db:studio    # Open Drizzle Studio GUI
-bun db:reset     # Reset database (destructive)
+### 开发规范
+1. **代码修改后必须验证 + 格式化**：
+   - 在 `apps/web` 写代码后：`cd apps/web && bun check` 直到类型检查和代码质量过关，然后执行 `bun format` 格式化代码
+
+2. **路径别名使用**：
+   - 优先使用 tsconfig.json 中的 paths 配置
+   - 使用 `@/components/xxx` 而不是 `../../src/components/xxx`
+
+3. **包管理**：
+   - 统一使用 Bun 作为包管理器
+   - 模块前缀统一为 `@repo/`
+
+## 核心组件
+
+### 数据模型
+- `users` - 用户表（Better Auth 创建）
+- `organizations` - 组织表（演讲集合管理）
+- `lectures` - 演讲会话表
+- `materials` - 预上传文本材料
+- `transcripts` - 实时转录片段
+- `quiz_items` - AI 生成的测验题目
+- `attempts` - 听众答题记录
+
+### 身份认证
+- 使用 Better Auth 提供 GitHub OAuth 登录
+- 支持多角色用户系统：组织者、演讲者、听众
+
+#### apps/web 身份认证工具函数
+在 `apps/web/src/lib/auth.ts` 中封装了身份认证相关的工具函数：
+
+```typescript
+// 推荐使用：封装的工具函数
+import { getServerSideSession } from '@/lib/auth';
+const session = await getServerSideSession();
+
+// 避免直接使用：原始 Better Auth API
+import { auth } from '@repo/auth';
+const session = await auth.api.getSession({ headers: await headers() });
 ```
 
-### Running Individual Apps
-```bash
-cd apps/web && bun dev  # Run Next.js app with Turbopack
+封装的工具函数提供了：
+- 统一的错误处理
+- 简化的 API 调用
+- 类型安全的会话获取
+
+参考 [docs/project_design.md](./docs/project_design.md) 了解完整项目设计
+
+## 前端设计规范
+
+### 颜色 + Icon 样式设计语言
+使用 CSS 变量系统，支持 dark/light 模式自动切换：
+
+```typescript
+// 主色调 - 使用 primary 颜色系统
+<div className="bg-primary/10 text-primary">
+  <Sparkles className="h-4 w-4" />
+</div>
+
+// 成功/积极色调 - 使用 success 颜色系统
+<div className="bg-success/10 text-success">
+  <MessageSquare className="h-4 w-4" />
+</div>
+
+// 信息/数据色调 - 使用 info 颜色系统
+<div className="bg-info/10 text-info">
+  <ChartBar className="h-4 w-4" />
+</div>
+
+// 警告色调 - 使用 warning 颜色系统
+<div className="bg-warning/10 text-warning">
+  <AlertTriangle className="h-4 w-4" />
+</div>
+
+// 错误/删除色调 - 使用 destructive 颜色系统
+<div className="bg-destructive/10 text-destructive">
+  <Trash2 className="h-4 w-4" />
+</div>
+
+// 辅助色调 - 使用 secondary 颜色系统
+<div className="bg-secondary/10 text-secondary-foreground">
+  <Settings className="h-4 w-4" />
+</div>
+
+// 强调色调 - 使用 accent 颜色系统
+<div className="bg-accent/10 text-accent-foreground">
+  <Star className="h-4 w-4" />
+</div>
 ```
 
-## Architecture Principles
-
-1. **Unified User Model**: Single user table with dynamic role assignment based on context (speaker/audience/organizer)
-2. **Snake Case Database**: All database fields use snake_case naming convention
-3. **Server Components First**: Leverage React Server Components for better performance
-4. **Type Safety**: Full TypeScript coverage with strict mode enabled
-
-## Database Schema
-
-Key entities:
-- `users` - Managed by Better Auth
-- `organizations` - Groups hosting lecture series (password-protected)
-- `lectures` - Individual presentation sessions
-- `materials` - Pre-uploaded presentation content
-- `transcripts` - Real-time speech transcriptions
-- `quiz_items` - AI-generated questions
-- `attempts` - User quiz responses
-
-## Development Guidelines
-
-1. **Use Bun**: All commands should use `bun` not `node`, `npm`, or `yarn`
-2. **Frontend Best Practices**: Follow cursor rules in `.cursor/rules/frontend.mdc`:
-   - Use early returns for readability
-   - Style with Tailwind classes only
-   - Prefix event handlers with "handle" (e.g., `handleClick`)
-   - Implement accessibility features
-   - Use `const` arrow functions with TypeScript types
-3. **Database Conventions**: 
-   - Use snake_case for all database fields
-   - Define relations in schema files
-   - Use Drizzle's query builder for type-safe queries
-4. **Design Style**: Follow the design style in [docs/guide/design_style.txt](./docs/guide/design_style.txt)
+设计原则：
+- 图标容器使用 `flex h-9 w-9 items-center justify-center rounded-lg` 或 `h-10 w-10`
+- 背景色使用 `/10` 透明度，文字色使用对应的实色变量
+- 图标尺寸通常为 `h-4 w-4` 或 `h-5 w-5`
+- 优先使用 lucide-react 图标库保持一致性
+- 使用 CSS 变量确保 dark/light 模式自动适配

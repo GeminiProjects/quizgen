@@ -1,5 +1,6 @@
 import { ChartBar, MessageSquare, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import AnnoymousLogin from '@/components/auth/annoymous-login';
 import { GitHubLogin } from '@/components/auth/github-login';
 
 export default function LandingPage() {
@@ -40,9 +41,10 @@ export default function LandingPage() {
             演讲即时智能评测系统
           </p>
 
-          {/* GitHub 登录按钮 */}
+          {/* 登录按钮 */}
           <div className="space-y-4">
             <GitHubLogin className="w-full" />
+            {process.env.NODE_ENV === 'development' && <AnnoymousLogin />}
           </div>
 
           {/* 功能特点 */}

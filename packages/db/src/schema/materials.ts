@@ -1,5 +1,12 @@
 import { relations } from 'drizzle-orm';
-import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgTable,
+  text,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { timestamps } from './columns.helpers';
 import { lectures } from './lectures';
@@ -22,7 +29,17 @@ export const materials = pgTable(
     // 文件类型
     file_type: text('file_type').notNull(),
     // 文本内容
-    text_content: text('text_content').notNull(),
+    text_content: text('text_content'),
+    // 上传状态: pending, uploading, processing, extracting, completed, failed
+    upload_status: varchar('upload_status', { length: 20 }).default('pending'),
+    // Gemini API 返回的文件 URI
+    gemini_file_uri: text('gemini_file_uri'),
+    // 处理进度 (0-100)
+    processing_progress: integer('processing_progress').default(0),
+    // 错误信息
+    error_message: text('error_message'),
+    // 创建者ID
+    created_by: text('created_by'),
     // 时间戳
     ...timestamps,
   },

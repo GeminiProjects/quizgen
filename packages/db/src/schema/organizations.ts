@@ -1,9 +1,9 @@
+import { authUser } from '@repo/auth/schema';
 import { relations } from 'drizzle-orm';
 import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { timestamps } from './columns.helpers';
 import { lectures } from './lectures';
-import { users } from './users';
 
 /**
  * 组织表
@@ -23,7 +23,7 @@ export const organizations = pgTable(
     // 创建者ID
     owner_id: text('owner_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => authUser.id, { onDelete: 'cascade' }),
     // 时间戳
     ...timestamps,
   },
@@ -38,9 +38,9 @@ export const organizationsRelations = relations(
   organizations,
   ({ one, many }) => ({
     // 组织创建者
-    owner: one(users, {
+    owner: one(authUser, {
       fields: [organizations.owner_id],
-      references: [users.id],
+      references: [authUser.id],
     }),
     // 组织内的演讲
     lectures: many(lectures),

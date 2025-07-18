@@ -1,106 +1,80 @@
 /**
  * 组织密码验证 API 路由
- * POST /api/organizations/[id]/verify - 验证组织密码
+ * 验证组织密码是否正确
  */
 
-import { db } from '@repo/db';
-import { organizations } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
-import { type NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-
-// 路由参数类型
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
-
-// 请求体验证
-const verifySchema = z.object({
-  password: z.string().min(1, '请输入密码'),
-});
+import { db, eq, organizations } from '@repo/db';
+import type { NextRequest } from 'next/server';
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  handleDatabaseError,
+  validateRequestBody,
+  withErrorHandler,
+} from '@/lib/api-utils';
+import { getServerSideSession } from '@/lib/auth';
+import { organizationSchemas } from '@/lib/schemas';
 
 /**
  * 验证组织密码
- * 用于演讲者创建演讲时验证组织密码
+ * POST /api/organizations/[id]/verify
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
+export const POST = withErrorHandler(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
+    // 验证用户身份
+    const session = await getServerSideSession();
 
-    // 解析和验证请求体
-    const body = await request.json();
-    const { password } = verifySchema.parse(body);
-
-    // 查询组织信息
-    const [organization] = await db
-      .select({
-        id: organizations.id,
-        name: organizations.name,
-        password: organizations.password,
-      })
-      .from(organizations)
-      .where(eq(organizations.id, id));
-
-    if (!organization) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: '组织不存在',
-          },
-        },
-        { status: 404 }
-      );
+    if (!session) {
+      return createErrorResponse('未登录', 401);
     }
 
-    // 验证密码
-    const isValid = organization.password === password;
-
-    if (!isValid) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_PASSWORD',
-            message: '密码错误',
-          },
-        },
-        { status: 401 }
-      );
-    }
-
-    // 密码正确，返回成功
-    return NextResponse.json({
-      success: true,
-      message: '密码验证成功',
-      data: {
-        id: organization.id,
-        name: organization.name,
-      },
-    });
-  } catch (error) {
-    // 参数验证错误
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '请求数据验证失败',
-            details: error.message,
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    console.error('验证组织密码失败:', error);
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: '服务器内部错误',
-        },
-      },
-      { status: 500 }
+    // 验证请求体
+    const validationResult = await validateRequestBody(
+      request,
+      organizationSchemas.validatePassword
     );
+
+    if (!validationResult.success) {
+      return createErrorResponse(validationResult.error);
+    }
+
+    const { password } = validationResult.data;
+
+    try {
+      // 查询组织
+      const [organization] = await db
+        .select({
+          id: organizations.id,
+          name: organizations.name,
+          password: organizations.password,
+        })
+        .from(organizations)
+        .where(eq(organizations.id, id))
+        .limit(1);
+
+      if (!organization) {
+        return createErrorResponse('组织不存在', 404);
+      }
+
+      // 验证密码
+      if (organization.password !== password) {
+        return createErrorResponse('密码错误', 400);
+      }
+
+      return createSuccessResponse(
+        {
+          id: organization.id,
+          name: organization.name,
+          verified: true,
+        },
+        '密码验证成功'
+      );
+    } catch (error) {
+      return handleDatabaseError(error);
+    }
   }
-}
+);

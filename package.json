@@ -6,9 +6,9 @@
     "dev": "turbo dev",
     "test": "turbo test",
     "clean": "turbo clean && git clean -xdf node_modules .turbo",
-    "typecheck": "turbo typecheck",
-    "lint": "bunx ultracite lint",
-    "format": "bunx ultracite format",
+    "check": "turbo check",
+    "format": "turbo format",
+    "check-deprecated": "node scripts/check-deprecated.js",
     "db:generate": "cd packages/db && bunx drizzle-kit generate",
     "db:push": "cd packages/db && bunx drizzle-kit push",
     "db:migrate": "cd packages/db && bunx drizzle-kit migrate",
@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
-    "turbo": "^2.5.4",
+    "turbo": "^2.5.5",
     "typescript": "5.8.3",
     "ultracite": "5.0.36"
   },
@@ -26,7 +26,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "@ai-sdk/google": "^2.0.0-beta.11",
-    "bun": "^1.2.18"
+    "bun": "^1.2.18",
+    "react-dropzone": "^14.3.8"
   }
 }
