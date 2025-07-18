@@ -1,4 +1,4 @@
-name: Claude Code Review
+name: 🤖 Claude AI 代码审查
 
 on:
   pull_request:
@@ -12,6 +12,7 @@ on:
 
 jobs:
   claude-review:
+    name: 🔍 AI 智能代码审查
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
@@ -26,12 +27,12 @@ jobs:
       id-token: write
     
     steps:
-      - name: Checkout repository
+      - name: 📥 检出代码仓库
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Run Claude Code Review
+      - name: 🤖 运行 Claude AI 代码审查
         id: claude-review
         uses: anthropics/claude-code-action@beta
         with:
@@ -42,14 +43,20 @@ jobs:
           
           # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            请用精炼、通俗易懂的中文对这个 PR 进行代码审查，重点关注：
             
-            Be constructive and helpful in your feedback.
+            ## 📋 审查要点
+            1. **代码质量**：是否符合项目代码规范（参考 CLAUDE.md）
+            2. **潜在问题**：是否存在逻辑错误或边界情况未处理
+            3. **性能优化**：是否有性能瓶颈或优化空间
+            4. **安全风险**：是否存在安全漏洞或数据泄露风险
+            5. **测试覆盖**：是否有足够的测试用例
+            
+            ## 💡 反馈原则
+            - 用简洁明了的中文表达
+            - 提供具体的改进建议和代码示例
+            - 对于新手贡献者，给予鼓励和详细解释
+            - 标注问题严重程度：🔴 严重 / 🟡 建议 / 🟢 优秀
 
           # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
           # use_sticky_comment: true
@@ -69,10 +76,4 @@ jobs:
           #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
           
           # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
-
+          allowed_tools: "Bash(bun test),Bash(bun check),Bash(bun format --check)"

@@ -1,4 +1,4 @@
-name: Claude Code
+name: 🤖 Claude AI 助手
 
 on:
   issue_comment:
@@ -12,6 +12,7 @@ on:
 
 jobs:
   claude:
+    name: 💬 AI 智能对话响应
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
@@ -25,12 +26,12 @@ jobs:
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
-      - name: Checkout repository
+      - name: 📥 检出代码仓库
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Run Claude Code
+      - name: 🤖 运行 Claude AI 助手
         id: claude
         uses: anthropics/claude-code-action@beta
         with:
@@ -50,15 +51,20 @@ jobs:
           # assignee_trigger: "claude-bot"
           
           # Optional: Allow Claude to run specific commands
-          # allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
+          allowed_tools: "Bash(bun install),Bash(bun build),Bash(bun test),Bash(bun check),Bash(bun format),Bash(bun db:*)"
           
           # Optional: Add custom instructions for Claude to customize its behavior for your project
-          # custom_instructions: |
-          #   Follow our coding standards
-          #   Ensure all new code has tests
-          #   Use TypeScript for new files
-          
-          # Optional: Custom environment variables for Claude
-          # claude_env: |
-          #   NODE_ENV: test
+          custom_instructions: |
+            ## 🎯 响应原则
+            - 使用精炼、通俗易懂的中文回复
+            - 简洁明了，避免冗长解释
+            - 提供可执行的代码示例
+            
+            ## 📋 项目规范
+            - 遵循 CLAUDE.md 中的代码规范
+            - 使用 Bun 作为包管理器
+            - monorepo 导入使用 @repo/* 前缀
 
+          claude_env: |
+            NODE_ENV: development
+            PACKAGE_MANAGER: bun

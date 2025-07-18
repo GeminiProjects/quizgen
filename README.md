@@ -4,6 +4,12 @@
 [![Powered by Bun](https://img.shields.io/badge/powered%20by-Bun-red.svg)](https://bun.sh/)
 [![Built with Turborepo](https://img.shields.io/badge/built%20with-Turborepo-blueviolet.svg)](https://turbo.build/)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e7ae9997-82f7-4a1d-9a3b-fb1b846f971e">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/457b7180-57c2-4aed-8e46-8f5576c9b00a">
+  <img alt="Product Preview" src="https://github.com/user-attachments/assets/457b7180-57c2-4aed-8e46-8f5576c9b00a">
+</picture>
+
 > 毕业实习校内团队项目。
 
 - [项目需求](./docs/origin/requirement.md)
@@ -133,8 +139,7 @@ HTTPS_PROXY=
 > - [Github OAuth](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) 创建与配置
 > - [Google API Key](https://console.cloud.google.com/apis/credentials) 创建
 > 
-> 请自行研究, 本项目不再赘述。
->
+> 本文不再赘述。  
 > 首次创建数据库后，你可以通过 `bun db:push` 命令将数据库模式推送到数据库。
 
 #### 7. 启动开发服务器
