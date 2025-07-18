@@ -37,19 +37,19 @@ export default function JoinLectureDialog({
 
   /**
    * 处理演讲码输入
-   * 自动格式化为 XXXX-XXXX 格式
+   * 自动格式化为 XXX-XXX 格式
    */
   const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-    // 限制最多8个字符
-    if (value.length > 8) {
-      value = value.slice(0, 8);
+    // 限制最多6个字符
+    if (value.length > 6) {
+      value = value.slice(0, 6);
     }
 
-    // 在第4个字符后添加连字符
-    if (value.length > 4) {
-      value = `${value.slice(0, 4)}-${value.slice(4)}`;
+    // 在第3个字符后添加连字符
+    if (value.length > 3) {
+      value = `${value.slice(0, 3)}-${value.slice(3)}`;
     }
 
     setJoinCode(value);
@@ -63,8 +63,8 @@ export default function JoinLectureDialog({
 
     // 验证演讲码格式
     const cleanCode = joinCode.replace(/-/g, '');
-    if (cleanCode.length !== 8) {
-      toast.error('请输入完整的演讲码');
+    if (cleanCode.length !== 6) {
+      toast.error('请输入完整的6位演讲码');
       return;
     }
 
@@ -126,13 +126,13 @@ export default function JoinLectureDialog({
                 className="text-center font-mono text-2xl tracking-widest"
                 disabled={isLoading}
                 id="join-code"
-                maxLength={9}
+                maxLength={7}
                 onChange={handleJoinCodeChange}
-                placeholder="XXXX-XXXX"
+                placeholder="XXX-XXX"
                 value={joinCode}
               />
               <p className="text-muted-foreground text-xs">
-                请向演讲者索取8位演讲码
+                请向演讲者索取6位演讲码
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function JoinLectureDialog({
             >
               取消
             </Button>
-            <Button disabled={isLoading || joinCode.length < 9} type="submit">
+            <Button disabled={isLoading || joinCode.length < 7} type="submit">
               {isLoading ? '加入中...' : '加入演讲'}
             </Button>
           </DialogFooter>

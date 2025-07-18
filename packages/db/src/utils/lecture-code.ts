@@ -47,5 +47,9 @@ export function isValidLectureCode(code: string): boolean {
  * @returns 格式化后的演讲码
  */
 export function formatLectureCode(code: string): string {
-  return code.toUpperCase().trim();
+  // 去除所有非字母数字字符（如连字符），并转为大写
+  return code
+    .replace(/[^A-Z0-9]/gi, '')
+    .toUpperCase()
+    .trim();
 }
