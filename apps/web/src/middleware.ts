@@ -7,7 +7,13 @@ import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 
 // 受保护的路由前缀
-const PROTECTED_PATHS = ['/dashboard', '/lecture', '/organization', '/profile'];
+const PROTECTED_PATHS = [
+  '/participation',
+  '/lectures',
+  '/organizations',
+  '/lecture',
+  '/profile',
+];
 
 // 公开路由（登录后需要重定向）
 const AUTH_PATHS = ['/auth'];
@@ -34,19 +40,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(signinUrl);
   }
 
-  // 已登录用户访问登录页 -> 重定向到 dashboard
+  // 已登录用户访问登录页 -> 重定向到参与记录页
   if (isAuthenticated && isAuthPath) {
     // 优先使用 callbackUrl 参数
     const callbackUrl = searchParams.get('callbackUrl');
     if (callbackUrl?.startsWith('/')) {
       return NextResponse.redirect(new URL(callbackUrl, request.url));
     }
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/participation', request.url));
   }
 
-  // 已登录用户访问根路径 -> 重定向到 dashboard
+  // 已登录用户访问根路径 -> 重定向到参与记录页
   if (isAuthenticated && pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/participation', request.url));
   }
 
   // 添加安全响应头

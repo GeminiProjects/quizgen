@@ -21,7 +21,7 @@ interface GitHubLoginProps {
 
 // 内部组件，包含 useSearchParams 逻辑
 function GitHubLoginInner({
-  callbackURL = '/dashboard',
+  callbackURL = '/participation',
   children = '使用 GitHub 登录',
   className,
 }: GitHubLoginProps) {
@@ -54,12 +54,7 @@ function GitHubLoginInner({
   };
 
   return (
-    <Button
-      className={className}
-      disabled={isLoading}
-      onClick={handleLogin}
-      variant="outline"
-    >
+    <Button className={className} disabled={isLoading} onClick={handleLogin}>
       <svg
         aria-hidden="true"
         className="mr-2 h-5 w-5"

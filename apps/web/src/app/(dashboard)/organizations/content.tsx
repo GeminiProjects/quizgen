@@ -33,15 +33,15 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import CreateOrganizationDialog from '@/app/(dashboard)/organizations/create-org-dialog';
+import OrganizationStatsCard from '@/app/(dashboard)/organizations/stats';
 import { useOrganizations } from '@/hooks/use-organizations';
-import OrganizationStatsCard from '../components/organization-stats-card';
-import CreateOrganizationDialog from '../dialogs/create-organization-dialog';
 
 /**
  * 组织管理标签页
  * 显示用户创建的组织列表，支持创建、搜索、排序和查看组织详情
  */
-export default function OrganizationsTab() {
+export default function OrganizationsContent() {
   const { organizations, isLoading, error, mutate } = useOrganizations();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
@@ -189,13 +189,11 @@ export default function OrganizationsTab() {
 
   return (
     <div className="space-y-6">
-      {/* 页面头部 */}
-      <div className="flex items-center justify-between">
+      {/* 页面头部 - 标题和操作按钮在同一行 */}
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="font-bold text-2xl text-warning">我的组织</h2>
-          <p className="text-muted-foreground">
-            管理您创建的组织，查看组织内演讲活动
-          </p>
+          <h1 className="font-bold text-2xl">我的组织</h1>
+          <p className="text-muted-foreground">创建和管理演讲组织</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
@@ -277,7 +275,7 @@ export default function OrganizationsTab() {
             >
               <Link
                 className="absolute inset-0 z-10"
-                href={`/organization/${org.id}`}
+                href={`/organizations/${org.id}`}
               >
                 <span className="sr-only">查看{org.name}详情</span>
               </Link>
@@ -289,7 +287,7 @@ export default function OrganizationsTab() {
                       <ArrowRight className="-translate-x-1 h-3.5 w-3.5 flex-shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
                     </CardTitle>
                     <CardDescription className="mt-0.5 line-clamp-1 text-xs">
-                      {org.description || '暂无描述'}
+                      {org.description || '暂时没有描述。'}
                     </CardDescription>
                   </div>
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">

@@ -3,7 +3,7 @@ import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { getServerSideSession } from '@/lib/auth';
-import OrganizationDetailClient from './organization-detail-client';
+import OrganizationDetailContent from './content';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -75,7 +75,7 @@ export default async function OrganizationDetailPage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<LoadingSkeleton />}>
-      <OrganizationDetailClient
+      <OrganizationDetailContent
         organization={data.organization}
         stats={data.stats}
       />

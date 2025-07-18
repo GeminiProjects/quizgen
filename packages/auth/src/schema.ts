@@ -13,6 +13,7 @@ export const authUser = pgTable('auth_user', {
     .$defaultFn(() => false)
     .notNull(),
   image: text('image'),
+  isAnonymous: boolean('is_anonymous').default(false).notNull(),
   createdAt: timestamp('created_at')
     .$defaultFn(() => new Date())
     .notNull(),

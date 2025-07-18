@@ -1,13 +1,6 @@
 'use client';
 
-import type { SessionResponse } from '@repo/auth';
 import { signOut } from '@repo/auth/client';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@repo/ui/components/avatar';
-import { Button } from '@repo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,17 +13,38 @@ import { LogOut, Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 
-interface UserStatusProps {
-  session: SessionResponse;
+interface UserMenuProps {
+  children: React.ReactNode;
+  userName: string;
+  userEmail: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
- * 用户状态组件
- * 显示用户头像，悬浮展开操作菜单（包括登出）
+ * 用户菜单客户端组件
+ * 处理用户菜单的交互逻辑（主题切换和登出）
  */
-export default function UserStatus({ session }: UserStatusProps) {
+export default function UserMenu({
+  children,
+  userName,
+  userEmail,
+  size = 'md',
+}: UserMenuProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { theme, setTheme } = useTheme();
+
+  // 根据尺寸获取样式
+  const sizeStyles = {
+    sm: {
+      dropdown: 'w-48',
+    },
+    md: {
+      dropdown: 'w-56',
+    },
+    lg: {
+      dropdown: 'w-64',
+    },
+  };
 
   const getNextTheme = () => {
     switch (theme) {
@@ -78,39 +92,15 @@ export default function UserStatus({ session }: UserStatusProps) {
     }
   };
 
-  // 获取用户名首字母作为头像 fallback
-  const getUserInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word.charAt(0))
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
-
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button className="relative h-10 w-10 rounded-full" variant="ghost">
-          <Avatar className="h-10 w-10">
-            <AvatarImage
-              alt={session.user.name}
-              src={session.user.image || undefined}
-            />
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {getUserInitials(session.user.name)}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className={sizeStyles[size].dropdown}>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="font-medium text-sm leading-none">
-              {session.user.name}
-            </p>
+            <p className="font-medium text-sm leading-none">{userName}</p>
             <p className="text-muted-foreground text-xs leading-none">
-              {session.user.email}
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>

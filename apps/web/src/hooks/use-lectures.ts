@@ -1,5 +1,4 @@
 import useSWR from 'swr';
-import type { Organization } from '@/types/organization';
 
 /**
  * 演讲数据类型
@@ -16,7 +15,6 @@ export interface Lecture {
   updated_at: string;
   org_id: string | null;
   owner_id: string;
-  organization?: Organization;
   _count?: {
     quiz_items: number;
     participants: number;
@@ -65,10 +63,8 @@ export interface UpdateLectureData {
 /**
  * 获取演讲列表
  */
-export function useLectures(organizationId?: string) {
-  const url = organizationId
-    ? `/api/organizations/${organizationId}/lectures`
-    : '/api/lectures';
+export function useLectures() {
+  const url = '/api/lectures';
 
   const { data, error, isLoading, mutate } = useSWR<LecturesResponse>(url, {
     // 3分钟内不重新请求
