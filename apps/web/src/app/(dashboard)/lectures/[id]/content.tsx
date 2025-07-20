@@ -28,7 +28,6 @@ import {
   FileText,
   Hash,
   MessageSquare,
-  Mic,
   MoreHorizontal,
   Timer,
   Trash2,
@@ -169,12 +168,12 @@ export default function LectureDetailContent({
           value={stats.totalQuizItems}
         />
 
-        <StatsCard
+        {/* <StatsCard
           description="转录段数"
           icon={Mic}
           title="转录文本"
           value={stats.totalTranscripts}
-        />
+        /> */}
 
         <StatsCard
           description="上传材料"

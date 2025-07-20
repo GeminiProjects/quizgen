@@ -48,14 +48,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       materials: materialsList.map((material) => ({
         id: material.id,
-        fileName: material.file_name,
-        fileType: material.file_type,
-        status: material.upload_status,
-        progress: material.processing_progress || 0,
-        hasContent: !!material.text_content,
-        error: material.error_message,
-        createdAt: material.created_at,
-        updatedAt: material.updated_at,
+        file_name: material.file_name,
+        file_type: material.file_type,
+        upload_status: material.upload_status,
+        processing_progress: material.processing_progress || 0,
+        text_content: material.text_content,
+        error_message: material.error_message,
+        created_at: material.created_at,
+        updated_at: material.updated_at,
       })),
     });
   } catch (error) {

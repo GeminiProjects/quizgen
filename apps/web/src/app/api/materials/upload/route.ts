@@ -2,14 +2,15 @@
  * 文件上传 API 路由
  * POST /api/materials/upload
  */
-import { db, eq, lectures, materials } from '@repo/db';
+
 import {
   createGeminiClient,
   FileProcessor,
   MAX_FILE_SIZE,
   SUPPORTED_MIME_TYPES,
   type SupportedMimeType,
-} from '@repo/gemini-api';
+} from '@repo/ai';
+import { db, eq, lectures, materials } from '@repo/db';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSideSession } from '@/lib/auth';
 
@@ -82,16 +83,37 @@ export async function POST(request: NextRequest) {
       .returning();
 
     // 8. 异步处理文件
-    processFileAsync(material.id, file).catch((error) => {
+    processFileAsync(material.id, file).catch(async (error) => {
       console.error('文件处理失败:', error);
-      // 更新状态为失败
-      db.update(materials)
-        .set({
-          upload_status: 'failed',
-          error_message: error.message || '处理失败',
-        })
-        .where(eq(materials.id, material.id))
-        .catch(console.error);
+
+      // 如果是早期失败（如 fetch failed），删除数据库记录
+      const errorMessage = error.message || '处理失败';
+      const isEarlyFailure =
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('Gemini API 文件上传失败');
+
+      if (isEarlyFailure) {
+        // 删除失败的记录
+        try {
+          await db.delete(materials).where(eq(materials.id, material.id));
+          console.log(`已删除失败的材料记录: ${material.id}`);
+        } catch (deleteError) {
+          console.error('删除失败记录时出错:', deleteError);
+        }
+      } else {
+        // 其他类型的失败，只更新状态
+        try {
+          await db
+            .update(materials)
+            .set({
+              upload_status: 'failed',
+              error_message: errorMessage,
+            })
+            .where(eq(materials.id, material.id));
+        } catch (updateError) {
+          console.error('更新失败状态时出错:', updateError);
+        }
+      }
     });
 
     // 9. 立即返回，让前端轮询状态

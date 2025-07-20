@@ -1,16 +1,18 @@
 'use client';
 
 import { Badge } from '@repo/ui/components/badge';
+import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
-import { ScrollArea } from '@repo/ui/components/scroll-area';
-import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { ChevronRight, FileText, Mic, MicOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Transcript } from '@/types';
+import TranscriptDialog from './transcript-dialog';
 
 interface TranscriptPanelProps {
   lectureId: string;
@@ -78,106 +80,106 @@ export default function TranscriptPanel({
     setTranscripts(demoTranscripts);
   }, [isActive, lectureId]);
 
-  /**
-   * 格式化时间戳
-   */
-  const formatTimestamp = (date: string) => {
-    return new Date(date).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
+  const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
+
+  // 获取最新的转录文本
+  const latestTranscript = transcripts.at(-1);
+  const displayText =
+    latestTranscript?.text ||
+    (isActive ? '等待转录内容...' : '开始演讲后显示转录内容');
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {/* 麦克风状态 */}
+    <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>麦克风状态</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>实时转录</CardTitle>
+              <CardDescription>麦克风状态和转录内容监控</CardDescription>
+            </div>
             <Badge
               className={
                 isMicEnabled ? 'bg-success text-success-foreground' : ''
               }
               variant="secondary"
             >
-              {isMicEnabled ? '已启用' : '未启用'}
+              {isMicEnabled ? '麦克风已启用' : '麦克风未启用'}
             </Badge>
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* 麦克风图标和状态 */}
-          <div className="flex items-center justify-center py-4">
-            <div
-              className={`flex h-24 w-24 items-center justify-center rounded-full transition-all ${
-                isMicEnabled
-                  ? 'bg-success/10 text-success'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {isMicEnabled ? (
-                <Mic className="h-12 w-12" />
-              ) : (
-                <MicOff className="h-12 w-12" />
-              )}
-            </div>
-          </div>
-
-          {/* 音量指示器 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">输入音量</span>
-              <span className="font-medium">{Math.round(micVolume)}%</span>
-            </div>
-            <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+          {/* 麦克风状态栏 */}
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center gap-3">
               <div
-                className="absolute top-0 left-0 h-full bg-success transition-all duration-100"
-                style={{ width: `${micVolume}%` }}
-              />
+                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
+                  isMicEnabled
+                    ? 'bg-success/10 text-success'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {isMicEnabled ? (
+                  <Mic className="h-5 w-5" />
+                ) : (
+                  <MicOff className="h-5 w-5" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">
+                  {isActive ? '正在录制' : '准备就绪'}
+                </p>
+                <div className="mt-1 flex items-center gap-4">
+                  <span className="text-muted-foreground text-xs">
+                    输入音量: {Math.round(micVolume)}%
+                  </span>
+                  {/* 迷你音量条 */}
+                  <div className="relative h-1 w-16 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="absolute top-0 left-0 h-full bg-success transition-all duration-100"
+                      style={{ width: `${micVolume}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 提示信息 */}
-          <div className="rounded-lg bg-info/10 p-3">
-            <p className="flex items-center gap-2 text-info text-sm">
-              <Volume2 className="h-4 w-4" />
-              {isActive
-                ? '正在实时转录您的演讲内容'
-                : '开始演讲后将自动启用麦克风'}
+          {/* 最新转录内容预览 */}
+          <div className="space-y-2 rounded-lg border p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium text-sm">最新转录</span>
+                {transcripts.length > 0 && (
+                  <Badge className="text-xs" variant="secondary">
+                    {transcripts.length} 条记录
+                  </Badge>
+                )}
+              </div>
+              <Button
+                className="text-xs"
+                onClick={() => setShowTranscriptDialog(true)}
+                size="sm"
+                variant="ghost"
+              >
+                查看全部
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Button>
+            </div>
+            <p className="line-clamp-2 text-muted-foreground text-sm">
+              {displayText}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* 转录内容 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>实时转录</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[300px] w-full rounded-lg border p-4">
-            {transcripts.length > 0 ? (
-              <div className="space-y-3">
-                {transcripts.map((transcript) => (
-                  <div className="space-y-1" key={transcript.id}>
-                    <p className="text-muted-foreground text-xs">
-                      {formatTimestamp(transcript.created_at)}
-                    </p>
-                    <p className="text-sm leading-relaxed">{transcript.text}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center text-center">
-                <p className="text-muted-foreground">
-                  {isActive ? '等待转录内容...' : '开始演讲后显示转录内容'}
-                </p>
-              </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
+      {/* 转录内容弹窗 */}
+      <TranscriptDialog
+        isActive={isActive}
+        onOpenChange={setShowTranscriptDialog}
+        open={showTranscriptDialog}
+        transcripts={transcripts}
+      />
+    </>
   );
 }

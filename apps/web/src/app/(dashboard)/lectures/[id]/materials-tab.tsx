@@ -4,7 +4,7 @@ import {
   MAX_FILE_SIZE,
   MIME_TYPE_EXTENSIONS,
   SUPPORTED_MIME_TYPES,
-} from '@repo/gemini-api';
+} from '@repo/ai';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -21,10 +21,10 @@ import {
   Eye,
   FileText,
   Loader2,
+  RefreshCw,
   Trash2,
   Upload,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -36,7 +36,6 @@ import type { Material } from '@/types';
  * 支持文件上传、预览和管理
  */
 export default function MaterialsTab({ lectureId }: { lectureId: string }) {
-  const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
@@ -44,22 +43,101 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  // 检查删除的材料（上传失败）
+  const checkDeletedMaterials = useCallback(
+    (oldMaterials: Material[], newMaterials: Material[]) => {
+      if (oldMaterials.length === 0) {
+        return;
+      }
+
+      const newIds = new Set(newMaterials.map((m) => m.id));
+      const deletedMaterials = oldMaterials.filter(
+        (m) => !newIds.has(m.id) && m.upload_status !== 'completed'
+      );
+
+      for (const m of deletedMaterials) {
+        toast.error(`${m.file_name} 上传失败`);
+      }
+    },
+    []
+  );
+
+  // 刷新材料列表
+  const refreshMaterials = useCallback(
+    async (showError = true) => {
+      setRefreshing(true);
+      try {
+        const response = await fetch(`/api/materials?lectureId=${lectureId}`);
+        const data = await response.json();
+        const newMaterials = data.materials || [];
+
+        // 检测删除的材料
+        checkDeletedMaterials(materials, newMaterials);
+        setMaterials(newMaterials);
+      } catch (error) {
+        console.error('Failed to load materials:', error);
+        if (showError) {
+          toast.error('加载材料列表失败');
+        }
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [lectureId, materials, checkDeletedMaterials]
+  );
 
   // 初始加载材料列表
   useEffect(() => {
-    async function loadMaterials() {
+    const loadMaterials = async () => {
+      setLoading(true);
       try {
         const response = await fetch(`/api/materials?lectureId=${lectureId}`);
         const data = await response.json();
         setMaterials(data.materials || []);
       } catch (error) {
         console.error('Failed to load materials:', error);
+        toast.error('加载材料列表失败');
       } finally {
         setLoading(false);
       }
-    }
+    };
     loadMaterials();
   }, [lectureId]);
+
+  // 轮询检查处理中的材料
+  useEffect(() => {
+    // 检查是否有处理中的材料
+    const hasProcessingMaterials = materials.some(
+      (m) =>
+        m.upload_status === 'uploading' ||
+        m.upload_status === 'processing' ||
+        m.upload_status === 'extracting'
+    );
+
+    if (hasProcessingMaterials && !pollingInterval) {
+      // 开始轮询
+      const interval = setInterval(() => {
+        refreshMaterials(false);
+      }, 3000); // 每3秒检查一次
+      setPollingInterval(interval);
+    } else if (!hasProcessingMaterials && pollingInterval) {
+      // 停止轮询
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
+    // 清理函数
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [materials, pollingInterval, refreshMaterials]);
 
   /**
    * 处理文件上传
@@ -84,17 +162,52 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
             throw new Error(error.message || '上传失败');
           }
 
+          const result = await response.json();
           toast.success(`${file.name} 上传成功`);
+
+          // 立即添加到列表（处理中状态）
+          const newMaterial: Material = {
+            id: result.materialId,
+            file_name: file.name,
+            file_type: file.type,
+            upload_status: 'uploading',
+            processing_progress: 0,
+            text_content: null,
+            error_message: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            lecture_id: lectureId,
+            created_by: '',
+            gemini_file_uri: null,
+          };
+          setMaterials((prev) => [newMaterial, ...prev]);
         }
 
-        router.refresh();
+        // 延迟刷新以确保文件处理开始
+        setTimeout(() => {
+          refreshMaterials(false);
+
+          // 持续检查上传状态
+          let checkCount = 0;
+          const checkInterval = setInterval(() => {
+            checkCount++;
+            refreshMaterials(false);
+
+            // 最多检查20次（60秒）
+            if (checkCount >= 20) {
+              clearInterval(checkInterval);
+            }
+          }, 3000);
+        }, 2000);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : '上传失败');
+        // 上传失败后刷新列表
+        await refreshMaterials(false);
       } finally {
         setUploading(false);
       }
     },
-    [lectureId, router]
+    [lectureId, refreshMaterials]
   );
 
   /**
@@ -104,9 +217,14 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
     setDeletingIds((prev) => new Set(prev).add(materialId));
 
     try {
-      await deleteMaterial(materialId);
-      toast.success('材料已删除');
-      router.refresh();
+      const result = await deleteMaterial(materialId);
+      if (result.success) {
+        toast.success('材料已删除');
+        // 刷新材料列表
+        await refreshMaterials();
+      } else {
+        toast.error(result.error || '删除失败');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '删除失败');
     } finally {
@@ -194,6 +312,24 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* 标题和刷新按钮 */}
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-lg">演讲材料</h3>
+        <Button
+          disabled={refreshing}
+          onClick={() => refreshMaterials()}
+          size="sm"
+          variant="outline"
+        >
+          {refreshing ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          刷新
+        </Button>
+      </div>
+
       {/* 上传区域 */}
       <div
         {...getRootProps()}
@@ -214,6 +350,23 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
       </div>
 
       {/* 材料列表 */}
+      {materials.length > 0 && (
+        <div className="flex items-center justify-between text-muted-foreground text-sm">
+          <span>共 {materials.length} 个文件</span>
+          {materials.some(
+            (m) =>
+              m.upload_status === 'uploading' ||
+              m.upload_status === 'processing' ||
+              m.upload_status === 'extracting'
+          ) && (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              正在处理中...
+            </span>
+          )}
+        </div>
+      )}
+
       {materials.length === 0 ? (
         <div className="rounded-lg border border-dashed py-12 text-center">
           <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />

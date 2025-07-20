@@ -12,7 +12,7 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
     "@repo/db": "workspace:*",
-    "@repo/gemini-api": "workspace:*",
+    "@repo/ai": "workspace:*",
     "@repo/ui": "workspace:*",
     "framer-motion": "^12.23.6",
     "next": "15.3.5",

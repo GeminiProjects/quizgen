@@ -151,7 +151,7 @@ export default function LecturesPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-bold text-2xl">我的演讲</h1>
+          <h1 className="font-bold text-2xl text-info">我的演讲</h1>
           <p className="text-muted-foreground">管理您创建的演讲会话</p>
         </div>
         <LecturesPageContent hasLectures={true} />

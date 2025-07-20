@@ -19,8 +19,8 @@
       "version": "0.1.0",
       "dependencies": {
         "@radix-ui/react-slot": "^1.2.3",
+        "@repo/ai": "workspace:*",
         "@repo/db": "workspace:*",
-        "@repo/gemini-api": "workspace:*",
         "@repo/ui": "workspace:*",
         "framer-motion": "^12.23.6",
         "next": "15.3.5",
@@ -36,6 +36,18 @@
         "@types/react-dom": "^19",
         "tailwindcss": "^4",
         "typescript": "^5",
+      },
+    },
+    "packages/ai": {
+      "name": "@repo/ai",
+      "version": "0.0.1",
+      "dependencies": {
+        "@google/genai": "^1.10.0",
+        "zod": "^4.0.5",
+      },
+      "devDependencies": {
+        "@repo/tsconfig": "workspace:*",
+        "@types/bun": "^1.2.18",
       },
     },
     "packages/auth": {
@@ -68,18 +80,6 @@
         "dotenv": "^16.4.7",
         "drizzle-kit": "^0.31.4",
         "tsx": "^4.20.0",
-      },
-    },
-    "packages/gemini-api": {
-      "name": "@repo/gemini-api",
-      "version": "0.0.1",
-      "dependencies": {
-        "@google/genai": "^1.10.0",
-        "zod": "^4.0.5",
-      },
-      "devDependencies": {
-        "@repo/tsconfig": "workspace:*",
-        "@types/bun": "^1.2.18",
       },
     },
     "packages/tsconfig": {
@@ -490,11 +490,11 @@
 
     "@radix-ui/rect": ["@radix-ui/rect@1.1.1", "", {}, "sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw=="],
 
+    "@repo/ai": ["@repo/ai@workspace:packages/ai"],
+
     "@repo/auth": ["@repo/auth@workspace:packages/auth"],
 
     "@repo/db": ["@repo/db@workspace:packages/db"],
-
-    "@repo/gemini-api": ["@repo/gemini-api@workspace:packages/gemini-api"],
 
     "@repo/tsconfig": ["@repo/tsconfig@workspace:packages/tsconfig"],
 

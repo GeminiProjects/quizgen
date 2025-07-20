@@ -114,7 +114,7 @@ export default function OrganizationsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-bold text-2xl">我的组织</h1>
+          <h1 className="font-bold text-2xl text-warning">我的组织</h1>
           <p className="text-muted-foreground">创建和管理演讲组织</p>
         </div>
         <OrganizationsPageContent hasOrganizations={true} searchQuery="" />

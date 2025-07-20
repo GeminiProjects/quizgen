@@ -1,11 +1,100 @@
 /**
  * 文件处理器 - 负责上传文件到 Gemini API 并提取文本内容
  */
-import type { GoogleGenAI } from '@google/genai';
+import type { File as File_2, GoogleGenAI } from '@google/genai';
 import type { FileProcessingResult } from './types';
 
 export class FileProcessor {
+  private readonly MAX_PROCESSING_ATTEMPTS = 60;
+  private readonly PROCESSING_POLL_INTERVAL = 1000;
+
   constructor(private client: GoogleGenAI) {}
+
+  /**
+   * 将文件转换为可上传的格式
+   */
+  private prepareFileForUpload(
+    file: File | Buffer | Blob,
+    mimeType: string
+  ): File | Blob {
+    if (Buffer.isBuffer(file)) {
+      return new Blob([file], { type: mimeType });
+    }
+    return file;
+  }
+
+  /**
+   * 执行文件上传操作
+   */
+  private async performUpload(
+    file: File | Blob,
+    mimeType: string,
+    displayName?: string
+  ): Promise<File_2> {
+    try {
+      const uploadedFile = await this.client.files.upload({
+        file,
+        config: {
+          mimeType,
+          displayName,
+        },
+      });
+
+      if (!uploadedFile.name) {
+        throw new Error('文件上传失败：未返回文件名');
+      }
+
+      return uploadedFile;
+    } catch (uploadError) {
+      console.error('Gemini API 上传失败细节:', {
+        error: uploadError,
+        message:
+          uploadError instanceof Error ? uploadError.message : 'Unknown error',
+        stack: uploadError instanceof Error ? uploadError.stack : undefined,
+        mimeType,
+        displayName,
+        fileSize: file instanceof Blob ? file.size : 'unknown',
+      });
+      throw new Error(
+        `Gemini API 文件上传失败: ${
+          uploadError instanceof Error ? uploadError.message : '未知错误'
+        }`
+      );
+    }
+  }
+
+  /**
+   * 等待文件处理完成
+   */
+  private async waitForFileProcessing(fileName: string): Promise<File_2> {
+    let fileInfo = await this.client.files.get({ name: fileName });
+    let attempts = 0;
+
+    while (
+      fileInfo.state === 'PROCESSING' &&
+      attempts < this.MAX_PROCESSING_ATTEMPTS
+    ) {
+      console.log(
+        `文件处理中... (${attempts + 1}/${this.MAX_PROCESSING_ATTEMPTS})`
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.PROCESSING_POLL_INTERVAL)
+      );
+      fileInfo = await this.client.files.get({ name: fileName });
+      attempts++;
+    }
+
+    // 检查处理结果
+    if (fileInfo.state === 'FAILED') {
+      throw new Error(`文件处理失败: ${fileInfo.error?.message || '未知错误'}`);
+    }
+
+    if (fileInfo.state === 'PROCESSING') {
+      throw new Error('文件处理超时，请稍后重试');
+    }
+
+    return fileInfo;
+  }
 
   /**
    * 上传文件并等待处理完成
@@ -18,58 +107,28 @@ export class FileProcessor {
     file: File | Buffer | Blob,
     mimeType: string,
     displayName?: string
-  ) {
+  ): Promise<File_2> {
     try {
-      // 1. 上传文件到 Gemini API
       console.log(`开始上传文件: ${displayName || 'unnamed'}`);
 
-      // 将 Buffer 转换为 Blob
-      let uploadFile: File | Blob;
-      if (Buffer.isBuffer(file)) {
-        uploadFile = new Blob([file], { type: mimeType });
-      } else {
-        uploadFile = file;
-      }
+      // 1. 准备文件
+      const uploadFile = this.prepareFileForUpload(file, mimeType);
 
-      const uploadedFile = await this.client.files.upload({
-        file: uploadFile,
-        config: {
-          mimeType,
-          displayName,
-        },
-      });
-
-      if (!uploadedFile.name) {
-        throw new Error('文件上传失败：未返回文件名');
-      }
-
+      // 2. 执行上传
+      const uploadedFile = await this.performUpload(
+        uploadFile,
+        mimeType,
+        displayName
+      );
       console.log(`文件上传成功，文件名: ${uploadedFile.name}`);
 
-      // 2. 轮询检查文件处理状态
-      let fileInfo = await this.client.files.get({ name: uploadedFile.name });
-      let attempts = 0;
-      const maxAttempts = 60; // 最多等待 60 秒
+      // 3. 等待处理完成
+      const processedFile = await this.waitForFileProcessing(
+        uploadedFile.name || 'unknown'
+      );
+      console.log(`文件处理完成: ${processedFile.name}`);
 
-      while (fileInfo.state === 'PROCESSING' && attempts < maxAttempts) {
-        console.log(`文件处理中... (${attempts + 1}/${maxAttempts})`);
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 等待 1 秒
-        fileInfo = await this.client.files.get({ name: uploadedFile.name });
-        attempts++;
-      }
-
-      // 3. 检查最终状态
-      if (fileInfo.state === 'FAILED') {
-        throw new Error(
-          `文件处理失败: ${fileInfo.error?.message || '未知错误'}`
-        );
-      }
-
-      if (fileInfo.state === 'PROCESSING') {
-        throw new Error('文件处理超时，请稍后重试');
-      }
-
-      console.log(`文件处理完成: ${fileInfo.name}`);
-      return fileInfo;
+      return processedFile;
     } catch (error) {
       console.error('文件上传失败:', error);
       throw error;

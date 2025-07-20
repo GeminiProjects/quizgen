@@ -11,7 +11,6 @@ import {
   quizItems,
   transcripts,
 } from '@repo/db';
-
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
