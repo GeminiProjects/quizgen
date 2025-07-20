@@ -13,7 +13,7 @@ import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import QuizDisplay from '@/components/quiz-display';
-import type { Material } from '@/hooks/use-materials';
+import type { Material } from '@/types';
 
 interface QuizTestTabProps {
   lectureId: string;

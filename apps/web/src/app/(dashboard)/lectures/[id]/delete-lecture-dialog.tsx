@@ -10,14 +10,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@repo/ui/components/alert-dialog';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useLectureActions } from '@/hooks/use-lectures';
+import { deleteLecture } from '@/app/actions/lectures';
 
 interface DeleteLectureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   lectureId: string;
   lectureTitle: string;
 }
@@ -33,8 +34,8 @@ export default function DeleteLectureDialog({
   lectureId,
   lectureTitle,
 }: DeleteLectureDialogProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { deleteLecture } = useLectureActions();
 
   /**
    * 处理删除操作
@@ -44,7 +45,12 @@ export default function DeleteLectureDialog({
     try {
       await deleteLecture(lectureId);
       toast.success('演讲已删除');
-      onSuccess();
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push('/lectures');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '删除失败');
     } finally {

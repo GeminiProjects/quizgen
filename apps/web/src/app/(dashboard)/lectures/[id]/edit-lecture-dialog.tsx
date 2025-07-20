@@ -1,6 +1,5 @@
 'use client';
 
-import type { Lecture } from '@repo/db';
 import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
@@ -15,13 +14,18 @@ import { Textarea } from '@repo/ui/components/textarea';
 import { Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useLectureActions } from '@/hooks/use-lectures';
+import { updateLecture } from '@/app/actions/lectures';
 
 interface EditLectureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  lecture: Lecture;
+  lecture: {
+    id: string;
+    title: string;
+    description: string | null;
+    starts_at: string | Date;
+  };
 }
 
 /**
@@ -40,7 +44,6 @@ export default function EditLectureDialog({
     description: lecture.description || '',
     starts_at: new Date(lecture.starts_at).toISOString().slice(0, 16),
   });
-  const { updateLecture } = useLectureActions();
 
   // 表单提交
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,11 +65,12 @@ export default function EditLectureDialog({
       await updateLecture(lecture.id, {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
-        starts_at: formData.starts_at,
+        starts_at: new Date(formData.starts_at).toISOString(),
       });
 
-      toast.success('演讲更新成功');
+      toast.success('演讲信息更新成功');
       onSuccess();
+      onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '更新演讲失败');
     } finally {
@@ -78,67 +82,58 @@ export default function EditLectureDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>编辑演讲信息</DialogTitle>
+          <DialogTitle>编辑演讲</DialogTitle>
         </DialogHeader>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="title">演讲标题 *</Label>
+            <Label htmlFor="title">演讲标题</Label>
             <Input
+              autoFocus
+              disabled={loading}
               id="title"
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
+                setFormData({ ...formData, title: e.target.value })
               }
-              placeholder="请输入演讲标题"
-              required
+              placeholder="输入演讲标题"
               value={formData.title}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">演讲描述</Label>
+            <Label htmlFor="description">演讲描述（可选）</Label>
             <Textarea
+              disabled={loading}
               id="description"
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
+                setFormData({ ...formData, description: e.target.value })
               }
-              placeholder="请输入演讲描述（可选）"
+              placeholder="输入演讲描述"
               rows={3}
               value={formData.description}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="starts_at">开始时间 *</Label>
+            <Label htmlFor="starts_at">开始时间</Label>
             <div className="relative">
               <Calendar className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 className="pl-10"
-                disabled={lecture.status !== 'not_started'}
+                disabled={loading}
                 id="starts_at"
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    starts_at: e.target.value,
-                  }))
+                  setFormData({ ...formData, starts_at: e.target.value })
                 }
-                required
                 type="datetime-local"
                 value={formData.starts_at}
               />
             </div>
-            {lecture.status !== 'not_started' && (
-              <p className="text-muted-foreground text-sm">
-                演讲已开始，无法修改开始时间
-              </p>
-            )}
           </div>
 
           <DialogFooter>
             <Button
+              disabled={loading}
               onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
@@ -146,7 +141,7 @@ export default function EditLectureDialog({
               取消
             </Button>
             <Button disabled={loading} type="submit">
-              {loading ? '更新中...' : '更新演讲'}
+              保存更改
             </Button>
           </DialogFooter>
         </form>

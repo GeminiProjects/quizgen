@@ -4,7 +4,6 @@ import { cn } from '@repo/ui/lib/utils';
 import { Building2, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { preloadData } from '@/lib/swr-config';
 
 // 导航项配置 - 按照顺序：参与、演讲、组织
 const navItems = [
@@ -67,18 +66,7 @@ export function BottomNav({ className }: BottomNavProps) {
               )}
               href={item.href}
               key={item.id}
-              onMouseEnter={() => {
-                // 鼠标悬停时预加载数据
-                if (item.apiEndpoint) {
-                  preloadData(item.apiEndpoint);
-                }
-              }}
-              onTouchStart={() => {
-                // 触摸开始时预加载数据（移动端）
-                if (item.apiEndpoint) {
-                  preloadData(item.apiEndpoint);
-                }
-              }}
+              prefetch={false}
             >
               <Icon
                 className={cn(

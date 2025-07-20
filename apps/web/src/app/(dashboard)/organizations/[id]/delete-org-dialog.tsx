@@ -12,16 +12,17 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { mutate } from 'swr';
+import { deleteOrganization } from '@/app/actions/organizations';
 
 interface DeleteOrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
   organizationName: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 /**
@@ -34,6 +35,7 @@ export default function DeleteOrganizationDialog({
   organizationName,
   onSuccess,
 }: DeleteOrganizationDialogProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
@@ -49,34 +51,25 @@ export default function DeleteOrganizationDialog({
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/organizations/${organizationId}`, {
-        method: 'DELETE',
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || '删除失败');
-      }
+      await deleteOrganization(organizationId);
 
       toast.success('组织已删除');
+      onOpenChange(false);
 
-      // 清除组织列表的 SWR 缓存
-      await mutate('/api/organizations');
-
-      onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push('/organizations');
+      }
     } catch (error) {
-      console.error('Error deleting organization:', error);
-      toast.error(
-        error instanceof Error ? error.message : '删除失败，请稍后重试'
-      );
+      toast.error(error instanceof Error ? error.message : '删除失败');
     } finally {
       setLoading(false);
     }
   };
 
   /**
-   * 重置对话框状态
+   * 关闭对话框时重置状态
    */
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -87,45 +80,37 @@ export default function DeleteOrganizationDialog({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <DialogTitle>删除组织</DialogTitle>
-              <DialogDescription>此操作不可撤销，请谨慎操作</DialogDescription>
-            </div>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            删除组织
+          </DialogTitle>
+          <DialogDescription>
+            此操作不可撤销。删除组织会同时删除所有相关的演讲数据。
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="rounded-lg border border-warning/20 bg-warning/10 p-4">
-            <p className="text-sm">删除组织后：</p>
-            <ul className="mt-2 space-y-1 text-muted-foreground text-sm">
-              <li>• 组织信息将被永久删除</li>
-              <li>• 相关演讲将保留，但不再属于任何组织</li>
-              <li>• 演讲者将无法再使用组织密码创建演讲</li>
-              <li>• 此操作无法撤销</li>
-            </ul>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="confirm">
-              请输入组织名称{' '}
-              <span className="font-mono font-semibold">
-                {organizationName}
-              </span>{' '}
-              以确认删除
+              请输入组织名称 <strong>{organizationName}</strong> 以确认删除
             </Label>
             <Input
+              autoComplete="off"
               disabled={loading}
               id="confirm"
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="输入组织名称"
               value={confirmText}
             />
+          </div>
+
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+            <p className="text-destructive text-sm">
+              <strong>警告：</strong>
+              删除组织将同时删除所有关联的演讲、测验题目、参与记录等数据。
+            </p>
           </div>
         </div>
 

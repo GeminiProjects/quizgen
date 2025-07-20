@@ -20,15 +20,15 @@ import { Textarea } from '@repo/ui/components/textarea';
 import { CalendarIcon, ChevronDownIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { createLecture } from '@/app/actions/lectures';
+import { getPublicOrganizations } from '@/app/actions/organizations';
 import { OrganizationSelector } from '@/components/organization-selector';
-import type { Lecture } from '@/hooks/use-lectures';
-import { useLectureActions } from '@/hooks/use-lectures';
-import { usePublicOrganizations } from '@/hooks/use-public-organizations';
+import type { Organization } from '@/types';
 
 interface CreateLectureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (lecture: Lecture) => void;
+  onSuccess: () => void;
 }
 
 /**
@@ -56,8 +56,7 @@ export default function CreateLectureDialog({
     description: '',
     org_password: '',
   });
-  const { createLecture } = useLectureActions();
-  const { organizations } = usePublicOrganizations();
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   // 重置表单
   const resetForm = useCallback(() => {
@@ -78,6 +77,15 @@ export default function CreateLectureDialog({
       resetForm();
     }
   }, [open, resetForm]);
+
+  // 加载公开组织列表
+  useEffect(() => {
+    const loadOrganizations = async () => {
+      const orgs = await getPublicOrganizations();
+      setOrganizations(orgs);
+    };
+    loadOrganizations();
+  }, []);
 
   // 验证表单
   const validateForm = () => {
@@ -123,7 +131,7 @@ export default function CreateLectureDialog({
         0
       );
 
-      const result = await createLecture({
+      const _result = await createLecture({
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         org_id: selectedOrgId || null,
@@ -132,7 +140,7 @@ export default function CreateLectureDialog({
       });
 
       toast.success('演讲创建成功');
-      onSuccess(result.data);
+      onSuccess();
       onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建演讲失败');
@@ -225,7 +233,9 @@ export default function CreateLectureDialog({
               onChange={(orgId: string) => {
                 setSelectedOrgId(orgId);
                 // 根据ID查找组织名称
-                const org = organizations?.find((o) => o.id === orgId);
+                const org = organizations?.find(
+                  (o: Organization) => o.id === orgId
+                );
                 setSelectedOrgName(org?.name || '');
                 // 选择组织后清空密码
                 setFormData((prev) => ({ ...prev, org_password: '' }));

@@ -16,6 +16,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { updateOrganization } from '@/app/actions/organizations';
 
 /**
  * 组织更新表单验证
@@ -26,10 +27,6 @@ const updateOrganizationSchema = z.object({
     .min(1, '组织名称不能为空')
     .max(100, '组织名称不能超过100个字符'),
   description: z.string().max(500, '组织描述不能超过500个字符').optional(),
-  password: z
-    .string()
-    .min(6, '密码至少需要6个字符')
-    .max(50, '密码不能超过50个字符'),
 });
 
 interface Organization {
@@ -59,21 +56,8 @@ export default function EditOrganizationDialog({
   const [formData, setFormData] = useState({
     name: organization.name,
     description: organization.description || '',
-    password: organization.password,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  /**
-   * 生成随机密码
-   */
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let password = '';
-    for (let i = 0; i < 18; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData((prev) => ({ ...prev, password }));
-  };
 
   /**
    * 验证表单数据
@@ -97,27 +81,6 @@ export default function EditOrganizationDialog({
   };
 
   /**
-   * 更新组织信息
-   */
-  const updateOrganization = async () => {
-    const response = await fetch(`/api/organizations/${organization.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || '更新失败');
-    }
-
-    return result;
-  };
-
-  /**
    * 处理表单提交
    */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,16 +92,17 @@ export default function EditOrganizationDialog({
     }
 
     setLoading(true);
-
     try {
-      await updateOrganization();
-      toast.success('组织信息已更新');
+      await updateOrganization(organization.id, {
+        name: formData.name,
+        description: formData.description || undefined,
+      });
+
+      toast.success('组织信息更新成功');
       onSuccess();
+      onOpenChange(false);
     } catch (error) {
-      console.error('Error updating organization:', error);
-      toast.error(
-        error instanceof Error ? error.message : '更新失败，请稍后重试'
-      );
+      toast.error(error instanceof Error ? error.message : '更新失败');
     } finally {
       setLoading(false);
     }
@@ -146,83 +110,72 @@ export default function EditOrganizationDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>编辑组织信息</DialogTitle>
-            <DialogDescription>修改组织的基本信息和访问密码</DialogDescription>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>编辑组织信息</DialogTitle>
+          <DialogDescription>
+            更新组织的基本信息。密码无法修改，请妥善保管。
+          </DialogDescription>
+        </DialogHeader>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="name">组织名称</Label>
+            <Input
+              autoComplete="off"
+              disabled={loading}
+              id="name"
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="输入组织名称"
+              value={formData.name}
+            />
+            {errors.name && (
+              <p className="text-destructive text-sm">{errors.name}</p>
+            )}
+          </div>
 
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">组织名称</Label>
+          <div className="space-y-2">
+            <Label htmlFor="description">组织描述（可选）</Label>
+            <Textarea
+              disabled={loading}
+              id="description"
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              placeholder="输入组织描述"
+              rows={3}
+              value={formData.description}
+            />
+            {errors.description && (
+              <p className="text-destructive text-sm">{errors.description}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">组织密码</Label>
+            <div className="flex gap-2">
               <Input
-                disabled={loading}
-                id="name"
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="输入组织名称"
-                value={formData.name}
+                disabled
+                id="password"
+                readOnly
+                type="text"
+                value={organization.password}
               />
-              {errors.name && (
-                <p className="text-destructive text-sm">{errors.name}</p>
-              )}
+              <Button
+                className="shrink-0"
+                disabled
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                不可修改
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">组织描述（可选）</Label>
-              <Textarea
-                disabled={loading}
-                id="description"
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="输入组织描述"
-                rows={3}
-                value={formData.description}
-              />
-              {errors.description && (
-                <p className="text-destructive text-sm">{errors.description}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">组织密码</Label>
-              <div className="flex gap-2">
-                <Input
-                  className="font-mono"
-                  disabled={loading}
-                  id="password"
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      password: e.target.value,
-                    }))
-                  }
-                  placeholder="输入组织密码"
-                  value={formData.password}
-                />
-                <Button
-                  disabled={loading}
-                  onClick={generatePassword}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                演讲者需要此密码才能在该组织下创建演讲
-              </p>
-              {errors.password && (
-                <p className="text-destructive text-sm">{errors.password}</p>
-              )}
-            </div>
+            <p className="text-muted-foreground text-sm">
+              密码创建后无法修改，请妥善保管
+            </p>
           </div>
 
           <DialogFooter>

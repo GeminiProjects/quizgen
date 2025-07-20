@@ -2,7 +2,7 @@
 
 import { MessageSquare, Presentation, TrendingUp, Users } from 'lucide-react';
 import { StatsCard } from '@/components/stats-card';
-import type { Lecture } from '@/hooks/use-lectures';
+import type { Lecture } from '@/types';
 
 interface LectureStatsCardProps {
   lectures: Lecture[];
