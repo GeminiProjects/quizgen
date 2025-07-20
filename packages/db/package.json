@@ -4,7 +4,8 @@
   "type": "module",
   "version": "0.0.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -23,7 +24,6 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.3",
     "@types/bun": "^1.2.15",
-    "@types/pg": "^8.15.4",
     "dotenv": "^16.4.7",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.20.0"

@@ -42,34 +42,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
+import type { LectureWithDate, OrganizationDetailClientProps } from '@/types';
 import DeleteOrganizationDialog from './delete-org-dialog';
 import EditOrganizationDialog from './edit-org-dialog';
-
-interface LectureWithDate {
-  id: string;
-  title: string;
-  created_at: string | Date;
-  description?: string | null;
-  status?: string;
-  participantCount?: number;
-}
-
-interface OrganizationWithLectures {
-  id: string;
-  name: string;
-  description: string | null;
-  password: string;
-  lectures?: LectureWithDate[];
-  created_at: string | Date;
-  updated_at: string | Date;
-}
-
-interface OrganizationDetailClientProps {
-  organization: OrganizationWithLectures;
-  stats: {
-    totalLectures: number;
-  };
-}
 
 /**
  * 组织详情客户端组件 - 现代化极简设计

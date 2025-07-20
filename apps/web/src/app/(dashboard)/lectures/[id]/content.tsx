@@ -41,56 +41,12 @@ import { toast } from 'sonner';
 import { endLecture, pauseLecture, startLecture } from '@/app/actions/lectures';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
-import { lectureStatusConfig } from '@/types';
+import { type LectureDetailClientProps, lectureStatusConfig } from '@/types';
 import DeleteLectureDialog from './delete-lecture-dialog';
 import EditLectureDialog from './edit-lecture-dialog';
 import LectureControlSection from './lecture-control-section';
 import MaterialsTab from './materials-tab';
 import QuizTestTab from './quiz-test-tab';
-
-interface QuizItemWithDate {
-  id: string;
-  created_at: string | Date;
-  lecture_id: string;
-  ts: Date | string;
-  question: string;
-  options: string[];
-  answer: number;
-  question_type?: string;
-  correct_answer?: string;
-  explanation?: string | null;
-  _count?: {
-    attempts: number;
-    correctAttempts: number;
-  };
-}
-
-interface LectureWithQuizItems {
-  id: string;
-  title: string;
-  description: string | null;
-  status: 'not_started' | 'in_progress' | 'paused' | 'ended';
-  join_code: string;
-  starts_at: string | Date;
-  ends_at: string | Date | null;
-  created_at: string | Date;
-  updated_at: string | Date;
-  org_id: string | null;
-  owner_id: string;
-  quizItems?: QuizItemWithDate[];
-}
-
-interface LectureDetailClientProps {
-  lecture: LectureWithQuizItems;
-  stats: {
-    totalParticipants: number;
-    totalQuizItems: number;
-    totalTranscripts: number;
-    totalMaterials: number;
-    contextSize: number;
-    avgResponseTime: number;
-  };
-}
 
 /**
  * 演讲详情客户端组件

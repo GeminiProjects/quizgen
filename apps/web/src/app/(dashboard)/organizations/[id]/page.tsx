@@ -50,7 +50,15 @@ async function getOrganizationData(organizationId: string, userId: string) {
   return {
     organization: {
       ...organization,
-      lectures: recentLectures,
+      created_at: organization.created_at.toISOString(),
+      updated_at: organization.updated_at.toISOString(),
+      lectures: recentLectures.map((lecture) => ({
+        ...lecture,
+        created_at: lecture.created_at.toISOString(),
+        updated_at: lecture.updated_at.toISOString(),
+        starts_at: lecture.starts_at.toISOString(),
+        ends_at: lecture.ends_at?.toISOString() || null,
+      })),
     },
     stats: stats[0] || { totalLectures: 0 },
   };

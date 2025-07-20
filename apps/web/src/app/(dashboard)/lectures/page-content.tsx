@@ -4,7 +4,6 @@ import { Button } from '@repo/ui/components/button';
 import { Card, CardContent } from '@repo/ui/components/card';
 import { Plus, Presentation } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import CreateLectureDialog from './create-lecture-dialog';
 
 interface PageContentProps {
@@ -16,7 +15,6 @@ export default function LecturesPageContent({ hasLectures }: PageContentProps) {
 
   const handleLectureCreated = () => {
     setShowCreateDialog(false);
-    toast.success('演讲创建成功');
   };
 
   if (!hasLectures) {

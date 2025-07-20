@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { updateOrganization } from '@/app/actions/organizations';
+import type { Organization } from '@/types';
 
 /**
  * 组织更新表单验证
@@ -28,13 +29,6 @@ const updateOrganizationSchema = z.object({
     .max(100, '组织名称不能超过100个字符'),
   description: z.string().max(500, '组织描述不能超过500个字符').optional(),
 });
-
-interface Organization {
-  id: string;
-  name: string;
-  description: string | null;
-  password: string;
-}
 
 interface EditOrganizationDialogProps {
   open: boolean;

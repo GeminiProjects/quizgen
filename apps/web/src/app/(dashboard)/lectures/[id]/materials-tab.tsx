@@ -29,28 +29,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { deleteMaterial } from '@/app/actions/materials';
-
-interface Material {
-  id: string;
-  fileName: string;
-  fileType: string;
-  status: string;
-  progress: number;
-  hasContent: boolean;
-  error?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface MaterialsTabProps {
-  lectureId: string;
-}
+import type { Material } from '@/types';
 
 /**
  * 材料准备标签页组件 - 文件管理器风格
  * 支持文件上传、预览和管理
  */
-export default function MaterialsTab({ lectureId }: MaterialsTabProps) {
+export default function MaterialsTab({ lectureId }: { lectureId: string }) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
@@ -142,7 +127,7 @@ export default function MaterialsTab({ lectureId }: MaterialsTabProps) {
       const data = await response.json();
 
       setPreviewContent(data.content);
-      setPreviewFileName(material.fileName);
+      setPreviewFileName(material.file_name);
       setShowPreview(true);
     } catch {
       toast.error('获取内容失败');
@@ -255,22 +240,24 @@ export default function MaterialsTab({ lectureId }: MaterialsTabProps) {
 
                 {/* 文件信息 */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{material.fileName}</p>
+                  <p className="truncate font-medium">{material.file_name}</p>
                   <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                    <span>{material.fileType}</span>
+                    <span>{material.file_type}</span>
                     <span>
-                      {new Date(material.createdAt).toLocaleDateString('zh-CN')}
+                      {new Date(material.created_at).toLocaleDateString(
+                        'zh-CN'
+                      )}
                     </span>
                   </div>
                 </div>
 
                 {/* 状态指示器 */}
-                {material.status === 'completed' ? (
+                {material.upload_status === 'completed' ? (
                   <div className="flex items-center gap-2 text-green-600">
                     <CheckCircle className="h-4 w-4" />
                     <span className="text-sm">已处理</span>
                   </div>
-                ) : material.status === 'failed' ? (
+                ) : material.upload_status === 'failed' ? (
                   <div className="flex items-center gap-2 text-destructive">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-sm">处理失败</span>
@@ -284,7 +271,7 @@ export default function MaterialsTab({ lectureId }: MaterialsTabProps) {
 
                 {/* 操作按钮 */}
                 <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  {material.hasContent && (
+                  {material.text_content && (
                     <Button
                       onClick={() => handlePreview(material)}
                       size="sm"

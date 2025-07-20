@@ -1,6 +1,5 @@
 'use client';
 
-import type { Transcript } from '@repo/db';
 import { Badge } from '@repo/ui/components/badge';
 import {
   Card,
@@ -11,6 +10,7 @@ import {
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import type { Transcript } from '@/types';
 
 interface TranscriptPanelProps {
   lectureId: string;
@@ -57,22 +57,22 @@ export default function TranscriptPanel({
         id: '1',
         lecture_id: lectureId,
         text: '大家好，欢迎参加今天的演讲。',
-        ts: new Date(Date.now() - 60_000),
-        created_at: new Date(Date.now() - 60_000),
+        ts: new Date(Date.now() - 60_000).toISOString(),
+        created_at: new Date(Date.now() - 60_000).toISOString(),
       },
       {
         id: '2',
         lecture_id: lectureId,
         text: '今天我们要讨论的主题是现代软件开发的最佳实践。',
-        ts: new Date(Date.now() - 30_000),
-        created_at: new Date(Date.now() - 30_000),
+        ts: new Date(Date.now() - 30_000).toISOString(),
+        created_at: new Date(Date.now() - 30_000).toISOString(),
       },
       {
         id: '3',
         lecture_id: lectureId,
         text: '首先，让我们从代码质量开始说起...',
-        ts: new Date(Date.now() - 10_000),
-        created_at: new Date(Date.now() - 10_000),
+        ts: new Date(Date.now() - 10_000).toISOString(),
+        created_at: new Date(Date.now() - 10_000).toISOString(),
       },
     ];
     setTranscripts(demoTranscripts);
@@ -81,7 +81,7 @@ export default function TranscriptPanel({
   /**
    * 格式化时间戳
    */
-  const formatTimestamp = (date: Date) => {
+  const formatTimestamp = (date: string) => {
     return new Date(date).toLocaleTimeString('zh-CN', {
       hour: '2-digit',
       minute: '2-digit',
@@ -162,7 +162,7 @@ export default function TranscriptPanel({
                 {transcripts.map((transcript) => (
                   <div className="space-y-1" key={transcript.id}>
                     <p className="text-muted-foreground text-xs">
-                      {formatTimestamp(transcript.ts)}
+                      {formatTimestamp(transcript.created_at)}
                     </p>
                     <p className="text-sm leading-relaxed">{transcript.text}</p>
                   </div>

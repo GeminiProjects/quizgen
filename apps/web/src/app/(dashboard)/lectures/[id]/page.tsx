@@ -11,6 +11,7 @@ import {
   quizItems,
   transcripts,
 } from '@repo/db';
+
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
@@ -123,7 +124,15 @@ async function getLectureData(lectureId: string, userId: string) {
   return {
     lecture: {
       ...lecture,
-      quizItems: recentQuizItems,
+      created_at: lecture.created_at.toISOString(),
+      updated_at: lecture.updated_at.toISOString(),
+      starts_at: lecture.starts_at.toISOString(),
+      ends_at: lecture.ends_at?.toISOString() || null,
+      quizItems: recentQuizItems.map((item) => ({
+        ...item,
+        created_at: item.created_at.toISOString(),
+        ts: item.ts.toISOString(),
+      })),
     },
     stats: {
       totalParticipants: participantStats[0]?.totalParticipants || 0,

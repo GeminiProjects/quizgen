@@ -1,5 +1,3 @@
-'use client';
-
 import { MessageSquare, Presentation, TrendingUp, Users } from 'lucide-react';
 import { StatsCard } from '@/components/stats-card';
 import type { Lecture } from '@/types';

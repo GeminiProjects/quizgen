@@ -12,7 +12,7 @@ import type {
   QuizItem as DBQuizItem,
   Transcript as DBTranscript,
   User as DBUser,
-} from '@repo/db';
+} from '@repo/db/client';
 
 // ============= 基础类型转换 =============
 // 将 Date 类型转换为 string（处理 Server Actions 序列化）
@@ -157,5 +157,55 @@ export interface ActionResponse<T = unknown> {
   error?: string;
 }
 
-// ============= 重新导出数据库常量 =============
-export { LectureStatus as DBLectureStatus } from '@repo/db';
+// ============= 扩展类型 =============
+// 包含测验题目数据的扩展类型
+export interface QuizItemWithDate extends QuizItem {
+  _count?: {
+    attempts: number;
+    correctAttempts: number;
+  };
+}
+
+// 包含测验题目的演讲类型
+export interface LectureWithQuizItems extends Lecture {
+  quizItems?: QuizItemWithDate[];
+}
+
+// 带日期的演讲类型
+export interface LectureWithDate {
+  id: string;
+  title: string;
+  created_at: string | Date;
+  description?: string | null;
+  status?: string;
+  participantCount?: number;
+}
+
+// 包含演讲列表的组织类型
+export interface OrganizationWithLectures extends Organization {
+  lectures?: LectureWithDate[];
+}
+
+// 演讲详情客户端属性
+export interface LectureDetailClientProps {
+  lecture: LectureWithQuizItems;
+  stats: {
+    totalParticipants: number;
+    totalQuizItems: number;
+    totalTranscripts: number;
+    totalMaterials: number;
+    contextSize: number;
+    avgResponseTime: number;
+  };
+}
+
+// 组织详情客户端属性
+export interface OrganizationDetailClientProps {
+  organization: OrganizationWithLectures;
+  stats: {
+    totalLectures: number;
+  };
+}
+
+// ============= 数据库常量 =============
+// 从 @repo/db/client 导入以避免服务器端代码泄露到客户端
