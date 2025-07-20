@@ -1,5 +1,5 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
 
 // 从环境变量获取数据库连接字符串
@@ -11,11 +11,23 @@ if (!databaseUrl) {
 }
 
 // 创建数据库连接实例
-// 使用 snake_case 命名约定
-export const db = drizzle(neon(databaseUrl), {
-  casing: 'snake_case',
-  schema,
-});
+let db: ReturnType<typeof drizzlePg> | ReturnType<typeof drizzleNeon>;
+
+// 兼容 Neon Serverless 和 PostgreSQL 连接
+if (databaseUrl.includes('neon')) {
+  db = drizzleNeon(databaseUrl, {
+    casing: 'snake_case',
+    schema,
+  });
+} else {
+  db = drizzlePg(databaseUrl, {
+    casing: 'snake_case',
+    schema,
+  });
+}
+
+// 导出数据库连接实例
+export { db };
 
 // 导出 Drizzle ORM 常用工具
 export {

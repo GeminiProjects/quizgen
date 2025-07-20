@@ -14,7 +14,7 @@ import {
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { getServerSideSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import LectureDetailContent from './content';
 
 interface PageProps {
@@ -146,11 +146,7 @@ async function getLectureData(lectureId: string, userId: string) {
  */
 export default async function LectureDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const session = await getServerSideSession();
-
-  if (!session?.user?.id) {
-    notFound();
-  }
+  const session = await requireAuth();
 
   const data = await getLectureData(resolvedParams.id, session.user.id);
 

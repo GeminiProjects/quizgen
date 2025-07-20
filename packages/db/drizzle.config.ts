@@ -6,7 +6,7 @@ dotenv.config({ path: '../../.env.local' });
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error('DATABASE_URL is required');
+  throw new Error('环境变量 DATABASE_URL 未设置');
 }
 
 export default defineConfig({

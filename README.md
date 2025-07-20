@@ -28,7 +28,7 @@
 |        | [Next.js](https://nextjs.org)                       | ^15   | 全栈框架         |
 |        | [TailwindCSS](https://tailwindcss.com)              | ^4    | 样式框架         |
 |        | [shadcn/ui](https://ui.shadcn.com)                  | -     | UI 组件库        |
-| 数据库 | [Postgres](https://www.postgresql.org/)             | ^16   | 关系型数据库     |
+| 数据库 | [Postgres](https://www.postgresql.org/)             | ^17   | 关系型数据库     |
 |        | [Drizzle](https://orm.drizzle.team)                 | ^0.44 | 数据库 ORM       |
 | 认证   | [Better Auth](https://better-auth.com)              | ^0.2  | 身份认证服务     |
 | 云服务 | [Vercel](https://vercel.com)                        | -     | Next.js 应用部署 |
@@ -70,6 +70,7 @@ quizgen/
 
 - **Bun**: 1.2+ 版本（包管理器 + 运行时）
 - **Git**: 版本控制
+- **Docker**: 用于运行本地数据库（可选）
 - **IDE**: [Visual Studio Code](https://code.visualstudio.com) 或 [Cursor](https://cursor.com)
 
 #### 1. 安装 Bun
@@ -108,41 +109,62 @@ bun install
 
 #### 4. 配置环境变量
 
+我们提供了一个交互式配置向导，帮助你快速设置环境变量：
+
 ```bash
-# 复制环境变量示例文件
-cp .env.example .env.local
+# 运行配置向导
+bun setup
 ```
 
-配置以下环境变量：
-```env
-# Better Auth 认证密钥 (一段随机字符串)
-BETTER_AUTH_SECRET=
+配置向导将引导你设置以下内容：
 
-# Github OAuth 凭证, 用于账户登录
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
+1. **Google API Key**（**必填**）
+   - 访问 [Google AI Studio](https://aistudio.google.com/app/apikey) 创建 API Key
+   - 用于生成智能测验题目
 
-# 数据库 (Postgres URL)
-DATABASE_URL=
+2. **Better Auth Secret**（可选）
+   - 留空将自动生成随机密钥
+   - 用于身份认证加密
 
-# Google API Key
-GOOGLE_GENERATIVE_AI_API_KEY=
+3. **GitHub OAuth**（可选）
+   - 访问 [GitHub Developer Settings](https://github.com/settings/developers) 创建 OAuth App
+   - 回调 URL 设置为: `http://localhost:3000/api/auth/callback/github`
+   - 用于用户登录，如果不选本地也支持 `匿名登录` 快速测试
 
-# 开发时代理 (可选)
-HTTP_PROXY=
-HTTPS_PROXY=
+4. **数据库配置**（可选）
+   - 留空将自动启动本地 PostgreSQL 17 数据库（需要 Docker）
+   - 或者提供自己的 PostgreSQL 数据库 URL
+
+> [!TIP]
+> 如果选择使用本地数据库，确保已安装并运行 [Docker Desktop](https://www.docker.com/products/docker-desktop/)。
+
+#### 5. 数据库管理
+
+如果使用本地数据库，可以使用以下命令管理：
+
+```bash
+# 启动数据库和管理界面
+bun db:start
+
+# 停止数据库
+bun db:stop
+
+# 重启数据库
+bun db:restart
+
+# 查看数据库状态
+bun db:status
+
+# 查看数据库日志
+bun db:logs
+
+# 清理数据库数据（危险操作）
+bun db:clean
 ```
 
-> [!NOTE]
-> 这里涉及一些基础环境配置
-> - [Postgres](https://www.postgresql.org/) 数据库搭建
-> - [Github OAuth](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app) 创建与配置
-> - [Google API Key](https://console.cloud.google.com/apis/credentials) 创建
-> 
-> 本文不再赘述。  
-> 首次创建数据库后，你可以通过 `bun db:push` 命令将数据库模式推送到数据库。
+数据库管理界面将在 https://local.drizzle.studio/ 运行。
 
-#### 7. 启动开发服务器
+#### 6. 启动开发服务器
 ```bash
 bun dev
 ```

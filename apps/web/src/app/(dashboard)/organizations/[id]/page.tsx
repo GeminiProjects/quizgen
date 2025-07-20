@@ -2,7 +2,7 @@ import { and, count, db, desc, eq, lectures, organizations } from '@repo/db';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { getServerSideSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import OrganizationDetailContent from './content';
 
 interface PageProps {
@@ -61,11 +61,7 @@ async function getOrganizationData(organizationId: string, userId: string) {
  */
 export default async function OrganizationDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const session = await getServerSideSession();
-
-  if (!session?.user?.id) {
-    notFound();
-  }
+  const session = await requireAuth();
 
   const data = await getOrganizationData(resolvedParams.id, session.user.id);
 

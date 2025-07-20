@@ -9,10 +9,18 @@
     "check": "turbo check",
     "format": "turbo format",
     "check-deprecated": "node scripts/check-deprecated.js",
+    "setup": "bun scripts/setup-env.ts",
     "db:generate": "cd packages/db && bunx drizzle-kit generate",
     "db:push": "cd packages/db && bunx drizzle-kit push",
     "db:migrate": "cd packages/db && bunx drizzle-kit migrate",
-    "db:studio": "cd packages/db && bunx drizzle-kit studio"
+    "db:studio": "cd packages/db && bunx drizzle-kit studio",
+    "db": "bun scripts/db-manager.ts",
+    "db:start": "bun scripts/db-manager.ts start",
+    "db:stop": "bun scripts/db-manager.ts stop",
+    "db:restart": "bun scripts/db-manager.ts restart",
+    "db:status": "bun scripts/db-manager.ts status",
+    "db:logs": "bun scripts/db-manager.ts logs",
+    "db:clean": "bun scripts/db-manager.ts clean"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.2",

@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { getServerSideSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import ParticipationContent from './content';
 
 /**
@@ -7,11 +6,7 @@ import ParticipationContent from './content';
  * 查看用户参与的演讲和测评
  */
 export default async function ParticipationPage() {
-  const session = await getServerSideSession();
-
-  if (!session) {
-    redirect('/');
-  }
+  await requireAuth();
 
   return (
     <div className="w-full">
