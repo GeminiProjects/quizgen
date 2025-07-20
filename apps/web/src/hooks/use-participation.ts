@@ -44,12 +44,21 @@ export function useParticipation() {
       errorRetryInterval: 1000,
       // 最多重试3次
       errorRetryCount: 3,
+      // 保持之前的数据直到新数据加载完成
+      keepPreviousData: true,
+      // 重新验证时保持数据
+      revalidateIfStale: false,
+      // 窗口聚焦时不自动重新验证（已在组件中手动处理）
+      revalidateOnFocus: false,
+      // 断网重连时重新验证
+      revalidateOnReconnect: true,
     }
   );
 
   return {
     participations: data?.data || [],
     isLoading,
+    isValidating: !data && isLoading,
     error,
     mutate,
   };

@@ -4,6 +4,7 @@ import { cn } from '@repo/ui/lib/utils';
 import { Building2, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { preloadData } from '@/lib/swr-config';
 
 // 导航项配置 - 按照顺序：参与、演讲、组织
 const navItems = [
@@ -13,6 +14,7 @@ const navItems = [
     icon: Users,
     href: '/participation',
     color: 'success' as const,
+    apiEndpoint: '/api/participation',
   },
   {
     id: 'lectures',
@@ -20,6 +22,7 @@ const navItems = [
     icon: Sparkles,
     href: '/lectures',
     color: 'info' as const,
+    apiEndpoint: '/api/lectures',
   },
   {
     id: 'organizations',
@@ -27,6 +30,7 @@ const navItems = [
     icon: Building2,
     href: '/organizations',
     color: 'warning' as const,
+    apiEndpoint: '/api/organizations',
   },
 ];
 
@@ -63,6 +67,18 @@ export function BottomNav({ className }: BottomNavProps) {
               )}
               href={item.href}
               key={item.id}
+              onMouseEnter={() => {
+                // 鼠标悬停时预加载数据
+                if (item.apiEndpoint) {
+                  preloadData(item.apiEndpoint);
+                }
+              }}
+              onTouchStart={() => {
+                // 触摸开始时预加载数据（移动端）
+                if (item.apiEndpoint) {
+                  preloadData(item.apiEndpoint);
+                }
+              }}
             >
               <Icon
                 className={cn(

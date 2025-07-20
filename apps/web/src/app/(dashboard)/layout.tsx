@@ -1,11 +1,17 @@
 import { BottomNav } from '@/components/navigation/bottom-nav';
 import { TopNav } from '@/components/navigation/top-nav';
+import { requireAuth } from '@/lib/auth';
 
-export default function MainLayout({
+// 强制动态渲染，因为所有 dashboard 页面都需要认证
+export const dynamic = 'force-dynamic';
+
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // 统一在布局中进行认证检查
+  await requireAuth();
   return (
     <div className="flex min-h-screen flex-col">
       {/* 顶部导航栏 - 固定高度，减少空间占用 */}

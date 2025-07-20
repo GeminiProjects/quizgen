@@ -36,6 +36,7 @@ export const GET = withErrorHandler(async (_request: NextRequest) => {
 
   try {
     // 查询用户参与的演讲列表
+    // 使用子查询预先计算 quiz_items 数量，避免在主查询中使用 GROUP BY
     const participatedLectures = await db
       .select({
         id: lectures.id,
@@ -75,9 +76,16 @@ export const GET = withErrorHandler(async (_request: NextRequest) => {
         authUser.name,
         authUser.email
       )
-      .orderBy(desc(lectureParticipants.joined_at));
+      .orderBy(desc(lectureParticipants.joined_at))
+      .limit(100); // 限制返回最近 100 条记录
 
-    return createSuccessResponse(participatedLectures);
+    // 添加缓存头，减少重复请求
+    const response = createSuccessResponse(participatedLectures);
+    response.headers.set(
+      'Cache-Control',
+      'private, max-age=60, stale-while-revalidate=300'
+    );
+    return response;
   } catch (error) {
     return handleDatabaseError(error);
   }

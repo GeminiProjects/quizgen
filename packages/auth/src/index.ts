@@ -6,10 +6,19 @@
 import { db } from '@repo/db';
 import { betterAuth, type Session, type User } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { anonymous, type BetterAuthPlugin } from 'better-auth/plugins';
+import {
+  anonymous,
+  type BetterAuthPlugin,
+  oAuthProxy,
+} from 'better-auth/plugins';
 import { authTables } from './schema';
 
 const plugins: BetterAuthPlugin[] = [];
+
+// 配置 OAuth 代理插件（如果设置了代理环境变量）
+if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+  plugins.push(oAuthProxy({}));
+}
 
 if (process.env.NODE_ENV === 'development') {
   plugins.push(anonymous());

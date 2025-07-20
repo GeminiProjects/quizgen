@@ -19,7 +19,8 @@
     "better-auth": "^1.2.12"
   },
   "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
     "@types/bun": "^1.2.0",
-    "@repo/tsconfig": "workspace:*"
+    "undici": "^7.12.0"
   }
 }

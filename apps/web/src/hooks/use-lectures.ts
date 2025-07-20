@@ -66,19 +66,23 @@ export interface UpdateLectureData {
 export function useLectures() {
   const url = '/api/lectures';
 
-  const { data, error, isLoading, mutate } = useSWR<LecturesResponse>(url, {
-    // 3分钟内不重新请求
-    dedupingInterval: 3 * 60 * 1000,
-    // 错误重试间隔递增
-    errorRetryInterval: 1000,
-    // 最多重试3次
-    errorRetryCount: 3,
-  });
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<LecturesResponse>(url, {
+      // 3分钟内不重新请求
+      dedupingInterval: 3 * 60 * 1000,
+      // 错误重试间隔递增
+      errorRetryInterval: 1000,
+      // 最多重试3次
+      errorRetryCount: 3,
+      // 保留之前的数据
+      keepPreviousData: true,
+    });
 
   return {
     lectures: data?.data?.data || [],
     pagination: data?.data?.pagination,
     isLoading,
+    isValidating,
     error,
     mutate,
   };
@@ -88,7 +92,7 @@ export function useLectures() {
  * 获取单个演讲详情
  */
 export function useLecture(id: string | undefined) {
-  const { data, error, isLoading, mutate } = useSWR<{
+  const { data, error, isLoading, isValidating, mutate } = useSWR<{
     success: boolean;
     data: Lecture;
   }>(id ? `/api/lectures/${id}` : null, {
@@ -101,11 +105,14 @@ export function useLecture(id: string | undefined) {
       }
       return 0;
     },
+    // 保留之前的数据
+    keepPreviousData: true,
   });
 
   return {
     lecture: data?.data,
     isLoading,
+    isValidating,
     error,
     mutate,
   };

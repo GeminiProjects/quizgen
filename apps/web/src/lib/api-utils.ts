@@ -23,11 +23,19 @@ export function createSuccessResponse<T>(
   data: T,
   message?: string
 ): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     data,
     message,
   });
+
+  // 添加缓存头，缓存 5 秒
+  response.headers.set(
+    'Cache-Control',
+    'public, s-maxage=5, stale-while-revalidate=59'
+  );
+
+  return response;
 }
 
 /**

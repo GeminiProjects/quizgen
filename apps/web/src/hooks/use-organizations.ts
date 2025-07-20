@@ -22,22 +22,23 @@ interface OrganizationsResponse {
  * 获取用户的组织列表
  */
 export function useOrganizations() {
-  const { data, error, isLoading, mutate } = useSWR<OrganizationsResponse>(
-    '/api/organizations',
-    {
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<OrganizationsResponse>('/api/organizations', {
       // 5分钟内不重新请求
       dedupingInterval: 5 * 60 * 1000,
       // 错误重试间隔递增
       errorRetryInterval: 1000,
       // 最多重试3次
       errorRetryCount: 3,
-    }
-  );
+      // 保留之前的数据
+      keepPreviousData: true,
+    });
 
   return {
     organizations: data?.data?.data || [],
     pagination: data?.data?.pagination,
     isLoading,
+    isValidating,
     error,
     mutate,
   };
@@ -47,17 +48,20 @@ export function useOrganizations() {
  * 获取单个组织详情
  */
 export function useOrganization(id: string | undefined) {
-  const { data, error, isLoading, mutate } = useSWR<Organization>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<Organization>(
     id ? `/api/organizations/${id}` : null,
     {
       // 组织详情缓存时间更长
       dedupingInterval: 10 * 60 * 1000,
+      // 保留之前的数据
+      keepPreviousData: true,
     }
   );
 
   return {
     organization: data,
     isLoading,
+    isValidating,
     error,
     mutate,
   };
