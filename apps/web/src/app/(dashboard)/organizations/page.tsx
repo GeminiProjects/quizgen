@@ -35,14 +35,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CreateOrganizationDialog from '@/app/(dashboard)/organizations/create-org-dialog';
 import OrganizationStatsCard from '@/app/(dashboard)/organizations/stats';
-import { PageTransition } from '@/components/page-transition';
 import { useOrganizations } from '@/hooks/use-organizations';
 
 /**
  * 组织管理标签页
  * 显示用户创建的组织列表，支持创建、搜索、排序和查看组织详情
  */
-export default function OrganizationsContent() {
+export default function OrganizationsPage() {
   const { organizations, isLoading, isValidating, error, mutate } =
     useOrganizations();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -189,188 +188,186 @@ export default function OrganizationsContent() {
   }
 
   return (
-    <PageTransition>
-      <div className="space-y-6">
-        {/* 页面头部 - 标题和操作按钮在同一行 */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-bold text-2xl">我的组织</h1>
-            <p className="text-muted-foreground">创建和管理演讲组织</p>
-          </div>
-          <Button
-            disabled={isValidating}
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            创建组织
-          </Button>
+    <div className="space-y-6">
+      {/* 页面头部 - 标题和操作按钮在同一行 */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-bold text-2xl">我的组织</h1>
+          <p className="text-muted-foreground">创建和管理演讲组织</p>
         </div>
-
-        {/* 组织统计 */}
-        {organizations && organizations.length > 0 && (
-          <OrganizationStatsCard organizations={organizations} />
-        )}
-
-        {/* 搜索和排序控件 */}
-        {organizations && organizations.length > 0 && (
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-9"
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索组织名称或描述..."
-                value={searchQuery}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select
-                onValueChange={(value) =>
-                  setSortBy(value as 'name' | 'created_at' | 'lectures')
-                }
-                value={sortBy}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="created_at">创建时间</SelectItem>
-                  <SelectItem value="name">名称</SelectItem>
-                  <SelectItem value="lectures">演讲数量</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={toggleSortOrder} size="icon" variant="outline">
-                {sortOrder === 'asc' ? (
-                  <SortAsc className="h-4 w-4" />
-                ) : (
-                  <SortDesc className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* 组织列表 */}
-        {filteredAndSortedOrganizations.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Building2 className="mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 font-semibold text-lg">
-                {searchQuery ? '没有找到匹配的组织' : '还没有创建任何组织'}
-              </h3>
-              <p className="mb-4 text-center text-muted-foreground">
-                {searchQuery
-                  ? '尝试使用其他关键词搜索'
-                  : '创建您的第一个组织，开始管理系列演讲活动！'}
-              </p>
-              {!searchQuery && (
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  创建组织
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filteredAndSortedOrganizations.map((org) => (
-              <Card
-                className="group relative overflow-hidden transition-all duration-200 hover:shadow-md"
-                key={org.id}
-              >
-                <Link
-                  className="absolute inset-0 z-10"
-                  href={`/organizations/${org.id}`}
-                >
-                  <span className="sr-only">查看{org.name}详情</span>
-                </Link>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <span className="truncate">{org.name}</span>
-                        <ArrowRight className="-translate-x-1 h-3.5 w-3.5 flex-shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
-                      </CardTitle>
-                      <CardDescription className="mt-0.5 line-clamp-1 text-xs">
-                        {org.description || '暂时没有描述。'}
-                      </CardDescription>
-                    </div>
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  {/* 统计信息 */}
-                  <div className="mb-3 flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Presentation className="h-3.5 w-3.5" />
-                      <span>演讲管理</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>
-                        {new Date(org.created_at).toLocaleDateString('zh-CN', {
-                          month: 'numeric',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 组织密码 */}
-                  <div className="relative z-20 flex items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <Input
-                        className="h-8 pr-20 font-mono text-xs"
-                        onClick={(e) => e.stopPropagation()}
-                        readOnly
-                        type={showPasswords[org.id] ? 'text' : 'password'}
-                        value={org.password}
-                      />
-                    </div>
-                    <div className="absolute top-1 right-1 flex gap-1">
-                      <Button
-                        className="h-6 w-6 p-0"
-                        disabled={isValidating}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          togglePasswordVisibility(org.id);
-                        }}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        {showPasswords[org.id] ? (
-                          <EyeOff className="h-3 w-3" />
-                        ) : (
-                          <Eye className="h-3 w-3" />
-                        )}
-                      </Button>
-                      <Button
-                        className="h-6 w-6 p-0"
-                        disabled={isValidating}
-                        onClick={(e) => copyPassword(org.password, e)}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* 创建组织对话框 */}
-        <CreateOrganizationDialog
-          onOpenChange={setShowCreateDialog}
-          onSuccess={handleOrganizationCreated}
-          open={showCreateDialog}
-        />
+        <Button
+          disabled={isValidating}
+          onClick={() => setShowCreateDialog(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          创建组织
+        </Button>
       </div>
-    </PageTransition>
+
+      {/* 组织统计 */}
+      {organizations && organizations.length > 0 && (
+        <OrganizationStatsCard organizations={organizations} />
+      )}
+
+      {/* 搜索和排序控件 */}
+      {organizations && organizations.length > 0 && (
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索组织名称或描述..."
+              value={searchQuery}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Select
+              onValueChange={(value) =>
+                setSortBy(value as 'name' | 'created_at' | 'lectures')
+              }
+              value={sortBy}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">创建时间</SelectItem>
+                <SelectItem value="name">名称</SelectItem>
+                <SelectItem value="lectures">演讲数量</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={toggleSortOrder} size="icon" variant="outline">
+              {sortOrder === 'asc' ? (
+                <SortAsc className="h-4 w-4" />
+              ) : (
+                <SortDesc className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 组织列表 */}
+      {filteredAndSortedOrganizations.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Building2 className="mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 className="mb-2 font-semibold text-lg">
+              {searchQuery ? '没有找到匹配的组织' : '还没有创建任何组织'}
+            </h3>
+            <p className="mb-4 text-center text-muted-foreground">
+              {searchQuery
+                ? '尝试使用其他关键词搜索'
+                : '创建您的第一个组织，开始管理系列演讲活动！'}
+            </p>
+            {!searchQuery && (
+              <Button onClick={() => setShowCreateDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                创建组织
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filteredAndSortedOrganizations.map((org) => (
+            <Card
+              className="group relative overflow-hidden transition-all duration-200 hover:shadow-md"
+              key={org.id}
+            >
+              <Link
+                className="absolute inset-0 z-10"
+                href={`/organizations/${org.id}`}
+              >
+                <span className="sr-only">查看{org.name}详情</span>
+              </Link>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <span className="truncate">{org.name}</span>
+                      <ArrowRight className="-translate-x-1 h-3.5 w-3.5 flex-shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                    </CardTitle>
+                    <CardDescription className="mt-0.5 line-clamp-1 text-xs">
+                      {org.description || '暂时没有描述。'}
+                    </CardDescription>
+                  </div>
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {/* 统计信息 */}
+                <div className="mb-3 flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Presentation className="h-3.5 w-3.5" />
+                    <span>演讲管理</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>
+                      {new Date(org.created_at).toLocaleDateString('zh-CN', {
+                        month: 'numeric',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 组织密码 */}
+                <div className="relative z-20 flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Input
+                      className="h-8 pr-20 font-mono text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                      readOnly
+                      type={showPasswords[org.id] ? 'text' : 'password'}
+                      value={org.password}
+                    />
+                  </div>
+                  <div className="absolute top-1 right-1 flex gap-1">
+                    <Button
+                      className="h-6 w-6 p-0"
+                      disabled={isValidating}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        togglePasswordVisibility(org.id);
+                      }}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      {showPasswords[org.id] ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
+                    </Button>
+                    <Button
+                      className="h-6 w-6 p-0"
+                      disabled={isValidating}
+                      onClick={(e) => copyPassword(org.password, e)}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* 创建组织对话框 */}
+      <CreateOrganizationDialog
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleOrganizationCreated}
+        open={showCreateDialog}
+      />
+    </div>
   );
 }
