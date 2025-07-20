@@ -120,15 +120,7 @@ export const PUT = withErrorHandler(
           updated_at: new Date(),
         })
         .where(eq(organizations.id, id))
-        .returning({
-          id: organizations.id,
-          name: organizations.name,
-          description: organizations.description,
-          password: organizations.password,
-          owner_id: organizations.owner_id,
-          created_at: organizations.created_at,
-          updated_at: organizations.updated_at,
-        });
+        .returning();
 
       return createSuccessResponse(updatedOrganization, '组织更新成功');
     } catch (error) {

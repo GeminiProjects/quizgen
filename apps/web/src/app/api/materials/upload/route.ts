@@ -2,7 +2,7 @@
  * 文件上传 API 路由
  * POST /api/materials/upload
  */
-import { db, eq, materials } from '@repo/db';
+import { db, eq, lectures, materials } from '@repo/db';
 import {
   createGeminiClient,
   FileProcessor,
@@ -55,9 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. 验证演讲是否存在并且用户有权限
-    const lecture = await db.query.lectures.findFirst({
-      where: (lectures, { eq: whereEq }) => whereEq(lectures.id, lectureId),
-    });
+    const [lecture] = await db
+      .select()
+      .from(lectures)
+      .where(eq(lectures.id, lectureId))
+      .limit(1);
 
     if (!lecture) {
       return NextResponse.json({ error: '演讲不存在' }, { status: 404 });

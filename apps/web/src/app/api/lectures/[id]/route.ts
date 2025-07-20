@@ -152,19 +152,7 @@ export const PATCH = withErrorHandler(
         .update(lectures)
         .set(updateValues)
         .where(eq(lectures.id, id))
-        .returning({
-          id: lectures.id,
-          title: lectures.title,
-          description: lectures.description,
-          owner_id: lectures.owner_id,
-          org_id: lectures.org_id,
-          join_code: lectures.join_code,
-          status: lectures.status,
-          starts_at: lectures.starts_at,
-          ends_at: lectures.ends_at,
-          created_at: lectures.created_at,
-          updated_at: lectures.updated_at,
-        });
+        .returning();
 
       return createSuccessResponse(updatedLecture, '演讲更新成功');
     } catch (error) {

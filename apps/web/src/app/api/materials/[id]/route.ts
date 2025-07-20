@@ -2,7 +2,7 @@
  * 材料删除 API 路由
  * DELETE /api/materials/[id]
  */
-import { db, eq, materials } from '@repo/db';
+import { db, eq, lectures, materials } from '@repo/db';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSideSession } from '@/lib/auth';
 
@@ -23,30 +23,36 @@ export async function DELETE(
     }
 
     // 2. 查询材料记录
-    const material = await db.query.materials.findFirst({
-      where: (t, { eq: whereEq }) => whereEq(t.id, id),
-      with: {
-        lecture: true,
-      },
-    });
+    const [material] = await db
+      .select()
+      .from(materials)
+      .where(eq(materials.id, id))
+      .limit(1);
 
     if (!material) {
       return NextResponse.json({ error: '材料不存在' }, { status: 404 });
     }
 
-    // 3. 验证权限 - 只有创建者或演讲的创建者可以删除
+    // 3. 查询关联的演讲
+    const [lecture] = await db
+      .select()
+      .from(lectures)
+      .where(eq(lectures.id, material.lecture_id))
+      .limit(1);
+
+    // 4. 验证权限 - 只有创建者或演讲的创建者可以删除
     const hasPermission =
       material.created_by === session.user.id ||
-      material.lecture.owner_id === session.user.id;
+      (lecture && lecture.owner_id === session.user.id);
 
     if (!hasPermission) {
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
-    // 4. 删除材料记录
+    // 5. 删除材料记录
     await db.delete(materials).where(eq(materials.id, id));
 
-    // 5. 返回成功响应
+    // 6. 返回成功响应
     return NextResponse.json({
       success: true,
       message: '材料已删除',

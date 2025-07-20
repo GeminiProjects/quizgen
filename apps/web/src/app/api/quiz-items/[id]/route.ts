@@ -163,15 +163,7 @@ export const PUT = withErrorHandler(
           answer,
         })
         .where(eq(quizItems.id, id))
-        .returning({
-          id: quizItems.id,
-          lecture_id: quizItems.lecture_id,
-          question: quizItems.question,
-          options: quizItems.options,
-          answer: quizItems.answer,
-          ts: quizItems.ts,
-          created_at: quizItems.created_at,
-        });
+        .returning();
 
       return createSuccessResponse(updatedQuizItem, '题目更新成功');
     } catch (error) {
