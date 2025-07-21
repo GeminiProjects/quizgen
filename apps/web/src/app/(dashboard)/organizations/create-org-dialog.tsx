@@ -13,13 +13,12 @@ import { Label } from '@repo/ui/components/label';
 import { Textarea } from '@repo/ui/components/textarea';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useOrganizationActions } from '@/hooks/use-organizations';
-import type { Organization } from '@/types/organization';
+import { createOrganization } from '@/app/actions/organizations';
 
 interface CreateOrganizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (organization: Organization) => void;
+  onSuccess: () => void;
 }
 
 /**
@@ -37,7 +36,6 @@ export default function CreateOrganizationDialog({
     description: '',
     password: '',
   });
-  const { createOrganization } = useOrganizationActions();
 
   // 生成随机密码
   const generatePassword = () => {
@@ -71,14 +69,14 @@ export default function CreateOrganizationDialog({
     setLoading(true);
 
     try {
-      const result = await createOrganization({
+      const _result = await createOrganization({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         password: formData.password.trim(),
       });
 
       toast.success('组织创建成功');
-      onSuccess(result.data);
+      onSuccess();
       // 重置表单
       setFormData({
         name: '',

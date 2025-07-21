@@ -3,6 +3,7 @@
  * 基于演讲材料和转录内容使用 AI 生成选择题
  */
 
+import { createGeminiClient } from '@repo/ai';
 import {
   db,
   eq,
@@ -12,7 +13,6 @@ import {
   type Transcript,
   transcripts,
 } from '@repo/db';
-import { createGeminiClient } from '@repo/gemini-api';
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {

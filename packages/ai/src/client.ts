@@ -10,7 +10,7 @@ import { GoogleGenAI } from '@google/genai';
  */
 export function createGeminiClient(apiKey: string): GoogleGenAI {
   if (!apiKey) {
-    throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is required');
+    throw new Error('需要配置 GOOGLE_GENERATIVE_AI_API_KEY 环境变量');
   }
 
   return new GoogleGenAI({

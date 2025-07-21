@@ -1,6 +1,5 @@
 'use client';
 
-import type { Transcript } from '@repo/db';
 import { Button } from '@repo/ui/components/button';
 import {
   Card,
@@ -13,7 +12,7 @@ import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import QuizDisplay from '@/components/quiz-display';
-import type { Material } from '@/hooks/use-materials';
+import type { Material, Transcript } from '@/types';
 
 interface QuizTestTabProps {
   lectureId: string;

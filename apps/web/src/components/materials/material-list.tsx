@@ -35,22 +35,12 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import useSWR, { mutate } from 'swr';
-
-interface Material {
-  id: string;
-  fileName: string;
-  fileType: string;
-  status: string;
-  progress: number;
-  hasContent: boolean;
-  error?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { deleteMaterial } from '@/app/actions/materials';
+import type { Material } from '@/types';
 
 interface MaterialListProps {
-  lectureId: string;
+  materials: Material[];
+  onMaterialsChange?: () => void;
   onViewContent?: (materialId: string) => void;
   className?: string;
 }
@@ -122,60 +112,43 @@ const getStatusVariant = (
 };
 
 export function MaterialList({
-  lectureId,
+  materials,
+  onMaterialsChange,
   onViewContent,
   className,
 }: MaterialListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  // 获取材料列表
-  const { data, error, isLoading } = useSWR<{ materials: Material[] }>(
-    `/api/materials?lectureId=${lectureId}`,
-    async (url) => {
-      const res = await fetch(url);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || '获取材料列表失败');
-      }
-      return res.json();
-    },
-    {
-      refreshInterval: 5000, // 5 秒刷新一次，用于更新处理状态
-    }
-  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 删除材料
   const handleDelete = async () => {
-    if (!deletingId) {
+    if (!deletingId || isDeleting) {
       return;
     }
 
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/materials/${deletingId}`, {
-        method: 'DELETE',
-      });
+      const result = await deleteMaterial(deletingId);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || '删除失败');
+      if (result.success) {
+        toast.success('材料已删除');
+        onMaterialsChange?.();
+      } else {
+        throw new Error(result.error || '删除失败');
       }
-
-      toast.success('材料已删除');
-
-      // 刷新列表
-      mutate(`/api/materials?lectureId=${lectureId}`);
     } catch (err) {
       console.error('Delete material error:', err);
       toast.error(err instanceof Error ? err.message : '删除失败');
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
       setShowDeleteDialog(false);
     }
   };
 
   // 加载状态
-  if (isLoading) {
+  if (!materials) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -191,25 +164,6 @@ export function MaterialList({
       </Card>
     );
   }
-
-  // 错误状态
-  if (error) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>演讲材料</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-4 w-4" />
-            <p className="text-sm">{error.message}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const materials = data?.materials || [];
 
   return (
     <>
@@ -230,7 +184,8 @@ export function MaterialList({
                   <Card
                     className={cn(
                       'transition-colors',
-                      material.status === 'failed' && 'border-destructive/50'
+                      material.upload_status === 'failed' &&
+                        'border-destructive/50'
                     )}
                     key={material.id}
                   >
@@ -239,38 +194,44 @@ export function MaterialList({
                       <div
                         className={cn(
                           'flex h-10 w-10 items-center justify-center rounded-lg',
-                          material.status === 'completed'
+                          material.upload_status === 'completed'
                             ? 'bg-primary/10 text-primary'
-                            : material.status === 'failed'
+                            : material.upload_status === 'failed'
                               ? 'bg-destructive/10 text-destructive'
                               : 'bg-secondary/10 text-secondary-foreground'
                         )}
                       >
-                        {getFileIcon(material.fileType)}
+                        {getFileIcon(material.file_type)}
                       </div>
 
                       {/* 文件信息 */}
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-sm">
-                            {material.fileName}
+                            {material.file_name}
                           </p>
-                          <Badge variant={getStatusVariant(material.status)}>
+                          <Badge
+                            variant={getStatusVariant(
+                              material.upload_status || 'pending'
+                            )}
+                          >
                             <span className="mr-1">
-                              {getStatusIcon(material.status)}
+                              {getStatusIcon(
+                                material.upload_status || 'pending'
+                              )}
                             </span>
-                            {getStatusText(material.status)}
+                            {getStatusText(material.upload_status || 'pending')}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-muted-foreground text-xs">
                           <span>
-                            {new Date(material.createdAt).toLocaleString(
+                            {new Date(material.created_at).toLocaleString(
                               'zh-CN'
                             )}
                           </span>
-                          {material.error && (
+                          {material.error_message && (
                             <span className="text-destructive">
-                              {material.error}
+                              {material.error_message}
                             </span>
                           )}
                         </div>
@@ -278,8 +239,8 @@ export function MaterialList({
 
                       {/* 操作按钮 */}
                       <div className="flex items-center gap-2">
-                        {material.status === 'completed' &&
-                          material.hasContent && (
+                        {material.upload_status === 'completed' &&
+                          material.text_content && (
                             <Button
                               onClick={() => onViewContent?.(material.id)}
                               size="sm"

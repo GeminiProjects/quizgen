@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@repo/ui/globals.css';
 import { Toaster } from '@repo/ui/components/sonner';
-import { SWRProvider } from '@/components/swr-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = Geist({
@@ -40,10 +39,8 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <SWRProvider>
-            <div className="mx-auto max-w-7xl">{children}</div>
-            <Toaster />
-          </SWRProvider>
+          <div className="mx-auto max-w-7xl">{children}</div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

@@ -25,8 +25,9 @@ import {
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { cn } from '@repo/ui/lib/utils';
 import { Building2, Check, Lock, Search, Users } from 'lucide-react';
-import { useState } from 'react';
-import { usePublicOrganizations } from '@/hooks/use-public-organizations';
+import { useEffect, useState } from 'react';
+import { getPublicOrganizations } from '@/app/actions/organizations';
+import type { Organization } from '@/types';
 
 interface OrganizationSelectorProps {
   value?: string;
@@ -47,15 +48,27 @@ export function OrganizationSelector({
 }: OrganizationSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 获取公开组织列表
-  const { organizations, isLoading } = usePublicOrganizations({
-    search,
-    limit: 50, // 一次加载更多以减少分页
-  });
+  // 加载公开组织列表
+  useEffect(() => {
+    const loadOrganizations = async () => {
+      setIsLoading(true);
+      try {
+        const orgs = await getPublicOrganizations();
+        setOrganizations(orgs);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadOrganizations();
+  }, []);
 
   // 查找当前选中的组织
-  const selectedOrg = organizations.find((org) => org.id === value);
+  const selectedOrg = organizations.find(
+    (org: Organization) => org.id === value
+  );
 
   return (
     <>
@@ -102,7 +115,7 @@ export function OrganizationSelector({
               ) : (
                 <ScrollArea className="h-[400px]">
                   <CommandGroup>
-                    {organizations.map((org) => (
+                    {organizations.map((org: Organization) => (
                       <CommandItem
                         className="cursor-pointer p-3"
                         key={org.id}
@@ -116,11 +129,11 @@ export function OrganizationSelector({
                           {/* 创建者头像 */}
                           <Avatar className="h-12 w-12 flex-shrink-0">
                             <AvatarImage
-                              alt={org.owner.name || org.owner.email}
-                              src={org.owner.image || undefined}
+                              alt={org.owner?.name || org.owner?.email || ''}
+                              src={org.owner?.avatar_url || undefined}
                             />
                             <AvatarFallback className="text-lg">
-                              {(org.owner.name || org.owner.email)
+                              {(org.owner?.name || org.owner?.email || 'U')
                                 .charAt(0)
                                 .toUpperCase()}
                             </AvatarFallback>
@@ -152,10 +165,10 @@ export function OrganizationSelector({
                               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                 <Users className="h-3.5 w-3.5" />
                                 <span className="font-medium">
-                                  {org.owner.name || 'Anonymous'}
+                                  {org.owner?.name || 'Anonymous'}
                                 </span>
                                 <span className="text-xs">
-                                  {org.owner.email.slice(0, 22)}
+                                  {org.owner?.email?.slice(0, 22) || ''}
                                 </span>
                               </div>
 

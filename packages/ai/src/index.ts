@@ -1,5 +1,5 @@
 /**
- * @repo/gemini-api - Gemini API 客户端和工具集
+ * @repo/ai - Gemini API 客户端和工具集
  */
 
 // 导出客户端相关功能

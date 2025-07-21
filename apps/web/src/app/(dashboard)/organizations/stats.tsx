@@ -1,6 +1,6 @@
 import { Building2, Calendar, LayoutGrid, TrendingUp } from 'lucide-react';
 import { StatsCard } from '@/components/stats-card';
-import type { Organization } from '@/types/organization';
+import type { Organization } from '@/types';
 
 interface OrganizationStatsCardProps {
   organizations: Organization[];

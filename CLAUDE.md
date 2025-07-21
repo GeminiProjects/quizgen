@@ -70,41 +70,6 @@ cd packages/db && bun test # 运行数据库测试
    - 统一使用 Bun 作为包管理器
    - 模块前缀统一为 `@repo/`
 
-## 核心组件
-
-### 数据模型
-- `users` - 用户表（Better Auth 创建）
-- `organizations` - 组织表（演讲集合管理）
-- `lectures` - 演讲会话表
-- `materials` - 预上传文本材料
-- `transcripts` - 实时转录片段
-- `quiz_items` - AI 生成的测验题目
-- `attempts` - 听众答题记录
-
-### 身份认证
-- 使用 Better Auth 提供 GitHub OAuth 登录
-- 支持多角色用户系统：组织者、演讲者、听众
-
-#### apps/web 身份认证工具函数
-在 `apps/web/src/lib/auth.ts` 中封装了身份认证相关的工具函数：
-
-```typescript
-// 推荐使用：封装的工具函数
-import { getServerSideSession } from '@/lib/auth';
-const session = await getServerSideSession();
-
-// 避免直接使用：原始 Better Auth API
-import { auth } from '@repo/auth';
-const session = await auth.api.getSession({ headers: await headers() });
-```
-
-封装的工具函数提供了：
-- 统一的错误处理
-- 简化的 API 调用
-- 类型安全的会话获取
-
-参考 [docs/project_design.md](./docs/project_design.md) 了解完整项目设计
-
 ## 前端设计规范
 
 ### 颜色 + Icon 样式设计语言
