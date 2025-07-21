@@ -15,16 +15,20 @@ import {
   ArrowRight,
   Calendar,
   CheckCircle,
+  Clock,
   LogIn,
   MessageSquare,
   Play,
   Search,
   Users,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import useSWR from 'swr';
+import { BreadcrumbNav } from '@/components/breadcrumb-nav';
+import { StatsCard } from '@/components/stats-card';
 import { type Lecture, lectureStatusConfig } from '@/types';
 import JoinLectureDialog from './join-lecture-dialog';
 
@@ -99,10 +103,33 @@ export default function ParticipationPage() {
     });
   };
 
+  // 计算统计数据
+  const stats = {
+    totalParticipations: participations.length,
+    inProgress: participations.filter((p) => p.status === 'in_progress').length,
+    completed: participations.filter((p) => p.status === 'ended').length,
+    totalQuizzes: participations.reduce(
+      (sum, p) => sum + (p._count?.quiz_items || 0),
+      0
+    ),
+    avgQuizzesPerLecture:
+      participations.length > 0
+        ? (
+            participations.reduce(
+              (sum, p) => sum + (p._count?.quiz_items || 0),
+              0
+            ) / participations.length
+          ).toFixed(1)
+        : '0',
+  };
+
+  const breadcrumbItems = [{ label: '参与演讲' }];
+
   // 骨架屏
   if (isValidating && !participations) {
     return (
       <div className="space-y-6">
+        <BreadcrumbNav items={breadcrumbItems} />
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="mb-2 h-8 w-32" />
@@ -110,40 +137,15 @@ export default function ParticipationPage() {
           </div>
           <Skeleton className="h-10 w-24" />
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-3">
-                <Skeleton className="h-4 w-20" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="mb-2 h-8 w-16" />
-                <Skeleton className="h-3 w-32" />
-              </CardContent>
-            </Card>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton className="h-32" key={i} />
           ))}
         </div>
         <Skeleton className="h-10 w-full" />
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Skeleton className="mb-1 h-5 w-3/4" />
-                    <Skeleton className="h-3 w-full" />
-                  </div>
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Skeleton className="mb-3 h-4 w-32" />
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </CardContent>
-            </Card>
+            <Skeleton className="h-48" key={i} />
           ))}
         </div>
       </div>
@@ -152,9 +154,13 @@ export default function ParticipationPage() {
 
   return (
     <div className="space-y-6">
+      {/* 面包屑导航 */}
+      <BreadcrumbNav items={breadcrumbItems} />
+
+      {/* 页面头部 */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-bold text-2xl">参加演讲</h1>
+          <h1 className="font-bold text-2xl">参与演讲</h1>
           <p className="text-muted-foreground">查看您参与的演讲和测评</p>
         </div>
         <Button onClick={() => setShowJoinDialog(true)}>
@@ -162,47 +168,55 @@ export default function ParticipationPage() {
           加入演讲
         </Button>
       </div>
+
+      {/* 统计卡片 */}
       {participations && participations.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="font-medium text-sm">参与演讲</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-bold text-2xl">{participations.length}</div>
-              <p className="text-muted-foreground text-xs">累计参与的演讲数</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="font-medium text-sm">进行中</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-bold text-2xl">
-                {
-                  participations.filter((p) => p.status === 'in_progress')
-                    .length
-                }
-              </div>
-              <p className="text-muted-foreground text-xs">正在进行的演讲</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="font-medium text-sm">测验题目</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="font-bold text-2xl">
-                {participations.reduce(
-                  (sum, p) => sum + (p._count?.quiz_items || 0),
-                  0
-                )}
-              </div>
-              <p className="text-muted-foreground text-xs">可参与的测验总数</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <StatsCard
+            description="累计参与"
+            icon={Users}
+            title="参与演讲"
+            value={stats.totalParticipations}
+          />
+
+          <StatsCard
+            description="正在进行"
+            icon={Play}
+            title="进行中"
+            value={stats.inProgress}
+          />
+
+          <StatsCard
+            description="已完成"
+            icon={CheckCircle}
+            title="已完成"
+            value={stats.completed}
+          />
+
+          <StatsCard
+            description="可参与测验"
+            icon={MessageSquare}
+            title="测验总数"
+            value={stats.totalQuizzes}
+          />
+
+          <StatsCard
+            description="平均测验数"
+            icon={Clock}
+            title="平均测验"
+            value={stats.avgQuizzesPerLecture}
+          />
+
+          <StatsCard
+            description="参与状态"
+            icon={Zap}
+            title="活跃状态"
+            value={stats.inProgress > 0 ? '活跃' : '空闲'}
+          />
         </div>
       )}
+
+      {/* 搜索栏 */}
       {participations && participations.length > 0 && (
         <div className="relative">
           <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
@@ -214,6 +228,8 @@ export default function ParticipationPage() {
           />
         </div>
       )}
+
+      {/* 演讲列表 */}
       {filteredParticipations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -243,7 +259,7 @@ export default function ParticipationPage() {
             >
               <Link
                 className="absolute inset-0 z-10"
-                href={`/lectures/${p.id}`}
+                href={`/participation/${p.id}`}
               >
                 <span className="sr-only">查看{p.title}详情</span>
               </Link>
@@ -294,6 +310,8 @@ export default function ParticipationPage() {
           ))}
         </div>
       )}
+
+      {/* 加入演讲对话框 */}
       <JoinLectureDialog
         onOpenChange={setShowJoinDialog}
         onSuccess={() => {

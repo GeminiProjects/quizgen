@@ -248,3 +248,77 @@ export async function endLecture(id: string) {
     ends_at: new Date().toISOString(),
   });
 }
+
+export async function getLectureWithQuizzes(id: string) {
+  const session = await requireAuth();
+
+  try {
+    // 首先检查用户是否参与了该演讲
+    const [participant] = await db
+      .select()
+      .from(lectureParticipants)
+      .where(
+        and(
+          eq(lectureParticipants.lecture_id, id),
+          eq(lectureParticipants.user_id, session.user.id)
+        )
+      )
+      .limit(1);
+
+    if (!participant) {
+      return {
+        success: false,
+        message: 'You are not a participant of this lecture',
+      };
+    }
+
+    // 获取演讲详情
+    const [lecture] = await db
+      .select({
+        id: lectures.id,
+        title: lectures.title,
+        description: lectures.description,
+        status: lectures.status,
+        starts_at: lectures.starts_at,
+        ends_at: lectures.ends_at,
+        owner_name: sql<string>`(select name from auth_user where id = ${lectures.owner_id})`,
+      })
+      .from(lectures)
+      .where(eq(lectures.id, id))
+      .limit(1);
+
+    if (!lecture) {
+      return {
+        success: false,
+        message: 'Lecture not found',
+      };
+    }
+
+    // 获取测验题目
+    const quizzes = await db
+      .select()
+      .from(quizItems)
+      .where(eq(quizItems.lecture_id, id))
+      .orderBy(quizItems.created_at);
+
+    return {
+      success: true,
+      data: {
+        ...lecture,
+        starts_at: lecture.starts_at.toISOString(),
+        ends_at: lecture.ends_at?.toISOString() || null,
+        quizzes: quizzes.map((quiz) => ({
+          ...quiz,
+          created_at: quiz.created_at.toISOString(),
+          ts: quiz.ts.toISOString(),
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Failed to get lecture with quizzes:', error);
+    return {
+      success: false,
+      message: 'Failed to load lecture details',
+    };
+  }
+}

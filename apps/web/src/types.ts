@@ -207,5 +207,17 @@ export interface OrganizationDetailClientProps {
   };
 }
 
+// 参与演讲数据结构
+export interface LectureData {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'not_started' | 'in_progress' | 'paused' | 'ended';
+  starts_at: string;
+  ends_at: string | null;
+  owner_name: string;
+  quizzes: QuizItem[];
+}
+
 // ============= 数据库常量 =============
 // 从 @repo/db/client 导入以避免服务器端代码泄露到客户端
