@@ -40,3 +40,4 @@ export {
   type QuizItemUpdateRequest,
   quizItemSchemas,
 } from './quiz-item';
+export * from "./participation";
