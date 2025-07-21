@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
   Card,
@@ -15,23 +14,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui/components/tabs';
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  FileText,
-  Hash,
-  MessageSquare,
-  Timer,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Hash, Timer, Users } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
-import { type LectureData, lectureStatusConfig, type QuizItem } from '@/types';
+import type { LectureData, QuizItem } from '@/types';
 import ExitLectureDialog from './exit-lecture';
 import QuizTestTab from './quiz-test-tab';
 
@@ -99,12 +88,6 @@ export default function LectureContent({ lecture }: LectureContentProps) {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="font-bold text-3xl">{lecture.title}</h1>
-            <Badge
-              className={lectureStatusConfig[lecture.status]?.className}
-              variant={lectureStatusConfig[lecture.status]?.variant}
-            >
-              {lectureStatusConfig[lecture.status]?.label}
-            </Badge>
           </div>
           {lecture.description && (
             <p className="text-lg text-muted-foreground">
@@ -130,55 +113,38 @@ export default function LectureContent({ lecture }: LectureContentProps) {
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatsCard
-          description="可参与测验"
-          icon={MessageSquare}
-          title="测验数量"
-          value={participationStats.totalQuizzes}
-        />
-
-        <StatsCard
-          description="总选项数"
-          icon={Hash}
-          title="题目选项"
-          value={participationStats.totalQuestions}
-        />
-
-        <StatsCard
-          description="平均选项数"
-          icon={FileText}
-          title="平均选项"
-          value={participationStats.avgOptionsPerQuiz}
-        />
-
-        <StatsCard
-          description="演讲时长"
-          icon={Clock}
-          title="演讲时长"
-          value={
-            participationStats.lectureDuration > 0
-              ? `${participationStats.lectureDuration}分钟`
-              : '进行中'
-          }
-        />
-
-        <StatsCard
-          description="题目总字数"
-          icon={Hash}
-          title="内容大小"
-          value={
-            participationStats.contextSize > 1000
-              ? `${(participationStats.contextSize / 1000).toFixed(1)}k`
-              : participationStats.contextSize
-          }
-        />
-
-        <StatsCard
-          description="演讲状态"
-          icon={Zap}
-          title="当前状态"
-          value={lectureStatusConfig[lecture.status]?.label}
-        />
+        <div className="lg:col-span-2">
+          <StatsCard
+            description="总选项数"
+            icon={Hash}
+            title="题目选项"
+            value={participationStats.totalQuestions}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <StatsCard
+            description="演讲时长"
+            icon={Clock}
+            title="演讲时长"
+            value={
+              participationStats.lectureDuration > 0
+                ? `${participationStats.lectureDuration}分钟`
+                : '进行中'
+            }
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <StatsCard
+            description="题目总字数"
+            icon={Hash}
+            title="内容大小"
+            value={
+              participationStats.contextSize > 1000
+                ? `${(participationStats.contextSize / 1000).toFixed(1)}k`
+                : participationStats.contextSize
+            }
+          />
+        </div>
       </div>
 
       {/* 演讲信息卡片 */}
@@ -220,7 +186,6 @@ export default function LectureContent({ lecture }: LectureContentProps) {
             )}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium text-sm">测验数量</span>
               </div>
               <p className="text-muted-foreground">
@@ -240,18 +205,9 @@ export default function LectureContent({ lecture }: LectureContentProps) {
         <CardContent>
           <Tabs defaultValue="quiz">
             <TabsList className="mb-4">
-              <TabsTrigger value="quiz">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                测验参与
-              </TabsTrigger>
-              <TabsTrigger value="progress">
-                <Timer className="mr-2 h-4 w-4" />
-                参与进度
-              </TabsTrigger>
-              <TabsTrigger value="analytics">
-                <Zap className="mr-2 h-4 w-4" />
-                参与分析
-              </TabsTrigger>
+              <TabsTrigger value="quiz">测验参与</TabsTrigger>
+              <TabsTrigger value="progress">参与进度</TabsTrigger>
+              <TabsTrigger value="analytics">参与分析</TabsTrigger>
             </TabsList>
 
             <TabsContent value="quiz">

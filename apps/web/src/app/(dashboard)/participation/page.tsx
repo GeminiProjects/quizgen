@@ -15,13 +15,10 @@ import {
   ArrowRight,
   Calendar,
   CheckCircle,
-  Clock,
   LogIn,
-  MessageSquare,
   Play,
   Search,
   Users,
-  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -172,47 +169,30 @@ export default function ParticipationPage() {
       {/* 统计卡片 */}
       {participations && participations.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          <StatsCard
-            description="累计参与"
-            icon={Users}
-            title="参与演讲"
-            value={stats.totalParticipations}
-          />
-
-          <StatsCard
-            description="正在进行"
-            icon={Play}
-            title="进行中"
-            value={stats.inProgress}
-          />
-
-          <StatsCard
-            description="已完成"
-            icon={CheckCircle}
-            title="已完成"
-            value={stats.completed}
-          />
-
-          <StatsCard
-            description="可参与测验"
-            icon={MessageSquare}
-            title="测验总数"
-            value={stats.totalQuizzes}
-          />
-
-          <StatsCard
-            description="平均测验数"
-            icon={Clock}
-            title="平均测验"
-            value={stats.avgQuizzesPerLecture}
-          />
-
-          <StatsCard
-            description="参与状态"
-            icon={Zap}
-            title="活跃状态"
-            value={stats.inProgress > 0 ? '活跃' : '空闲'}
-          />
+          <div className="lg:col-span-2">
+            <StatsCard
+              description="累计参与"
+              icon={Users}
+              title="参与演讲"
+              value={stats.totalParticipations}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <StatsCard
+              description="正在进行"
+              icon={Play}
+              title="进行中"
+              value={stats.inProgress}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <StatsCard
+              description="已完成"
+              icon={CheckCircle}
+              title="已完成"
+              value={stats.completed}
+            />
+          </div>
         </div>
       )}
 
@@ -285,9 +265,8 @@ export default function ParticipationPage() {
                       <Play className="h-4 w-4" />
                     ) : p.status === 'ended' ? (
                       <CheckCircle className="h-4 w-4" />
-                    ) : (
-                      <MessageSquare className="h-4 w-4" />
-                    )}
+                    ) : // Removed MessageSquare as it's no longer imported
+                    null}
                   </div>
                 </div>
               </CardHeader>
@@ -297,7 +276,7 @@ export default function ParticipationPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <MessageSquare className="h-3.5 w-3.5" />
+                    {/* Removed MessageSquare as it's no longer imported */}
                     <span>{p._count?.quiz_items || 0} 道题</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
