@@ -100,6 +100,11 @@ export interface Attempt extends DateToString<DBAttempt> {
   quiz?: QuizItem;
 }
 
+export type ParticipationHistory = {
+    attempt: Attempt;
+    quizItem: QuizItem;
+}[];
+
 // ============= 参与者相关 =============
 export interface LectureParticipant extends DateToString<DBLectureParticipant> {
   participant?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
