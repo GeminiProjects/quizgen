@@ -15,11 +15,41 @@ import {
   Clock,
   MessageSquare,
   Play,
+  Plus,
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LectureStatus, ParticipatedQuizItem } from '@/types';
 import QuizTest from './quiz-test';
+
+// 示例小学选择题
+const sampleQuestions = [
+  {
+    question: '小明有 5 个苹果，小红有 3 个苹果，他们一共有多少个苹果？',
+    options: ['6个', '7个', '8个', '9个'],
+    answer: 2,
+  },
+  {
+    question: '下列哪个是单数？',
+    options: ['2', '4', '5', '8'],
+    answer: 2,
+  },
+  {
+    question: '一周有几天？',
+    options: ['5天', '6天', '7天', '8天'],
+    answer: 2,
+  },
+  {
+    question: '下面哪个季节最热？',
+    options: ['春天', '夏天', '秋天', '冬天'],
+    answer: 1,
+  },
+  {
+    question: '1 + 1 = ?',
+    options: ['1', '2', '3', '4'],
+    answer: 1,
+  },
+];
 
 interface QuizTestTabProps {
   lecture: {
@@ -34,16 +64,42 @@ export default function QuizTestTab({ lecture }: QuizTestTabProps) {
     null
   );
   const [showQuizDialog, setShowQuizDialog] = useState(false);
+  const [localQuizzes, setLocalQuizzes] = useState<ParticipatedQuizItem[]>(
+    lecture.quizzes || []
+  );
 
-  const unattemptedQuizzes = lecture.quizzes.filter((q) => !q.attempted);
-  const attemptedQuizzes = lecture.quizzes.filter((q) => q.attempted);
+  // 生成随机题目
+  const generateRandomQuizzes = () => {
+    // 随机选择3个题目
+    const selectedQuestions = [...sampleQuestions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    const newQuizzes: ParticipatedQuizItem[] = selectedQuestions.map(
+      (q, index) => ({
+        id: `local-${Date.now()}-${index}`,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        ts: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        attempted: false,
+      })
+    );
+
+    setLocalQuizzes((prev) => [...prev, ...newQuizzes]);
+  };
+
+  // 使用本地状态而不是直接使用 lecture.quizzes
+  const unattemptedQuizzes = localQuizzes.filter((q) => !q.attempted);
+  const attemptedQuizzes = localQuizzes.filter((q) => q.attempted);
   const correctQuizzes = attemptedQuizzes.filter(
     (q) => q.my_attempt?.is_correct
   );
 
   const progress =
-    lecture.quizzes.length > 0
-      ? (attemptedQuizzes.length / lecture.quizzes.length) * 100
+    localQuizzes.length > 0
+      ? (attemptedQuizzes.length / localQuizzes.length) * 100
       : 0;
 
   const handleStartQuiz = (quiz: ParticipatedQuizItem) => {
@@ -56,12 +112,16 @@ export default function QuizTestTab({ lecture }: QuizTestTabProps) {
     setSelectedQuiz(null);
   };
 
-  if (lecture.quizzes.length === 0) {
+  if (!localQuizzes.length) {
     return (
       <div className="py-12 text-center">
         <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
         <h3 className="mb-2 font-semibold text-lg">暂无测验题目</h3>
-        <p className="text-muted-foreground">演讲者还未发布任何测验题目</p>
+        <p className="mb-6 text-muted-foreground">演讲者还未发布任何测验题目</p>
+        <Button onClick={generateRandomQuizzes} size="lg">
+          <Plus className="mr-2 h-4 w-4" />
+          生成示例题目
+        </Button>
       </div>
     );
   }
@@ -77,7 +137,7 @@ export default function QuizTestTab({ lecture }: QuizTestTabProps) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">完成进度</span>
             <span className="font-medium">
-              {attemptedQuizzes.length} / {lecture.quizzes.length} 题
+              {attemptedQuizzes.length} / {localQuizzes.length} 题
             </span>
           </div>
           <Progress className="h-2" value={progress} />
@@ -103,6 +163,35 @@ export default function QuizTestTab({ lecture }: QuizTestTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* 生成更多题目按钮 */}
+      {localQuizzes.length > 0 && (
+        <div className="flex justify-center">
+          <Button
+            className="w-full max-w-md"
+            onClick={generateRandomQuizzes}
+            variant="outline"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            生成更多题目
+          </Button>
+        </div>
+      )}
+
+      {/* 参加测验按钮 */}
+      {unattemptedQuizzes.length > 0 && (
+        <div className="flex justify-center">
+          <Button
+            className="w-full max-w-md"
+            disabled={lecture.status === 'ended'}
+            onClick={() => handleStartQuiz(unattemptedQuizzes[0])}
+            size="lg"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            开始答题
+          </Button>
+        </div>
+      )}
 
       {/* 未答题目 */}
       {unattemptedQuizzes.length > 0 && (

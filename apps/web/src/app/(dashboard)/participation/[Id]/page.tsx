@@ -13,6 +13,13 @@ export default async function ParticipationLecturePage({ params }: PageProps) {
       throw new Error(result.error);
     }
 
+    // 添加调试日志
+    console.log('Lecture data:', {
+      id: result.data.id,
+      title: result.data.title,
+      quizCount: result.data.quizzes?.length || 0,
+    });
+
     const Content = (await import('./content')).default;
     return <Content lecture={result.data} />;
   } catch (error) {

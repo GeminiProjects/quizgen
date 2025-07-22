@@ -129,6 +129,7 @@ export interface ParticipatedQuizItem {
   id: string;
   question: string;
   options: string[];
+  answer?: number;
   ts: string;
   created_at: string;
   attempted: boolean;
