@@ -1,57 +1,88 @@
 /**
- * 文件处理相关的类型定义
+ * AI 包的类型定义文件
+ * 包含所有公共接口和类型定义
  */
 
-// 文件处理结果
-export interface FileProcessingResult {
-  fileName: string;
-  fileType: string;
-  extractedText: string;
-  geminiFileUri: string;
+import type { FilePart, LanguageModel } from 'ai';
+
+/**
+ * 测验题目接口
+ * 表示一个完整的选择题
+ */
+export interface Quiz {
+  /** 问题内容 */
+  question: string;
+  /** 选项列表（通常为4个选项） */
+  options: string[];
+  /** 正确答案的索引（0-3） */
+  answer: number;
+  /** 答案解释，说明为什么这个答案是正确的 */
+  explanation: string;
 }
 
-// 处理进度
-export interface ProcessingProgress {
-  status: 'uploading' | 'processing' | 'extracting' | 'completed' | 'failed';
-  progress: number; // 0-100
-  message?: string;
+/**
+ * 测验生成结果接口
+ * 包含生成的测验题目和状态信息
+ */
+export interface QuizGenerationResult {
+  /** 生成是否成功 */
+  success: boolean;
+  /** 生成的题目总数 */
+  total: number;
+  /** 生成的测验题目列表 */
+  quizzes: Quiz[];
+  /** 错误信息（可选） */
+  error?: string;
 }
 
-// 支持的文件类型
-export const SUPPORTED_MIME_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'audio/mpeg',
-  'audio/mp3',
-  'audio/wav',
-  'audio/m4a',
-  'video/mp4',
-  'video/quicktime',
-  'video/x-msvideo',
-] as const;
+/**
+ * 超时配置接口
+ * 用于控制生成函数的超时行为
+ */
+export interface TimeoutOptions {
+  /** 超时时间（毫秒） */
+  timeout?: number;
+  /** 超时时的错误信息 */
+  timeoutMessage?: string;
+  /** 超时时的回调函数 */
+  onTimeout?: () => void;
+}
 
-export type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number];
+/**
+ * 上下文生成配置接口
+ * 用于控制上下文生成的行为
+ */
+export interface ContextGenerationConfig {
+  /** 使用的语言模型 */
+  model: LanguageModel;
+  /** 输入文件 */
+  file: FilePart;
+}
 
-// 文件扩展名映射
-export const MIME_TYPE_EXTENSIONS: Record<SupportedMimeType, string[]> = {
-  'text/plain': ['.txt'],
-  'application/pdf': ['.pdf'],
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
-    '.docx',
-  ],
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': [
-    '.pptx',
-  ],
-  'audio/mpeg': ['.mp3'],
-  'audio/mp3': ['.mp3'],
-  'audio/wav': ['.wav'],
-  'audio/m4a': ['.m4a'],
-  'video/mp4': ['.mp4'],
-  'video/quicktime': ['.mov'],
-  'video/x-msvideo': ['.avi'],
-};
+/**
+ * 测验生成配置接口
+ * 用于控制测验生成的行为
+ */
+export interface QuizGenerationConfig {
+  /** 使用的语言模型 */
+  model: LanguageModel;
+  /** 上下文内容 */
+  context: string;
+  /** 要生成的题目数量 */
+  count: number;
+  /** 超时选项（可选） */
+  timeoutOptions?: TimeoutOptions;
+}
 
-// 文件大小限制（20MB）
-export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+/**
+ * 提示词模板类型
+ * 用于定义不同的提示词模板
+ */
+export interface PromptTemplate {
+  /** 模板名称 */
+  name: string;
+  /** 模板内容 */
+  content: string;
+  /** 模板变量 */
+  variables?: string[];
+}

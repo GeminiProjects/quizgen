@@ -36,9 +36,9 @@ export {
 export {
   insertLectureSchema,
   type Lecture,
+  lectureStatusEnum,
   lectures,
   lecturesRelations,
-  lectureStatusEnum,
   type NewLecture,
   selectLectureSchema,
 } from './lectures';

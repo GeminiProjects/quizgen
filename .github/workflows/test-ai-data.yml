@@ -1,0 +1,36 @@
+name: 🧪 AI 数据测试
+
+env:
+  GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+
+on:
+  push:
+    paths:
+      - "packages/ai/data/**"
+      - "packages/ai/tests/**"
+  pull_request:
+    paths:
+      - "packages/ai/data/**"
+      - "packages/ai/tests/**"
+
+jobs:
+  test:
+    name: 📊 运行 AI 数据测试
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 检出代码仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 🍞 设置 Bun 环境
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 📦 安装依赖
+        run: bun install --no-cache
+
+      - name: 🧪 运行测试
+        run: bun run test

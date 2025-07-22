@@ -1,22 +1,45 @@
 /**
- * @repo/ai - Gemini API 客户端和工具集
+ * @repo/ai-wrapper - AI功能封装包
+ *
+ * 提供统一的AI接口，支持：
+ * - 文件内容提取和优化
+ * - 基于内容的测验题目生成
+ * - 多种AI模型支持（Google Gemini、OpenRouter等）
+ * - 流式输出和批量处理
+ *
+ * @packageDocumentation
  */
 
-// 导出客户端相关功能
-export { createGeminiClient } from './client';
-
-// 导出文件处理器
-export { FileProcessor } from './file-processor';
-
-// 导出类型定义
-export type {
-  FileProcessingResult,
-  ProcessingProgress,
-  SupportedMimeType,
-} from './types';
-
+// 导出核心生成器函数
 export {
-  MAX_FILE_SIZE,
-  MIME_TYPE_EXTENSIONS,
-  SUPPORTED_MIME_TYPES,
+  generateContext,
+  generateQuestions,
+} from './generators';
+
+// 导出提示词管理函数
+export {
+  CONTEXT_GENERATION_PROMPT,
+  fillPromptTemplate,
+  QUIZ_GENERATION_PROMPT,
+} from './prompts';
+// 导出所有类型定义
+export type {
+  ContextGenerationConfig,
+  PromptTemplate,
+  Quiz,
+  QuizGenerationConfig,
+  QuizGenerationResult,
+  TimeoutOptions,
 } from './types';
+
+// 导出工具函数
+export {
+  batchWithTimeout,
+  cleanText,
+  createFilePart,
+  createTimeoutController,
+  exportQuizzesToJSON,
+  getMediaType,
+  validateQuiz,
+  withTimeout,
+} from './utils';
