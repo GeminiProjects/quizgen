@@ -4,7 +4,6 @@ import { Button } from '@repo/ui/components/button';
 import { Card, CardContent } from '@repo/ui/components/card';
 import { Plus, Presentation } from 'lucide-react';
 import { useState } from 'react';
-import { LectureFilters } from '@/components/lectures/lecture-filters';
 import CreateLectureDialog from './create-lecture-dialog';
 
 interface LecturesPageContentProps {
@@ -41,21 +40,4 @@ export default function LecturesPageContent({
       </div>
     );
   }
-
-  return (
-    <>
-      <div className="flex items-center gap-2">
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          创建演讲
-        </Button>
-        <CreateLectureDialog
-          onOpenChange={setShowCreateDialog}
-          onSuccess={() => setShowCreateDialog(false)}
-          open={showCreateDialog}
-        />
-      </div>
-      <LectureFilters />
-    </>
-  );
 }
