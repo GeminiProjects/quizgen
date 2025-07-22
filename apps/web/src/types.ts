@@ -83,9 +83,53 @@ export const lectureStatusConfig: Record<
 };
 
 // ============= 材料相关 =============
+/**
+ * 材料类型定义
+ * 继承自数据库材料类型，处理日期序列化并添加关联用户信息
+ */
 export interface Material extends DateToString<DBMaterial> {
+  // 上传者信息（可选）
   uploader?: Pick<User, 'id' | 'email' | 'name'>;
 }
+
+/**
+ * 材料状态枚举
+ * - processing: 处理中（上传、解析等）
+ * - completed: 处理完成，可以使用
+ * - timeout: 处理超时
+ *
+ * 注意：失败的材料会被自动删除，不会保存在数据库中
+ */
+export type MaterialStatus = 'processing' | 'completed' | 'timeout';
+
+/**
+ * 材料状态配置
+ * 定义每个状态的显示文本、样式和类名
+ */
+export const materialStatusConfig: Record<
+  MaterialStatus,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    className: string;
+  }
+> = {
+  processing: {
+    label: '处理中',
+    variant: 'secondary',
+    className: 'bg-info/10 text-info',
+  },
+  completed: {
+    label: '已完成',
+    variant: 'default',
+    className: 'bg-success/10 text-success',
+  },
+  timeout: {
+    label: '处理超时',
+    variant: 'destructive',
+    className: 'bg-destructive/10 text-destructive',
+  },
+};
 
 // ============= 测验相关 =============
 export interface QuizItem extends DateToString<DBQuizItem> {

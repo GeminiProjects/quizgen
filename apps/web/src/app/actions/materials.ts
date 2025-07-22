@@ -132,7 +132,6 @@ export async function createMaterial(input: {
         file_name: input.name,
         file_type: input.type,
         text_content: input.url,
-        processing_progress: input.size,
         created_by: session.user.id,
       })
       .returning();
@@ -342,7 +341,6 @@ export async function getMaterialStats(lectureId: string): Promise<
     const materialsData = await db
       .select({
         type: materials.file_type,
-        size: materials.processing_progress,
       })
       .from(materials)
       .where(eq(materials.lecture_id, lectureId));
@@ -350,7 +348,7 @@ export async function getMaterialStats(lectureId: string): Promise<
     // 计算统计信息
     const stats = {
       totalCount: materialsData.length,
-      totalSize: materialsData.reduce((sum, m) => sum + (m.size || 0), 0),
+      totalSize: 0, // 现在不再存储文件大小
       typeDistribution: {} as Record<string, number>,
     };
 

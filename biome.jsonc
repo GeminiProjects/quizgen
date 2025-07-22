@@ -32,6 +32,9 @@
         "noNestedTernary": "off",
         "noParameterProperties": "off"
       },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
+      },
       "a11y": {
         "useSemanticElements": "off"
       }

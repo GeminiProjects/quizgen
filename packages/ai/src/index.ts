@@ -10,12 +10,22 @@
  * @packageDocumentation
  */
 
+// 导出常量
+export {
+  EXTENSION_TO_MIME_TYPE,
+  FILE_PROCESSING_TIMEOUT,
+  getMimeTypeFromFilename,
+  isSupportedMimeType,
+  MAX_FILE_SIZE,
+  MIME_TYPE_EXTENSIONS,
+  SUPPORTED_MIME_TYPES,
+  type SupportedMimeType,
+} from './constants';
 // 导出核心生成器函数
 export {
   generateContext,
   generateQuestions,
 } from './generators';
-
 // 导出提示词管理函数
 export {
   CONTEXT_GENERATION_PROMPT,
@@ -31,7 +41,6 @@ export type {
   QuizGenerationResult,
   TimeoutOptions,
 } from './types';
-
 // 导出工具函数
 export {
   batchWithTimeout,

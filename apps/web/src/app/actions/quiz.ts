@@ -1,5 +1,7 @@
 'use server';
 
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { generateQuestions } from '@repo/ai';
 import {
   and,
   attempts,
@@ -7,8 +9,10 @@ import {
   desc,
   eq,
   lectures,
+  materials,
   quizItems,
   sql,
+  transcripts,
 } from '@repo/db';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
@@ -66,6 +70,7 @@ export async function getQuizItems(lectureId: string): Promise<
         question: quizItems.question,
         options: quizItems.options,
         answer: quizItems.answer,
+        explanation: quizItems.explanation,
         created_at: quizItems.created_at,
         _count: {
           attempts: sql<number>`(select count(*) from ${attempts} where ${attempts.quiz_id} = ${quizItems.id})`,
@@ -423,6 +428,139 @@ export async function pushQuizItem(
       success: true,
       pushedCount,
     });
+  } catch (error) {
+    return handleActionError(error);
+  }
+}
+
+/**
+ * 基于演讲内容生成测验题目
+ *
+ * @param input - 生成参数
+ * @param input.lectureId - 演讲 ID
+ * @param input.count - 要生成的题目数量（默认 10，最多 10）
+ * @returns 生成的题目列表
+ */
+export async function generateQuizItems(input: {
+  lectureId: string;
+  count?: number;
+}): Promise<ActionResult<QuizItem[]>> {
+  try {
+    // 验证用户身份
+    const session = await requireAuth();
+
+    // 验证演讲所有权
+    const [lecture] = await db
+      .select({ owner_id: lectures.owner_id })
+      .from(lectures)
+      .where(eq(lectures.id, input.lectureId))
+      .limit(1);
+
+    if (!lecture) {
+      return createErrorResponse('演讲不存在');
+    }
+
+    assertOwnership(lecture.owner_id, session.user.id, '演讲');
+
+    // 获取演讲的材料和转录
+    const [materialsData, transcriptsData] = await Promise.all([
+      db
+        .select()
+        .from(materials)
+        .where(eq(materials.lecture_id, input.lectureId)),
+      db
+        .select()
+        .from(transcripts)
+        .where(eq(transcripts.lecture_id, input.lectureId)),
+    ]);
+
+    // 构建上下文内容
+    let context = '';
+
+    // 添加材料内容
+    if (materialsData.length > 0) {
+      context += '【演讲材料内容】\n';
+      for (const material of materialsData) {
+        if (material.text_content && material.status === 'completed') {
+          context += `\n--- ${material.file_name} ---\n`;
+          context += material.text_content;
+          context += '\n';
+        }
+      }
+    }
+
+    // 添加转录内容
+    if (transcriptsData.length > 0) {
+      context += '\n【演讲转录内容】\n';
+      for (const transcript of transcriptsData) {
+        if (transcript.text) {
+          context += `\n${transcript.text}\n`;
+        }
+      }
+    }
+
+    if (!context.trim()) {
+      return createErrorResponse(
+        '没有足够的内容生成题目，请先上传材料或开始转录'
+      );
+    }
+
+    // 检查 API Key
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) {
+      throw new Error('缺少 GOOGLE_GENERATIVE_AI_API_KEY 环境变量');
+    }
+
+    // 创建 Google AI 客户端
+    const google = createGoogleGenerativeAI({
+      apiKey,
+    });
+
+    // 生成题目
+    const count = Math.min(input.count || 10, 10); // 最多生成 10 道题
+    const result = await generateQuestions({
+      model: google('gemini-2.0-flash-exp'),
+      context,
+      count,
+      timeoutOptions: {
+        timeout: 30_000, // 30 秒超时
+        timeoutMessage: '生成题目超时，请重试',
+      },
+    });
+
+    if (!result.success || result.quizzes.length === 0) {
+      return createErrorResponse(result.error || '生成题目失败');
+    }
+
+    // 将生成的题目保存到数据库
+    const createdQuizItems: QuizItem[] = [];
+
+    for (const quiz of result.quizzes) {
+      const [created] = await db
+        .insert(quizItems)
+        .values({
+          lecture_id: input.lectureId,
+          question: quiz.question,
+          options: quiz.options,
+          answer: quiz.answer,
+          ts: new Date(),
+        })
+        .returning();
+
+      createdQuizItems.push({
+        ...created,
+        ts: created.ts.toISOString(),
+        created_at: created.created_at.toISOString(),
+        _count: {
+          attempts: 0,
+        },
+      });
+    }
+
+    // 重验证演讲详情页
+    revalidatePath(`/lectures/${input.lectureId}`);
+
+    return createSuccessResponse(createdQuizItems);
   } catch (error) {
     return handleActionError(error);
   }

@@ -11,6 +11,7 @@ import {
 import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { generateQuizItems } from '@/app/actions/quiz';
 import QuizDisplay from '@/components/quiz-display';
 import type { Material, Transcript } from '@/types';
 
@@ -51,28 +52,22 @@ export default function QuizTestTab({
     setShowResult(false);
 
     try {
-      // 调用后端 API 生成题目
-      const response = await fetch('/api/quiz-items/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lecture_id: lectureId,
-          count: 10, // 一次生成10道题
-        }),
+      // 使用 Server Action 生成题目
+      const result = await generateQuizItems({
+        lectureId,
+        count: 10, // 一次生成10道题
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '生成失败');
-      }
-
-      const data = await response.json();
-
-      if (data.data.quizzes && data.data.quizzes.length > 0) {
-        setGeneratedQuizzes(data.data.quizzes);
-        toast.success(`成功生成 ${data.data.quizzes.length} 道题目！`);
+      if (result.success && result.data && result.data.length > 0) {
+        // 将 Server Action 返回的数据转换为组件需要的格式
+        const quizzes = result.data.map((item) => ({
+          question: item.question,
+          options: item.options,
+          correctAnswer: item.answer,
+          explanation: '暂无解释', // QuizItem 类型中没有 explanation 字段
+        }));
+        setGeneratedQuizzes(quizzes);
+        toast.success(`成功生成 ${quizzes.length} 道题目！`);
       } else {
         throw new Error('未能生成有效的题目');
       }

@@ -184,8 +184,7 @@ export function MaterialList({
                   <Card
                     className={cn(
                       'transition-colors',
-                      material.upload_status === 'failed' &&
-                        'border-destructive/50'
+                      material.status === 'timeout' && 'border-destructive/50'
                     )}
                     key={material.id}
                   >
@@ -194,9 +193,9 @@ export function MaterialList({
                       <div
                         className={cn(
                           'flex h-10 w-10 items-center justify-center rounded-lg',
-                          material.upload_status === 'completed'
+                          material.status === 'completed'
                             ? 'bg-primary/10 text-primary'
-                            : material.upload_status === 'failed'
+                            : material.status === 'timeout'
                               ? 'bg-destructive/10 text-destructive'
                               : 'bg-secondary/10 text-secondary-foreground'
                         )}
@@ -212,15 +211,13 @@ export function MaterialList({
                           </p>
                           <Badge
                             variant={getStatusVariant(
-                              material.upload_status || 'pending'
+                              material.status || 'processing'
                             )}
                           >
                             <span className="mr-1">
-                              {getStatusIcon(
-                                material.upload_status || 'pending'
-                              )}
+                              {getStatusIcon(material.status || 'processing')}
                             </span>
-                            {getStatusText(material.upload_status || 'pending')}
+                            {getStatusText(material.status || 'processing')}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-muted-foreground text-xs">
@@ -239,7 +236,7 @@ export function MaterialList({
 
                       {/* 操作按钮 */}
                       <div className="flex items-center gap-2">
-                        {material.upload_status === 'completed' &&
+                        {material.status === 'completed' &&
                           material.text_content && (
                             <Button
                               onClick={() => onViewContent?.(material.id)}

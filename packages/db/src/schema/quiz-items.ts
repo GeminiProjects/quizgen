@@ -30,6 +30,8 @@ export const quizItems = pgTable(
     options: json('options').$type<string[]>().notNull(),
     // 正确答案（0-3）
     answer: integer('answer').notNull(),
+    // 解释
+    explanation: text('explanation'),
     // 生成时间
     ts: timestamp('ts').notNull().defaultNow(),
     // 创建时间

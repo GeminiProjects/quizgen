@@ -54,8 +54,8 @@ export async function GET(
       id: material.id,
       fileName: material.file_name,
       fileType: material.file_type,
-      status: material.upload_status,
-      progress: material.processing_progress || 0,
+      status: material.status,
+      progress: 0, // 不再存储进度
       textContent: material.text_content,
       error: material.error_message,
       createdAt: material.created_at,

@@ -1,12 +1,5 @@
 import { relations } from 'drizzle-orm';
-import {
-  index,
-  integer,
-  pgTable,
-  text,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { index, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { timestamps } from './columns.helpers';
 import { lectures } from './lectures';
@@ -14,6 +7,13 @@ import { lectures } from './lectures';
 /**
  * 材料表
  * 存储预上传的演讲材料
+ *
+ * 状态说明：
+ * - processing: 材料正在处理中（上传、解析等）
+ * - completed: 材料处理成功，可以使用
+ * - timeout: 材料处理超时
+ *
+ * 注意：处理失败的材料会被自动删除，不会保存在数据库中
  */
 export const materials = pgTable(
   'materials',
@@ -30,13 +30,10 @@ export const materials = pgTable(
     file_type: text('file_type').notNull(),
     // 文本内容
     text_content: text('text_content'),
-    // 上传状态: pending, uploading, processing, extracting, completed, failed
-    upload_status: varchar('upload_status', { length: 20 }).default('pending'),
-    // Gemini API 返回的文件 URI
-    gemini_file_uri: text('gemini_file_uri'),
-    // 处理进度 (0-100)
-    processing_progress: integer('processing_progress').default(0),
-    // 错误信息
+    // 材料状态: processing（处理中）, completed（成功）, timeout（超时）
+    // 注意：失败的材料会被自动删除，不会保存在数据库中
+    status: varchar('status', { length: 20 }).notNull().default('processing'),
+    // 错误信息（当状态为 timeout 时使用）
     error_message: text('error_message'),
     // 创建者ID
     created_by: text('created_by'),
