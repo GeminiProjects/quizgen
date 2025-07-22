@@ -32,6 +32,7 @@ import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
 import { lectureStatusConfig, type ParticipatedLecture } from '@/types';
 import ExitLectureDialog from './exit-lecture';
+import QuizNotification from './quiz-notification';
 import QuizTestTab from './quiz-test-tab';
 
 interface LectureContentProps {
@@ -73,6 +74,9 @@ export default function LectureContent({ lecture }: LectureContentProps) {
 
   return (
     <div className="space-y-6">
+      {/* 添加通知组件 */}
+      <QuizNotification lectureId={lecture.id} />
+
       {/* 面包屑导航 */}
       <BreadcrumbNav items={breadcrumbItems} />
 
