@@ -27,6 +27,8 @@ export {
   lectureParticipants,
   lectureParticipantsRelations,
   type NewLectureParticipant,
+  participantRoleEnum,
+  participantStatusEnum,
   selectLectureParticipantSchema,
 } from './lecture-participants';
 
@@ -34,6 +36,7 @@ export {
 export {
   insertLectureSchema,
   type Lecture,
+  lectureStatusEnum,
   lectures,
   lecturesRelations,
   type NewLecture,

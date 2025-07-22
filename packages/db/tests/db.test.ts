@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import {
   attempts,
+  authUser,
   lectureParticipants,
   lectures,
   materials,
@@ -16,7 +17,6 @@ import {
   organizations,
   quizItems,
   transcripts,
-  users,
 } from '@/schema/index';
 import { db } from '@/tests/setup';
 import { generateLectureCode } from '@/utils/lecture-code';
@@ -37,7 +37,7 @@ describe('数据库表功能测试', () => {
     await db.delete(lectureParticipants);
     await db.delete(lectures);
     await db.delete(organizations);
-    await db.delete(users);
+    await db.delete(authUser);
   };
 
   beforeEach(async () => {
@@ -48,7 +48,7 @@ describe('数据库表功能测试', () => {
     await cleanup();
   });
 
-  describe('用户表 (users)', () => {
+  describe('用户表 (authUser)', () => {
     test('创建用户', async () => {
       // 准备测试数据
       const testUser: NewUser = {
@@ -60,7 +60,7 @@ describe('数据库表功能测试', () => {
 
       // 插入用户
       const [insertedUser] = await db
-        .insert(users)
+        .insert(authUser)
         .values(testUser)
         .returning();
 
@@ -68,7 +68,7 @@ describe('数据库表功能测试', () => {
       expect(insertedUser).toBeDefined();
       expect(insertedUser.id).toBe(testUser.id);
       expect(insertedUser.email).toBe(testUser.email);
-      expect(insertedUser.name).toBe(testUser.name ?? null);
+      expect(insertedUser.name).toBe(testUser.name);
     });
 
     test('查询用户', async () => {
@@ -81,13 +81,13 @@ describe('数据库表功能测试', () => {
       };
 
       // 插入测试数据
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       // 查询用户
       const [foundUser] = await db
         .select()
-        .from(users)
-        .where(eq(users.id, testUser.id));
+        .from(authUser)
+        .where(eq(authUser.id, testUser.id));
 
       // 验证结果
       expect(foundUser).toBeDefined();
@@ -104,7 +104,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       // 准备组织数据
       const testOrganization: NewOrganization = {
@@ -134,7 +134,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -168,7 +168,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -211,7 +211,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -257,7 +257,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       // 使用相同的演讲码创建两个演讲
       const duplicateCode = generateLectureCode();
@@ -296,7 +296,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testLecture: NewLecture = {
         title: '测试演讲',
@@ -324,7 +324,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -380,7 +380,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -434,7 +434,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -491,7 +491,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -557,7 +557,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
@@ -639,7 +639,7 @@ describe('数据库表功能测试', () => {
         name: '观众',
         emailVerified: false,
       };
-      await db.insert(users).values([speaker, audience]);
+      await db.insert(authUser).values([speaker, audience]);
 
       // 创建演讲
       const testLecture: NewLecture = {
@@ -699,7 +699,7 @@ describe('数据库表功能测试', () => {
         name: '观众2',
         emailVerified: false,
       };
-      await db.insert(users).values([speaker, audience1, audience2]);
+      await db.insert(authUser).values([speaker, audience1, audience2]);
 
       const testLecture: NewLecture = {
         title: '测试演讲',
@@ -757,7 +757,7 @@ describe('数据库表功能测试', () => {
         name: '用户',
         emailVerified: false,
       };
-      await db.insert(users).values(user);
+      await db.insert(authUser).values(user);
 
       const testLecture: NewLecture = {
         title: '测试演讲',
@@ -803,7 +803,7 @@ describe('数据库表功能测试', () => {
         name: '测试用户',
         emailVerified: false,
       };
-      await db.insert(users).values(testUser);
+      await db.insert(authUser).values(testUser);
 
       const testOrganization: NewOrganization = {
         name: '测试组织',
