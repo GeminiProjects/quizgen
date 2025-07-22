@@ -209,7 +209,13 @@ export default function LectureContent({ lecture }: LectureContentProps) {
             </TabsList>
 
             <TabsContent value="quiz">
-              <QuizTestTab lecture={lecture} />
+              <QuizTestTab
+                lecture={{
+                  id: lecture.id,
+                  status: lecture.status,
+                  quizzes: lecture.quizzes || [],
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="progress">

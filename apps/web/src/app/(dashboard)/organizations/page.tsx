@@ -42,11 +42,13 @@ function OrganizationsSkeleton() {
 }
 
 async function OrganizationsList() {
-  const { data: organizations } = await getOrganizations();
+  const result = await getOrganizations();
 
-  if (organizations.length === 0) {
+  if (!(result.success && result.data) || result.data.data.length === 0) {
     return <OrganizationsPageContent hasOrganizations={false} />;
   }
+
+  const organizations = result.data.data;
 
   return (
     <>

@@ -22,7 +22,33 @@ import { lectureStatusConfig } from '@/types';
 import { ParticipationSearch } from './participation-search';
 
 export default async function ParticipationPage() {
-  const { data: participations } = await getParticipatedLectures();
+  const result = await getParticipatedLectures();
+
+  if (!result.success) {
+    return (
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        <BreadcrumbNav
+          items={[
+            { href: '/', label: '首页' },
+            { href: '/participation', label: '我的参与' },
+          ]}
+        />
+        <div className="container mx-auto max-w-6xl">
+          <div className="mb-8 space-y-4">
+            <h1 className="font-bold text-3xl tracking-tight">我的参与</h1>
+            <p className="text-muted-foreground">
+              您还没有参与任何演讲，使用演讲码加入演讲开始互动
+            </p>
+          </div>
+          <div className="flex justify-center py-12">
+            <p className="text-muted-foreground">加载失败，请刷新页面重试</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const participations = result.data.data;
 
   // 格式化相对时间
   const formatRelativeTime = (dateStr: string) => {

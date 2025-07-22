@@ -151,7 +151,10 @@ export interface ParticipatedLecture {
   participant_role: ParticipantRole;
   participant_status: ParticipantStatus;
   joined_at: string;
-  quizzes: ParticipatedQuizItem[];
+  quizzes?: ParticipatedQuizItem[];
+  _count?: {
+    quiz_items: number;
+  };
 }
 
 // ============= 转录相关 =============
@@ -203,6 +206,27 @@ export interface ActionResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+/**
+ * Server Actions 统一返回类型
+ * 用于所有 Server Actions 的标准响应格式
+ */
+export type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+/**
+ * 分页查询结果类型
+ * 包含完整的分页信息
+ */
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
 }
 
 // ============= 扩展类型 =============

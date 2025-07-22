@@ -56,8 +56,10 @@ export function OrganizationSelector({
     const loadOrganizations = async () => {
       setIsLoading(true);
       try {
-        const orgs = await getPublicOrganizations();
-        setOrganizations(orgs);
+        const result = await getPublicOrganizations();
+        if (result.success) {
+          setOrganizations(result.data);
+        }
       } finally {
         setIsLoading(false);
       }

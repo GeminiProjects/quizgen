@@ -145,6 +145,203 @@ bg-destructive/10 text-destructive # 错误态
 "flex h-9 w-9 items-center justify-center rounded-lg"
 ```
 
+## 代码规范与硬性约束
+
+### TypeScript 类型规范（必须遵守）
+
+1. **禁止使用 `any` 类型**
+   ```typescript
+   // ❌ 错误
+   const data: any = fetchData();
+   
+   // ✅ 正确
+   const data: unknown = fetchData();
+   const data: User = fetchData();
+   ```
+
+2. **`unknown` 类型使用场景**
+   - 错误处理：`catch (error: unknown)`
+   - 泛型默认值：`ApiResponse<T = unknown>`
+   - 动态数据：`Record<string, unknown>`
+
+3. **类型导入必须使用 `import type`**
+   ```typescript
+   // ❌ 错误
+   import { User } from '@/types';
+   
+   // ✅ 正确
+   import type { User } from '@/types';
+   ```
+
+4. **接口扩展数据库类型**
+   ```typescript
+   // ✅ 正确的类型定义
+   interface User extends DateToString<DBUser> {
+     // 额外字段
+   }
+   ```
+
+### 导入顺序规范（Biome.js 强制）
+
+```typescript
+// 1. 外部包
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+// 2. 内部包（@repo/*）
+import { auth } from '@repo/auth';
+import { Button } from '@repo/ui/components/button';
+
+// 3. 应用内导入（@/*）
+import { createLecture } from '@/app/actions/lectures';
+import { cn } from '@/lib/utils';
+
+// 4. 类型导入
+import type { User, Lecture } from '@/types';
+```
+
+### Server Actions 强制规范
+
+```typescript
+'use server';
+
+export async function actionName(input: InputType): Promise<OutputType> {
+  // 1. 必须：身份验证（除非是公开接口）
+  const session = await requireAuth();
+  
+  // 2. 必须：Zod 参数验证
+  const validated = inputSchema.parse(input);
+  
+  try {
+    // 3. 数据库操作
+    const result = await db.transaction(async (tx) => {
+      // 事务操作
+    });
+    
+    // 4. 必须：路径重验证
+    revalidatePath('/relevant-path');
+    
+    // 5. 必须：返回序列化数据
+    return {
+      success: true,
+      data: serializeData(result),
+    };
+  } catch (error) {
+    // 6. 必须：统一错误处理
+    console.error('操作失败:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '操作失败',
+    };
+  }
+}
+```
+
+### React 组件规范
+
+1. **客户端组件标记**
+   ```typescript
+   'use client';  // 必须在文件顶部
+   ```
+
+2. **Props 接口命名**
+   ```typescript
+   interface ComponentNameProps {
+     // props 定义
+   }
+   
+   export function ComponentName({ prop1, prop2 }: ComponentNameProps) {
+     // 组件实现
+   }
+   ```
+
+3. **Hook 命名规范**
+   ```typescript
+   // ✅ 正确
+   export function useDialog() {}
+   export function useUserData() {}
+   
+   // ❌ 错误
+   export function dialog() {}
+   export function getUserData() {}
+   ```
+
+### 错误处理规范
+
+1. **统一的错误返回格式**
+   ```typescript
+   interface ActionResponse<T> {
+     success: boolean;
+     data?: T;
+     error?: string;
+   }
+   ```
+
+2. **数据库错误处理**
+   ```typescript
+   try {
+     // 数据库操作
+   } catch (error) {
+     return handleDatabaseError(error);
+   }
+   ```
+
+### Biome.js/Ultracite 配置要求
+
+1. **禁用的规则（已配置，可以使用）**
+   - `noAwaitInLoop`：允许循环中 await
+   - `noConsole`：允许 console 语句
+   - `noNestedTernary`：允许嵌套三元运算符
+
+2. **必须遵守的规则**
+   - 导入排序
+   - 未使用变量
+   - 类型安全
+   - 空格和缩进
+
+### 代码验证流程（强制）
+
+```bash
+# 每次修改代码后必须执行
+cd apps/web && bun check    # 必须通过
+cd ../.. && bun format      # 格式化代码
+
+# check 包含：
+# - TypeScript 类型检查（tsc --noEmit）
+# - Biome.js 代码检查
+```
+
+### 常见错误及解决方案
+
+1. **类型错误：`Object is possibly 'null'`**
+   ```typescript
+   // ❌ 错误
+   const name = user.name;
+   
+   // ✅ 正确
+   const name = user?.name;
+   const name = user!.name; // 确定不为 null 时
+   ```
+
+2. **异步函数忘记 await**
+   ```typescript
+   // ❌ 错误
+   const data = fetchData();
+   
+   // ✅ 正确
+   const data = await fetchData();
+   ```
+
+3. **日期序列化问题**
+   ```typescript
+   // ✅ 正确处理
+   return {
+     ...lecture,
+     created_at: lecture.created_at.toISOString(),
+     updated_at: lecture.updated_at.toISOString(),
+   };
+   ```
+
 ## 重要注意事项
 
 1. **必须使用 Bun**：所有包管理命令使用 `bun`，安装依赖时加 `--no-cache`
@@ -155,3 +352,5 @@ bg-destructive/10 text-destructive # 错误态
 6. **Zod 验证**：所有外部输入必须经过 Zod schema 验证
 7. **错误处理**：Server Actions 应返回统一的错误格式
 8. **代码验证**：提交前必须通过 `bun check`
+9. **禁止 any**：绝对不能使用 `any` 类型，使用 `unknown` 或具体类型
+10. **类型导入**：必须使用 `import type` 导入类型

@@ -81,8 +81,10 @@ export default function CreateLectureDialog({
   // 加载公开组织列表
   useEffect(() => {
     const loadOrganizations = async () => {
-      const orgs = await getPublicOrganizations();
-      setOrganizations(orgs);
+      const result = await getPublicOrganizations();
+      if (result.success) {
+        setOrganizations(result.data);
+      }
     };
     loadOrganizations();
   }, []);

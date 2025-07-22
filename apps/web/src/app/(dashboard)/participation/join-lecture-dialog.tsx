@@ -59,7 +59,11 @@ export default function JoinLectureDialog({
       try {
         const result = await joinLectureByCode({ join_code: joinCode.trim() });
 
-        if (result.already_joined) {
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        if (result.data.already_joined) {
           toast.info('您已经加入过这个演讲了');
         } else {
           toast.success('成功加入演讲');
@@ -69,7 +73,7 @@ export default function JoinLectureDialog({
         onOpenChange(false);
 
         // 跳转到演讲详情页
-        router.push(`/participation/${result.id}`);
+        router.push(`/participation/${result.data.id}`);
       } catch (error) {
         toast.error((error as Error)?.message || '加入演讲失败');
       }

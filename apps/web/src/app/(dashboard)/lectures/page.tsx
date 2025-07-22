@@ -72,11 +72,13 @@ function formatRelativeTime(dateStr: string) {
 }
 
 async function LecturesList() {
-  const { data: lectures } = await getLectures();
+  const result = await getLectures();
 
-  if (lectures.length === 0) {
+  if (!(result.success && result.data) || result.data.data.length === 0) {
     return <LecturesPageContent hasLectures={false} />;
   }
+
+  const lectures = result.data.data;
 
   return (
     <>

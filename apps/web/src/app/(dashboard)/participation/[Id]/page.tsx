@@ -7,10 +7,14 @@ interface PageProps {
 export default async function ParticipationLecturePage({ params }: PageProps) {
   try {
     const { id } = await params;
-    const lecture = await getParticipatedLectureWithQuizzes(id);
+    const result = await getParticipatedLectureWithQuizzes(id);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
 
     const Content = (await import('./content')).default;
-    return <Content lecture={lecture} />;
+    return <Content lecture={result.data} />;
   } catch (error) {
     if ((error as Error).message.includes('未参与')) {
       return (

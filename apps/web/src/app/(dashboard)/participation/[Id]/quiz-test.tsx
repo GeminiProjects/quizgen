@@ -71,13 +71,17 @@ export default function QuizTest({
           latency_ms: latencyMs,
         });
 
-        setResult(response);
+        if (!response.success) {
+          throw new Error(response.error);
+        }
 
-        if (response.is_correct) {
+        setResult(response.data);
+
+        if (response.data.is_correct) {
           toast.success('回答正确！');
         } else {
           toast.error(
-            `回答错误，正确答案是 ${['A', 'B', 'C', 'D'][response.correct_answer]}`
+            `回答错误，正确答案是 ${['A', 'B', 'C', 'D'][response.data.correct_answer]}`
           );
         }
 
