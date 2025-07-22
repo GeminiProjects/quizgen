@@ -1,6 +1,7 @@
 # Local
 .local
 .git-sum.md
+.tasks
 
 # Cloudflare Workers
 .wrangler/
