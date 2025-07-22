@@ -15,6 +15,7 @@ import DeleteConfirmModal from './delete-confirm-modal';
 import Header from './header';
 import JoinedOrganizationsList from './joined-organizations-list';
 import MyLecturesList from './my-lectures-list';
+import OrganizationListContainer from './organization-list-container';
 import ParticipatedLecturesList from './participated-lectures-list';
 import StatsCards from './stats-cards';
 
@@ -353,6 +354,15 @@ export default function Dashboard() {
               ...l,
               description: l.description || '',
             }))}
+          />
+        </div>
+        <div className="mt-6">
+          {/* 新增：组织列表容器，支持搜索、过滤、排序 */}
+          <OrganizationListContainer
+            organizations={[
+              ...myCreatedOrganizations,
+              ...myJoinedOrganizations,
+            ]}
           />
         </div>
         <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2 lg:mt-8">
