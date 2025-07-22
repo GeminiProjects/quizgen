@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    // 优化生产环境性能
+    staleTimes: {
+      dynamic: 30, // 动态数据缓存30秒
+      static: 180, // 静态数据缓存3分钟
+    },
+  },
 };
 
 export default nextConfig;

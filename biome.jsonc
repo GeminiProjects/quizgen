@@ -25,7 +25,8 @@
         "noNamespaceImport": "off"
       },
       "suspicious": {
-        "noConsole": "off"
+        "noConsole": "off",
+        "noArrayIndexKey": "off"
       },
       "style": {
         "noNestedTernary": "off",

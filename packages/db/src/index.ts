@@ -1,6 +1,17 @@
-import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
+import { neonConfig, Pool } from '@neondatabase/serverless';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
+
+// 配置 Neon Serverless（优化生产环境性能）
+if (process.env.VERCEL_ENV === 'production') {
+  // 使用 Vercel 的 WebSocket 代理以获得更好的连接性能
+  neonConfig.useSecureWebSocket = true;
+  neonConfig.wsProxy = (host, port) => `wss://${host}:${port}/v2`;
+
+  // 启用连接池以减少延迟
+  neonConfig.poolQueryViaFetch = true;
+}
 
 // 从环境变量获取数据库连接字符串
 const databaseUrl = process.env.DATABASE_URL;
@@ -15,7 +26,16 @@ let db: ReturnType<typeof drizzlePg> | ReturnType<typeof drizzleNeon>;
 
 // 兼容 Neon Serverless 和 PostgreSQL 连接
 if (databaseUrl.includes('neon')) {
-  db = drizzleNeon(databaseUrl, {
+  // 使用 Neon 连接池
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    // 连接池配置
+    max: 10, // 最大连接数
+    idleTimeoutMillis: 30_000, // 空闲连接超时
+    connectionTimeoutMillis: 10_000, // 连接超时
+  });
+
+  db = drizzleNeon(pool, {
     casing: 'snake_case',
     schema,
   });

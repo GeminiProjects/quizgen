@@ -13,7 +13,6 @@ const navItems = [
     icon: Users,
     href: '/participation',
     color: 'success' as const,
-    apiEndpoint: '/api/participation',
   },
   {
     id: 'lectures',
@@ -21,7 +20,6 @@ const navItems = [
     icon: Sparkles,
     href: '/lectures',
     color: 'info' as const,
-    apiEndpoint: '/api/lectures',
   },
   {
     id: 'organizations',
@@ -29,7 +27,6 @@ const navItems = [
     icon: Building2,
     href: '/organizations',
     color: 'warning' as const,
-    apiEndpoint: '/api/organizations',
   },
 ];
 
@@ -66,7 +63,7 @@ export function BottomNav({ className }: BottomNavProps) {
               )}
               href={item.href}
               key={item.id}
-              prefetch={false}
+              prefetch={true}
             >
               <Icon
                 className={cn(

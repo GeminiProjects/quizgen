@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import '@repo/ui/globals.css';
 import { Toaster } from '@repo/ui/components/sonner';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = Geist({
@@ -42,6 +44,10 @@ export default function RootLayout({
           <div className="mx-auto max-w-7xl">{children}</div>
           <Toaster />
         </ThemeProvider>
+
+        {/* 统计和性能分析 */}
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
