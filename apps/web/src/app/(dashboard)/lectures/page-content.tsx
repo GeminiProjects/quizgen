@@ -4,22 +4,21 @@ import { Button } from '@repo/ui/components/button';
 import { Card, CardContent } from '@repo/ui/components/card';
 import { Plus, Presentation } from 'lucide-react';
 import { useState } from 'react';
+import { LectureFilters } from '@/components/lectures/lecture-filters';
 import CreateLectureDialog from './create-lecture-dialog';
 
-interface PageContentProps {
+interface LecturesPageContentProps {
   hasLectures: boolean;
 }
 
-export default function LecturesPageContent({ hasLectures }: PageContentProps) {
+export default function LecturesPageContent({
+  hasLectures,
+}: LecturesPageContentProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-
-  const handleLectureCreated = () => {
-    setShowCreateDialog(false);
-  };
 
   if (!hasLectures) {
     return (
-      <>
+      <div className="flex-1">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Presentation className="mb-4 h-12 w-12 text-muted-foreground" />
@@ -36,25 +35,27 @@ export default function LecturesPageContent({ hasLectures }: PageContentProps) {
 
         <CreateLectureDialog
           onOpenChange={setShowCreateDialog}
-          onSuccess={handleLectureCreated}
+          onSuccess={() => setShowCreateDialog(false)}
           open={showCreateDialog}
         />
-      </>
+      </div>
     );
   }
 
   return (
     <>
-      <Button onClick={() => setShowCreateDialog(true)}>
-        <Plus className="mr-2 h-4 w-4" />
-        创建演讲
-      </Button>
-
-      <CreateLectureDialog
-        onOpenChange={setShowCreateDialog}
-        onSuccess={handleLectureCreated}
-        open={showCreateDialog}
-      />
+      <div className="flex items-center gap-2">
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          创建演讲
+        </Button>
+        <CreateLectureDialog
+          onOpenChange={setShowCreateDialog}
+          onSuccess={() => setShowCreateDialog(false)}
+          open={showCreateDialog}
+        />
+      </div>
+      <LectureFilters />
     </>
   );
 }
