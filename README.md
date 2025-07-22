@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Powered by Bun](https://img.shields.io/badge/powered%20by-Bun-red.svg)](https://bun.sh/)
 [![Built with Turborepo](https://img.shields.io/badge/built%20with-Turborepo-blueviolet.svg)](https://turbo.build/)
+[![Documentation](https://img.shields.io/badge/docs-available-green.svg)](./docs/README.md)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e7ae9997-82f7-4a1d-9a3b-fb1b846f971e">
@@ -10,10 +11,29 @@
   <img alt="Product Preview" src="https://github.com/user-attachments/assets/457b7180-57c2-4aed-8e46-8f5576c9b00a">
 </picture>
 
-> 毕业实习校内团队项目。
+> 🎓 毕业实习校内团队项目 - 基于 AI 的演讲实时互动平台
 
-- [项目需求](./docs/origin/requirement.md)
-- [项目设计](./docs/project_design.md)
+## 🚀 项目简介
+
+QuizGen 是一个革命性的演讲互动平台，通过 AI 技术自动生成测验题目，帮助演讲者实时了解听众的理解程度，提升演讲效果和互动体验。
+
+### ✨ 核心特性
+
+- 🤖 **AI 智能出题** - 基于演讲内容自动生成高质量测验题
+- 📊 **实时数据分析** - 即时查看答题情况和理解程度
+- 👥 **多角色支持** - 演讲者、听众、组织者完整生态
+- 🔒 **隐私保护** - 匿名参与，保护用户隐私
+- 📱 **跨平台支持** - 响应式设计，支持各种设备
+
+## 📚 文档
+
+- 📖 [**文档中心**](./docs/README.md) - 完整的项目文档索引
+- 🏗️ [项目架构](./docs/architecture.md) - 系统设计和技术架构
+- 📡 [API 文档](./docs/api.md) - Server Actions 接口说明
+- 💾 [数据库设计](./docs/database.md) - 数据模型详解
+- 🚀 [部署指南](./docs/deployment.md) - 生产环境部署
+- 💻 [开发指南](./docs/development.md) - 本地开发指南
+- 🤝 [贡献指南](./CONTRIBUTING.md) - 如何参与贡献
 
 
 ## 技术栈
@@ -170,3 +190,45 @@ bun dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000) 查看应用。
+
+## 🛠️ 常用命令
+
+```bash
+# 开发
+bun dev              # 启动开发服务器
+bun build            # 构建生产版本
+bun check            # 运行类型检查和代码检查
+bun format           # 格式化代码
+
+# 数据库
+bun db:start         # 启动本地数据库
+bun db:studio        # 打开数据库管理界面
+bun db:push          # 推送架构变更
+bun db:generate      # 生成迁移文件
+
+# 测试
+bun test             # 运行测试
+```
+
+## 🤝 参与贡献
+
+我们欢迎所有形式的贡献！查看[贡献指南](./CONTRIBUTING.md)了解如何：
+
+- 报告问题
+- 提出新功能
+- 提交代码
+- 改进文档
+
+## 📄 许可证
+
+本项目采用 [MIT 许可证](./LICENSE)。
+
+## 🙏 致谢
+
+感谢所有为 QuizGen 做出贡献的开发者和用户！
+
+---
+
+<p align="center">
+  Made with ❤️ by the QuizGen Team
+</p>
