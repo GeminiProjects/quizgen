@@ -28,25 +28,56 @@ export default function QuizTest({
     undefined
   );
 
+  // 处理本地题目答案
+  const handleLocalQuiz = (index: number) => {
+    const isCorrect = index === quiz.answer;
+    quiz.attempted = true;
+    quiz.my_attempt = {
+      quiz_id: quiz.id,
+      selected: index,
+      is_correct: isCorrect,
+    };
+    setShowResult(true);
+    toast[isCorrect ? 'success' : 'error'](
+      isCorrect ? '回答正确！' : '回答错误'
+    );
+    setTimeout(() => {
+      onComplete();
+    }, 2000);
+  };
+
+  // 处理服务器题目答案
+  const handleServerQuiz = async (index: number) => {
+    const result = await submitQuizAnswer({
+      lectureId,
+      quizId: quiz.id,
+      selected: index,
+    });
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    setShowResult(true);
+    toast[result.data.is_correct ? 'success' : 'error'](
+      result.data.is_correct ? '回答正确！' : '回答错误'
+    );
+    setTimeout(() => {
+      onComplete();
+    }, 2000);
+  };
+
   const handleAnswer = async (index: number) => {
     try {
       setIsSubmitting(true);
       setSelectedAnswer(index);
 
-      const result = await submitQuizAnswer({
-        lectureId,
-        quizId: quiz.id,
-        selected: index,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error);
+      // 根据题目类型选择处理方式
+      if (quiz.id.startsWith('local-')) {
+        handleLocalQuiz(index);
+      } else {
+        await handleServerQuiz(index);
       }
-
-      setShowResult(true);
-      setTimeout(() => {
-        onComplete();
-      }, 3000);
     } catch (error) {
       toast.error('提交答案失败');
       console.error('[QuizTest] 提交答案失败:', error);
