@@ -5,6 +5,10 @@ import { Suspense } from 'react';
 import { requireAuth } from '@/lib/auth';
 import OrganizationDetailContent from './content';
 
+export const metadata = {
+  title: '组织详情',
+};
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

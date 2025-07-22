@@ -19,7 +19,10 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'QuizGen - 演讲即时智能评测系统',
+  title: {
+    template: '%s | QuizGen',
+    default: '登录 | QuizGen',
+  },
   description:
     'AI赋能的演讲即时智能评测系统，演讲者一键生成问答题，听众实时互动答题，组织者统计教学效果。',
   icons: {

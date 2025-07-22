@@ -17,6 +17,10 @@ import { Suspense } from 'react';
 import { requireAuth } from '@/lib/auth';
 import LectureDetailContent from './content';
 
+export const metadata = {
+  title: '演讲详情',
+};
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

@@ -45,7 +45,6 @@ import DeleteLectureDialog from './delete-lecture-dialog';
 import EditLectureDialog from './edit-lecture-dialog';
 import LectureControlSection from './lecture-control-section';
 import MaterialsTab from './materials-tab';
-import QuizTestTab from './quiz-test-tab';
 
 /**
  * 演讲详情客户端组件
@@ -226,12 +225,8 @@ export default function LectureDetailContent({
           <CardDescription>查看和管理演讲的各项数据</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="quiz">
+          <Tabs defaultValue="materials">
             <TabsList className="mb-4">
-              <TabsTrigger value="quiz">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                测验管理
-              </TabsTrigger>
               <TabsTrigger value="materials">
                 <FileText className="mr-2 h-4 w-4" />
                 材料管理
@@ -241,10 +236,6 @@ export default function LectureDetailContent({
                 数据分析
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="quiz">
-              <QuizTestTab lectureId={lecture.id} />
-            </TabsContent>
 
             <TabsContent value="materials">
               <MaterialsTab lectureId={lecture.id} />

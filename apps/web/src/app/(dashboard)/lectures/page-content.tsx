@@ -40,4 +40,20 @@ export default function LecturesPageContent({
       </div>
     );
   }
+
+  // 当有演讲时，仅显示创建按钮
+  return (
+    <>
+      <Button onClick={() => setShowCreateDialog(true)}>
+        <Plus className="mr-2 h-4 w-4" />
+        创建演讲
+      </Button>
+
+      <CreateLectureDialog
+        onOpenChange={setShowCreateDialog}
+        onSuccess={() => setShowCreateDialog(false)}
+        open={showCreateDialog}
+      />
+    </>
+  );
 }
