@@ -343,6 +343,74 @@ export async function submitQuizAttempt(data: {
 }
 
 /**
+ * 提交测验答案
+ */
+export async function submitQuizAnswer(input: {
+  lectureId: string;
+  quizId: string;
+  selected: number;
+}): Promise<ActionResult<{ is_correct: boolean }>> {
+  try {
+    // 验证用户身份
+    const session = await requireAuth();
+
+    // 获取题目信息以验证答案
+    const [quiz] = await db
+      .select()
+      .from(quizItems)
+      .where(
+        and(
+          eq(quizItems.id, input.quizId),
+          eq(quizItems.lecture_id, input.lectureId)
+        )
+      )
+      .limit(1);
+
+    if (!quiz) {
+      return createErrorResponse('题目不存在');
+    }
+
+    // 检查是否已答过题
+    const [existing] = await db
+      .select()
+      .from(attempts)
+      .where(
+        and(
+          eq(attempts.quiz_id, input.quizId),
+          eq(attempts.user_id, session.user.id)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      return createErrorResponse('您已经回答过这道题了');
+    }
+
+    // 判断答案是否正确
+    const isCorrect = quiz.answer === input.selected;
+
+    // 保存答题记录
+    await db.insert(attempts).values({
+      quiz_id: input.quizId,
+      user_id: session.user.id,
+      selected: input.selected,
+      is_correct: isCorrect,
+      latency_ms: 0, // 默认值，因为新的接口不需要跟踪答题时间
+      created_at: new Date(),
+    });
+
+    // 重验证参与页面
+    revalidatePath(`/participation/${input.lectureId}`);
+
+    return createSuccessResponse({
+      is_correct: isCorrect,
+    });
+  } catch (error) {
+    return handleActionError(error);
+  }
+}
+
+/**
  * 获取用户在某个演讲中的答题记录
  *
  * @param lectureId - 演讲 ID

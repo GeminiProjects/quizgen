@@ -205,14 +205,14 @@ export default function LectureContent({ lecture }: LectureContentProps) {
           <CardDescription>查看和管理您的参与活动</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="quiz">
+          <Tabs className="w-full" defaultValue="quiz">
             <TabsList className="mb-4">
               <TabsTrigger value="quiz">测验参与</TabsTrigger>
               <TabsTrigger value="progress">参与进度</TabsTrigger>
               <TabsTrigger value="analytics">参与分析</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="quiz">
+            <TabsContent className="mt-0" value="quiz">
               <QuizTestTab
                 lecture={{
                   id: lecture.id,
