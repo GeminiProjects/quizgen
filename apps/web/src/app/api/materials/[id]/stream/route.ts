@@ -11,8 +11,9 @@ import { getServerSideSession } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     // 验证用户身份
     const session = await getServerSideSession();
@@ -20,7 +21,7 @@ export async function GET(
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const materialId = params.id;
+    const materialId = id;
 
     // 验证材料存在并检查权限
     const [materialWithLecture] = await db
@@ -82,29 +83,12 @@ export async function GET(
               clearInterval(interval);
               return;
             }
-
-            // 计算进度
-            let progress = 0;
-            if (current.status === 'completed') {
-              progress = 100;
-            } else if (
-              current.status === 'processing' &&
-              current.text_content
-            ) {
-              // 根据内容长度估算进度（假设最终会有 10000 字符）
-              progress = Math.min(
-                90,
-                Math.floor((current.text_content.length / 10_000) * 100)
-              );
-            }
-
             // 发送状态更新
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
                   type: 'update',
                   status: current.status,
-                  progress,
                   elapsedSeconds: checkCount * 3,
                 })}\n\n`
               )
