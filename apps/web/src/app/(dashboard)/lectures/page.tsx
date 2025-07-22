@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
+import { Skeleton } from '@repo/ui/components/skeleton';
 import {
   ArrowRight,
   Calendar,
@@ -17,6 +18,7 @@ import {
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { getLectures } from '@/app/actions/lectures';
+import { LectureFilters } from '@/components/lectures/lecture-filters';
 import { lectureStatusConfig } from '@/types';
 import JoinCodeField from './join-code-field';
 import LecturesPageContent from './page-content';
@@ -27,21 +29,21 @@ function LecturesSkeleton() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="mb-2 h-8 w-32 animate-pulse rounded bg-muted" />
-          <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+          <Skeleton className="mb-2 h-8 w-32" />
+          <Skeleton className="h-4 w-64" />
         </div>
-        <div className="h-10 w-24 animate-pulse rounded bg-muted" />
+        <Skeleton className="h-10 w-24" />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <Card key={i}>
             <CardHeader>
-              <div className="h-6 w-3/4 animate-pulse rounded bg-muted" />
-              <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="mt-2 h-4 w-1/2" />
             </CardHeader>
             <CardContent>
-              <div className="mb-2 h-4 w-full animate-pulse rounded bg-muted" />
-              <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+              <Skeleton className="mb-2 h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
             </CardContent>
           </Card>
         ))}
@@ -71,8 +73,12 @@ function formatRelativeTime(dateStr: string) {
   });
 }
 
-async function LecturesList() {
-  const result = await getLectures();
+async function LecturesList({
+  status,
+}: {
+  status?: 'not_started' | 'in_progress' | 'paused' | 'ended';
+}) {
+  const result = await getLectures({ status });
 
   if (!(result.success && result.data) || result.data.data.length === 0) {
     return <LecturesPageContent hasLectures={false} />;
@@ -148,19 +154,29 @@ async function LecturesList() {
   );
 }
 
-export default function LecturesPage() {
+export const metadata = {
+  title: '我的演讲',
+};
+
+type LecturesPageProps = {
+  searchParams: {
+    status?: 'not_started' | 'in_progress' | 'paused' | 'ended';
+  };
+};
+
+export default function LecturesPage({ searchParams }: LecturesPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-bold text-2xl text-info">我的演讲</h1>
+          <h1 className="font-bold text-2xl">我的演讲</h1>
           <p className="text-muted-foreground">管理您创建的演讲会话</p>
         </div>
         <LecturesPageContent hasLectures={true} />
       </div>
-
+      <LectureFilters />
       <Suspense fallback={<LecturesSkeleton />}>
-        <LecturesList />
+        <LecturesList status={searchParams.status} />
       </Suspense>
     </div>
   );
