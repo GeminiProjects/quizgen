@@ -26,7 +26,7 @@
     "@biomejs/biome": "2.1.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3",
-    "ultracite": "5.0.39"
+    "ultracite": "5.0.47"
   },
   "packageManager": "bun@1.2.18",
   "workspaces": [
@@ -34,8 +34,6 @@
     "packages/*"
   ],
   "dependencies": {
-    "bun": "^1.2.18",
-    "react-dropzone": "^14.3.8",
-    "swr": "^2.3.4"
+    "bun": "^1.2.19"
   }
 }
