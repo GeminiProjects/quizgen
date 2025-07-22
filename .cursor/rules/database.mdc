@@ -1,0 +1,509 @@
+---
+description: 数据库操作规范 - Drizzle ORM 和 PostgreSQL
+globs:
+  - "apps/web/src/app/actions/**/*.ts"
+  - "packages/db/**/*.ts"
+alwaysApply: false
+---
+
+# 数据库操作规范
+
+## Drizzle ORM 基础
+
+### 导入规范
+```typescript
+import { db, schema } from '@repo/db';
+import { eq, and, or, desc, asc, sql } from '@repo/db';
+```
+
+### 基本查询模式
+
+#### 查询单条记录
+```typescript
+// 使用 query API（推荐）
+const user = await db.query.users.findFirst({
+  where: eq(schema.users.id, userId),
+  with: {
+    lectures: true,
+    organizations: true,
+  },
+});
+
+// 使用 select API
+const [user] = await db
+  .select()
+  .from(schema.users)
+  .where(eq(schema.users.id, userId))
+  .limit(1);
+```
+
+#### 查询多条记录
+```typescript
+// 带关联和排序
+const lectures = await db.query.lectures.findMany({
+  where: eq(schema.lectures.organizationId, orgId),
+  with: {
+    materials: true,
+    quizItems: {
+      orderBy: (quizItems, { asc }) => [asc(quizItems.order)],
+    },
+  },
+  orderBy: (lectures, { desc }) => [desc(lectures.createdAt)],
+  limit: 20,
+  offset: 0,
+});
+```
+
+#### 复杂条件查询
+```typescript
+const activeLectures = await db.query.lectures.findMany({
+  where: and(
+    eq(schema.lectures.status, 'ongoing'),
+    or(
+      eq(schema.lectures.userId, userId),
+      eq(schema.lectures.organizationId, orgId)
+    )
+  ),
+});
+```
+
+## 插入操作
+
+### 单条插入
+```typescript
+const [lecture] = await db
+  .insert(schema.lectures)
+  .values({
+    title: 'New Lecture',
+    description: 'Description',
+    userId: user.id,
+    organizationId: org.id,
+    status: 'pending',
+  })
+  .returning();
+```
+
+### 批量插入
+```typescript
+const materials = await db
+  .insert(schema.materials)
+  .values([
+    { lectureId: lecture.id, type: 'slide', url: 'url1' },
+    { lectureId: lecture.id, type: 'pdf', url: 'url2' },
+  ])
+  .returning();
+```
+
+### 冲突处理
+```typescript
+// 插入或更新
+await db
+  .insert(schema.userSettings)
+  .values({
+    userId: user.id,
+    theme: 'dark',
+    notifications: true,
+  })
+  .onConflictDoUpdate({
+    target: schema.userSettings.userId,
+    set: {
+      theme: 'dark',
+      updatedAt: new Date(),
+    },
+  });
+
+// 插入或忽略
+await db
+  .insert(schema.lectureViews)
+  .values({ lectureId, userId })
+  .onConflictDoNothing();
+```
+
+## 更新操作
+
+### 基本更新
+```typescript
+const [updated] = await db
+  .update(schema.lectures)
+  .set({
+    status: 'completed',
+    completedAt: new Date(),
+    updatedAt: new Date(),
+  })
+  .where(eq(schema.lectures.id, lectureId))
+  .returning();
+```
+
+### 条件更新
+```typescript
+// 只更新自己的资源
+const result = await db
+  .update(schema.lectures)
+  .set({ title: newTitle })
+  .where(
+    and(
+      eq(schema.lectures.id, lectureId),
+      eq(schema.lectures.userId, currentUser.id)
+    )
+  )
+  .returning();
+
+if (result.length === 0) {
+  throw new Error('无权限或资源不存在');
+}
+```
+
+### 增量更新
+```typescript
+// 更新计数器
+await db
+  .update(schema.lectures)
+  .set({
+    viewCount: sql`${schema.lectures.viewCount} + 1`,
+    lastViewedAt: new Date(),
+  })
+  .where(eq(schema.lectures.id, lectureId));
+```
+
+## 删除操作
+
+### 软删除（推荐）
+```typescript
+// 标记为删除而不是物理删除
+await db
+  .update(schema.lectures)
+  .set({
+    deletedAt: new Date(),
+    updatedAt: new Date(),
+  })
+  .where(eq(schema.lectures.id, lectureId));
+```
+
+### 硬删除
+```typescript
+// 级联删除相关数据
+await db.transaction(async (tx) => {
+  // 先删除子记录
+  await tx.delete(schema.quizItems)
+    .where(eq(schema.quizItems.lectureId, lectureId));
+  
+  await tx.delete(schema.materials)
+    .where(eq(schema.materials.lectureId, lectureId));
+  
+  // 最后删除主记录
+  await tx.delete(schema.lectures)
+    .where(eq(schema.lectures.id, lectureId));
+});
+```
+
+## 事务处理
+
+### 基本事务
+```typescript
+const result = await db.transaction(async (tx) => {
+  // 创建组织
+  const [org] = await tx
+    .insert(schema.organizations)
+    .values({ name: 'New Org' })
+    .returning();
+  
+  // 添加创建者为管理员
+  await tx.insert(schema.organizationMembers).values({
+    organizationId: org.id,
+    userId: user.id,
+    role: 'admin',
+  });
+  
+  return org;
+});
+```
+
+### 事务回滚
+```typescript
+try {
+  await db.transaction(async (tx) => {
+    const lecture = await createLecture(tx, data);
+    
+    // 验证业务规则
+    if (!isValidLecture(lecture)) {
+      throw new Error('Invalid lecture data');
+    }
+    
+    await createRelatedResources(tx, lecture);
+    
+    return lecture;
+  });
+} catch (error) {
+  // 事务自动回滚
+  console.error('Transaction failed:', error);
+  throw error;
+}
+```
+
+### 事务隔离级别
+```typescript
+await db.transaction(async (tx) => {
+  // 设置隔离级别
+  await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`);
+  
+  // 执行需要严格隔离的操作
+  const balance = await getBalance(tx, userId);
+  await updateBalance(tx, userId, balance - amount);
+});
+```
+
+## 性能优化
+
+### 索引使用
+```typescript
+// schema 定义时创建索引
+export const lectures = pgTable('lectures', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  status: text('status').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  // 复合索引
+  orgStatusIdx: index('org_status_idx').on(
+    table.organizationId, 
+    table.status
+  ),
+  // 单列索引
+  createdAtIdx: index('created_at_idx').on(table.createdAt),
+}));
+```
+
+### 查询优化
+
+#### 选择必要字段
+```typescript
+// ❌ 错误：选择所有字段
+const users = await db.select().from(schema.users);
+
+// ✅ 正确：只选择需要的字段
+const users = await db
+  .select({
+    id: schema.users.id,
+    name: schema.users.name,
+    email: schema.users.email,
+  })
+  .from(schema.users);
+```
+
+#### 避免 N+1 查询
+```typescript
+// ❌ 错误：N+1 查询
+const lectures = await db.query.lectures.findMany();
+for (const lecture of lectures) {
+  const materials = await db.query.materials.findMany({
+    where: eq(schema.materials.lectureId, lecture.id),
+  });
+}
+
+// ✅ 正确：一次查询获取所有数据
+const lectures = await db.query.lectures.findMany({
+  with: {
+    materials: true,
+  },
+});
+```
+
+#### 批量操作
+```typescript
+// ❌ 错误：循环单条插入
+for (const item of items) {
+  await db.insert(schema.quizItems).values(item);
+}
+
+// ✅ 正确：批量插入
+await db.insert(schema.quizItems).values(items);
+```
+
+### 分页查询
+```typescript
+interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+async function getPaginatedLectures({ page, pageSize }: PaginationParams) {
+  const offset = (page - 1) * pageSize;
+  
+  // 获取数据和总数
+  const [lectures, [{ count }]] = await Promise.all([
+    db.query.lectures.findMany({
+      limit: pageSize,
+      offset,
+      orderBy: (lectures, { desc }) => [desc(lectures.createdAt)],
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(schema.lectures),
+  ]);
+  
+  return {
+    data: lectures,
+    pagination: {
+      page,
+      pageSize,
+      total: count,
+      totalPages: Math.ceil(count / pageSize),
+    },
+  };
+}
+```
+
+## 数据验证
+
+### 插入前验证
+```typescript
+import { z } from 'zod';
+
+const insertLectureSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().optional(),
+  organizationId: z.string().uuid(),
+});
+
+async function createLecture(data: unknown) {
+  // 验证输入
+  const validated = insertLectureSchema.parse(data);
+  
+  // 验证关联数据存在
+  const org = await db.query.organizations.findFirst({
+    where: eq(schema.organizations.id, validated.organizationId),
+  });
+  
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+  
+  // 插入数据
+  return db.insert(schema.lectures).values({
+    ...validated,
+    userId: getCurrentUserId(),
+  }).returning();
+}
+```
+
+## 数据库迁移
+
+### 创建迁移
+```bash
+# 生成迁移文件
+bun db:generate
+
+# 应用迁移
+bun db:push
+
+# 查看迁移状态
+bun db:status
+```
+
+### 迁移最佳实践
+```typescript
+// 添加字段（带默认值）
+ALTER TABLE lectures 
+ADD COLUMN view_count INTEGER DEFAULT 0 NOT NULL;
+
+// 重命名字段（需要数据迁移）
+-- 1. 添加新字段
+ALTER TABLE lectures ADD COLUMN description TEXT;
+-- 2. 复制数据
+UPDATE lectures SET description = old_description;
+-- 3. 删除旧字段
+ALTER TABLE lectures DROP COLUMN old_description;
+```
+
+## 常见模式
+
+### 软删除查询
+```typescript
+// 只查询未删除的记录
+const activeLectures = await db.query.lectures.findMany({
+  where: isNull(schema.lectures.deletedAt),
+});
+
+// 包含已删除的记录
+const allLectures = await db.query.lectures.findMany();
+```
+
+### 权限检查
+```typescript
+async function getUserLecture(userId: string, lectureId: string) {
+  const lecture = await db.query.lectures.findFirst({
+    where: and(
+      eq(schema.lectures.id, lectureId),
+      or(
+        // 用户是所有者
+        eq(schema.lectures.userId, userId),
+        // 用户属于组织
+        exists(
+          db
+            .select()
+            .from(schema.organizationMembers)
+            .where(
+              and(
+                eq(schema.organizationMembers.userId, userId),
+                eq(schema.organizationMembers.organizationId, 
+                   schema.lectures.organizationId)
+              )
+            )
+        )
+      )
+    ),
+  });
+  
+  if (!lecture) {
+    throw new Error('Lecture not found or access denied');
+  }
+  
+  return lecture;
+}
+```
+
+### 统计查询
+```typescript
+// 聚合查询
+const stats = await db
+  .select({
+    totalLectures: sql<number>`count(*)`,
+    completedLectures: sql<number>`count(*) filter (where status = 'completed')`,
+    avgDuration: sql<number>`avg(duration)`,
+    totalViews: sql<number>`sum(view_count)`,
+  })
+  .from(schema.lectures)
+  .where(eq(schema.lectures.organizationId, orgId));
+
+// 分组统计
+const lecturesByStatus = await db
+  .select({
+    status: schema.lectures.status,
+    count: sql<number>`count(*)`,
+  })
+  .from(schema.lectures)
+  .groupBy(schema.lectures.status);
+```
+
+## 调试和日志
+
+### 查询日志
+```typescript
+// 开发环境下记录 SQL
+if (process.env.NODE_ENV === 'development') {
+  db.$client.on('query', (query) => {
+    console.log('SQL:', query.sql);
+    console.log('Params:', query.params);
+  });
+}
+```
+
+### 性能分析
+```typescript
+// 使用 EXPLAIN 分析查询
+const plan = await db.execute(
+  sql`EXPLAIN ANALYZE ${
+    db.select().from(schema.lectures).where(eq(schema.lectures.id, id))
+  }`
+);
+```

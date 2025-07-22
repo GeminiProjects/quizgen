@@ -140,8 +140,7 @@ export default function QuizDisplay({
           <button
             className={cn(getOptionClassName(index), 'w-full')}
             disabled={showResult || isExpired || selectedAnswer !== null}
-            // biome-ignore lint/suspicious/noArrayIndexKey: 选项顺序固定，不会改变
-            key={`option-${index}`}
+            key={index}
             onClick={() => handleOptionClick(index)}
             type="button"
           >

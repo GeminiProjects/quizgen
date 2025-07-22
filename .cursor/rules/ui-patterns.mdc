@@ -1,0 +1,480 @@
+---
+description: UI 设计系统规范 - 样式、组件和交互模式
+globs:
+  - "apps/web/src/components/**/*.tsx"
+  - "apps/web/src/app/**/*.tsx"
+  - "packages/ui/**/*.tsx"
+alwaysApply: false
+---
+
+# UI 设计系统规范
+
+## 颜色系统
+
+### 语义化颜色变量
+```typescript
+// 主题颜色（支持 dark/light 模式）
+bg-background       // 页面背景
+bg-card            // 卡片背景
+bg-popover         // 弹出层背景
+bg-primary         // 主色调背景
+bg-secondary       // 次要背景
+bg-muted           // 柔和背景
+bg-accent          // 强调背景
+
+// 文本颜色
+text-foreground    // 主要文本
+text-card-foreground    // 卡片文本
+text-popover-foreground // 弹出层文本
+text-primary-foreground // 主色调文本
+text-secondary-foreground // 次要文本
+text-muted-foreground   // 柔和文本
+text-accent-foreground  // 强调文本
+
+// 边框颜色
+border            // 默认边框
+border-input      // 输入框边框
+ring              // 焦点环颜色
+```
+
+### 状态颜色
+```typescript
+// 状态颜色使用 /10 表示 10% 透明度
+<div className="bg-success/10 text-success">成功状态</div>
+<div className="bg-info/10 text-info">信息提示</div>
+<div className="bg-warning/10 text-warning">警告状态</div>
+<div className="bg-destructive/10 text-destructive">错误状态</div>
+
+// 图标容器标准样式
+<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+  <Icon className="h-5 w-5 text-primary" />
+</div>
+```
+
+## 间距系统
+
+### 标准间距
+```typescript
+// 使用 4 的倍数
+space-y-0   // 0
+space-y-1   // 0.25rem (4px)
+space-y-2   // 0.5rem (8px)
+space-y-3   // 0.75rem (12px)
+space-y-4   // 1rem (16px)
+space-y-6   // 1.5rem (24px)
+space-y-8   // 2rem (32px)
+
+// 页面内容间距
+<div className="space-y-6">
+  <section>...</section>
+  <section>...</section>
+</div>
+
+// 卡片内部间距
+<Card>
+  <CardHeader className="space-y-1">
+    <CardTitle>标题</CardTitle>
+    <CardDescription>描述</CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    {/* 内容 */}
+  </CardContent>
+</Card>
+```
+
+### 内边距模式
+```typescript
+// 标准内边距
+p-4   // 1rem (16px)
+p-6   // 1.5rem (24px)
+p-8   // 2rem (32px)
+
+// 响应式内边距
+<div className="p-4 md:p-6 lg:p-8">
+  {/* 移动端 16px，平板 24px，桌面 32px */}
+</div>
+```
+
+## 布局模式
+
+### 容器布局
+```typescript
+// 标准页面容器
+<div className="container mx-auto px-4 py-8">
+  <div className="mx-auto max-w-7xl">
+    {/* 页面内容 */}
+  </div>
+</div>
+
+// 仪表板布局
+<div className="flex min-h-screen">
+  <Sidebar className="w-64 shrink-0" />
+  <main className="flex-1 overflow-y-auto">
+    <div className="container py-6">
+      {/* 主要内容 */}
+    </div>
+  </main>
+</div>
+```
+
+### 网格系统
+```typescript
+// 响应式网格
+<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  {items.map(item => (
+    <Card key={item.id}>
+      {/* 卡片内容 */}
+    </Card>
+  ))}
+</div>
+
+// 固定列数网格
+<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+  {/* 统计卡片 */}
+</div>
+```
+
+### Flex 布局
+```typescript
+// 水平居中对齐
+<div className="flex items-center justify-between">
+  <h2 className="text-2xl font-bold">标题</h2>
+  <Button>操作</Button>
+</div>
+
+// 垂直布局带间距
+<div className="flex flex-col gap-4">
+  <Header />
+  <Content />
+  <Footer />
+</div>
+```
+
+## 组件样式
+
+### 按钮组件
+```typescript
+// 主要按钮
+<Button className="w-full sm:w-auto">
+  确认
+</Button>
+
+// 次要按钮
+<Button variant="outline">
+  取消
+</Button>
+
+// 危险按钮
+<Button variant="destructive">
+  删除
+</Button>
+
+// 图标按钮
+<Button variant="ghost" size="icon">
+  <MoreHorizontal className="h-4 w-4" />
+</Button>
+
+// 加载状态
+<Button disabled>
+  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+  处理中...
+</Button>
+```
+
+### 表单组件
+```typescript
+// 表单布局
+<form className="space-y-6">
+  <div className="space-y-2">
+    <Label htmlFor="title">标题</Label>
+    <Input
+      id="title"
+      placeholder="输入标题"
+      className="w-full"
+    />
+    <p className="text-sm text-muted-foreground">
+      请输入演讲标题
+    </p>
+  </div>
+  
+  <div className="space-y-2">
+    <Label htmlFor="description">描述</Label>
+    <Textarea
+      id="description"
+      placeholder="输入描述"
+      className="min-h-[100px] resize-none"
+    />
+  </div>
+</form>
+
+// 表单错误提示
+{errors.title && (
+  <p className="mt-1 text-sm text-destructive">
+    {errors.title}
+  </p>
+)}
+```
+
+### 卡片组件
+```typescript
+// 标准卡片
+<Card>
+  <CardHeader>
+    <div className="flex items-center justify-between">
+      <CardTitle>卡片标题</CardTitle>
+      <Badge>状态</Badge>
+    </div>
+    <CardDescription>
+      卡片描述信息
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* 卡片内容 */}
+  </CardContent>
+  <CardFooter className="flex justify-between">
+    <Button variant="outline">取消</Button>
+    <Button>确认</Button>
+  </CardFooter>
+</Card>
+
+// 可交互卡片
+<Card className="cursor-pointer transition-shadow hover:shadow-md">
+  {/* 内容 */}
+</Card>
+```
+
+### 对话框组件
+```typescript
+<Dialog>
+  <DialogTrigger asChild>
+    <Button>打开对话框</Button>
+  </DialogTrigger>
+  <DialogContent className="sm:max-w-[425px]">
+    <DialogHeader>
+      <DialogTitle>对话框标题</DialogTitle>
+      <DialogDescription>
+        对话框描述信息
+      </DialogDescription>
+    </DialogHeader>
+    <div className="grid gap-4 py-4">
+      {/* 对话框内容 */}
+    </div>
+    <DialogFooter>
+      <Button variant="outline">取消</Button>
+      <Button>确认</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+## 状态展示
+
+### 加载状态
+```typescript
+// 全页加载
+<div className="flex h-[50vh] items-center justify-center">
+  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+</div>
+
+// 内联加载
+<div className="flex items-center space-x-2 text-sm text-muted-foreground">
+  <Loader2 className="h-4 w-4 animate-spin" />
+  <span>加载中...</span>
+</div>
+
+// 骨架屏
+<div className="space-y-4">
+  <Skeleton className="h-12 w-3/4" />
+  <Skeleton className="h-4 w-full" />
+  <Skeleton className="h-4 w-5/6" />
+</div>
+```
+
+### 空状态
+```typescript
+<Card className="flex h-[400px] items-center justify-center">
+  <div className="text-center">
+    <FileQuestion className="mx-auto h-12 w-12 text-muted-foreground" />
+    <h3 className="mt-4 text-lg font-semibold">暂无数据</h3>
+    <p className="mt-2 text-sm text-muted-foreground">
+      还没有创建任何演讲
+    </p>
+    <Button className="mt-4">
+      <Plus className="mr-2 h-4 w-4" />
+      创建演讲
+    </Button>
+  </div>
+</Card>
+```
+
+### 错误状态
+```typescript
+<Alert variant="destructive">
+  <AlertCircle className="h-4 w-4" />
+  <AlertTitle>错误</AlertTitle>
+  <AlertDescription>
+    操作失败，请稍后重试
+  </AlertDescription>
+</Alert>
+```
+
+## 动画和过渡
+
+### 基础过渡
+```typescript
+// 颜色过渡
+<button className="transition-colors hover:bg-primary/90">
+  按钮
+</button>
+
+// 阴影过渡
+<div className="transition-shadow hover:shadow-lg">
+  卡片
+</div>
+
+// 变换过渡
+<div className="transition-transform hover:scale-105">
+  可缩放元素
+</div>
+```
+
+### 动画效果
+```typescript
+// 旋转动画
+<Loader2 className="animate-spin" />
+
+// 脉冲动画
+<div className="animate-pulse bg-muted" />
+
+// 淡入动画
+<div className="animate-in fade-in duration-500">
+  内容
+</div>
+```
+
+## 响应式设计
+
+### 断点使用
+```typescript
+// 移动优先响应式
+<div className="text-sm md:text-base lg:text-lg">
+  响应式文本
+</div>
+
+// 显示/隐藏元素
+<nav className="hidden md:block">
+  {/* 桌面端导航 */}
+</nav>
+<button className="md:hidden">
+  {/* 移动端菜单按钮 */}
+</button>
+```
+
+### 响应式间距
+```typescript
+<div className="space-y-4 md:space-y-6 lg:space-y-8">
+  {/* 根据屏幕大小调整间距 */}
+</div>
+```
+
+## 深色模式
+
+### 颜色适配
+```typescript
+// 使用语义化颜色自动适配
+<div className="bg-background text-foreground">
+  {/* 自动切换深浅色 */}
+</div>
+
+// 条件样式
+<div className="bg-white dark:bg-gray-800">
+  {/* 手动指定深色模式样式 */}
+</div>
+```
+
+## 图标使用
+
+### Lucide 图标规范
+```typescript
+import { Plus, Edit, Trash2, ChevronRight } from 'lucide-react';
+
+// 标准尺寸
+<Plus className="h-4 w-4" />      // 小图标 (16px)
+<Edit className="h-5 w-5" />      // 默认图标 (20px)
+<Trash2 className="h-6 w-6" />    // 大图标 (24px)
+
+// 带文本的图标
+<Button>
+  <Plus className="mr-2 h-4 w-4" />
+  添加
+</Button>
+
+// 图标按钮
+<Button variant="ghost" size="icon">
+  <MoreVertical className="h-4 w-4" />
+  <span className="sr-only">更多选项</span>
+</Button>
+```
+
+## 无障碍设计
+
+### ARIA 标签
+```typescript
+// 屏幕阅读器标签
+<button aria-label="删除项目">
+  <Trash2 className="h-4 w-4" />
+</button>
+
+// 加载状态
+<div aria-live="polite" aria-busy={isLoading}>
+  {isLoading ? '加载中...' : '内容'}
+</div>
+
+// 表单关联
+<Label htmlFor="email">邮箱</Label>
+<Input id="email" type="email" required />
+```
+
+### 键盘导航
+```typescript
+// 可聚焦元素
+<div
+  tabIndex={0}
+  role="button"
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleClick();
+    }
+  }}
+>
+  可键盘操作的元素
+</div>
+```
+
+## 性能优化
+
+### 图片优化
+```typescript
+import Image from 'next/image';
+
+<Image
+  src="/image.jpg"
+  alt="描述"
+  width={800}
+  height={600}
+  className="rounded-lg"
+  priority // 首屏图片
+  placeholder="blur" // 模糊占位符
+/>
+```
+
+### 懒加载
+```typescript
+// 组件懒加载
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <Skeleton className="h-40" />,
+});
+
+// 条件渲染
+{showComponent && <ExpensiveComponent />}
+```
