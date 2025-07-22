@@ -1,0 +1,419 @@
+---
+description: TypeScript 类型系统规范 - 类型定义和使用
+globs:
+  - "apps/web/src/**/*.ts"
+  - "apps/web/src/**/*.tsx"
+  - "packages/**/*.ts"
+  - "packages/**/*.tsx"
+alwaysApply: false
+---
+
+# TypeScript 类型系统规范
+
+## 核心原则
+
+1. **绝对禁止使用 `any`**
+2. **类型集中管理**：共享类型定义在 `src/types.ts`
+3. **类型导入使用 `import type`**
+4. **优先使用 `unknown` 而非 `any`**
+
+## 类型定义位置
+
+### 全局共享类型：`src/types.ts`
+```typescript
+// ✅ 正确：在 types.ts 中定义共享类型
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  avatar: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LectureStatus = 'pending' | 'ongoing' | 'completed';
+
+// 通用响应类型
+export interface ActionResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+```
+
+### 模块内部类型：与使用位置相同文件
+```typescript
+// ✅ 正确：组件专用类型在组件文件中定义
+interface LectureCardProps {
+  lecture: Lecture;
+  onStatusChange?: (status: LectureStatus) => void;
+}
+
+export function LectureCard({ lecture, onStatusChange }: LectureCardProps) {
+  // 组件实现
+}
+```
+
+### Schema 类型：在 schema 文件旁定义
+```typescript
+// lib/schemas/lecture.ts
+import { z } from 'zod';
+
+export const createLectureSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  organizationId: z.string().uuid(),
+});
+
+export type CreateLectureInput = z.infer<typeof createLectureSchema>;
+```
+
+## 类型导入规范
+
+### 使用 import type
+```typescript
+// ✅ 正确
+import type { User, Organization } from '@/types';
+import type { FC, ReactNode } from 'react';
+
+// ❌ 错误
+import { User, Organization } from '@/types';
+```
+
+### 混合导入
+```typescript
+// ✅ 正确：值和类型分开导入
+import { useState } from 'react';
+import type { FC } from 'react';
+
+// ✅ 正确：使用 type 修饰符
+import { useState, type FC } from 'react';
+```
+
+## 处理 unknown 类型
+
+### 错误处理
+```typescript
+// ✅ 正确
+try {
+  // 操作
+} catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error('错误信息:', error.message);
+  } else if (typeof error === 'string') {
+    console.error('错误:', error);
+  } else {
+    console.error('未知错误:', error);
+  }
+}
+```
+
+### 类型守卫
+```typescript
+// 定义类型守卫
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'email' in value
+  );
+}
+
+// 使用类型守卫
+function processData(data: unknown) {
+  if (isUser(data)) {
+    // data 现在是 User 类型
+    console.log(data.email);
+  }
+}
+```
+
+### API 响应处理
+```typescript
+// ✅ 正确：使用 unknown 和验证
+async function fetchUser(id: string): Promise<User> {
+  const response = await fetch(`/api/users/${id}`);
+  const data: unknown = await response.json();
+  
+  // 使用 Zod 验证
+  const validated = userSchema.parse(data);
+  return validated;
+}
+```
+
+## 日期序列化类型
+
+### DateToString 工具类型
+```typescript
+// types.ts
+export type DateToString<T> = T extends Date
+  ? string
+  : T extends object
+  ? { [K in keyof T]: DateToString<T[K]> }
+  : T;
+
+// 使用示例
+interface DBLecture {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Server Action 返回类型
+type LectureResponse = DateToString<DBLecture>;
+// 结果：{ id: string; title: string; createdAt: string; updatedAt: string; }
+```
+
+## 泛型使用
+
+### 基础泛型
+```typescript
+// ✅ 正确：为泛型提供有意义的名称和约束
+interface ApiResponse<TData = unknown> {
+  success: boolean;
+  data?: TData;
+  error?: string;
+}
+
+// 使用
+type UserResponse = ApiResponse<User>;
+type LecturesResponse = ApiResponse<Lecture[]>;
+```
+
+### 泛型约束
+```typescript
+// 确保 T 有 id 属性
+function findById<T extends { id: string }>(
+  items: T[],
+  id: string
+): T | undefined {
+  return items.find(item => item.id === id);
+}
+
+// 约束为特定类型的子集
+type Status<T extends string = string> = {
+  value: T;
+  label: string;
+};
+```
+
+## 联合类型和交叉类型
+
+### 联合类型
+```typescript
+// 状态机类型
+type LoadingState<T> = 
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: string };
+
+// 使用辨别联合
+function renderState<T>(state: LoadingState<T>) {
+  switch (state.status) {
+    case 'idle':
+      return <div>准备就绪</div>;
+    case 'loading':
+      return <div>加载中...</div>;
+    case 'success':
+      return <div>{JSON.stringify(state.data)}</div>;
+    case 'error':
+      return <div>错误: {state.error}</div>;
+  }
+}
+```
+
+### 交叉类型
+```typescript
+// 扩展现有类型
+type TimestampedUser = User & {
+  lastLoginAt: string;
+  loginCount: number;
+};
+
+// 组合多个类型
+type AuditableEntity = {
+  createdBy: string;
+  updatedBy: string;
+} & {
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
+## 工具类型使用
+
+### 内置工具类型
+```typescript
+// Partial - 所有属性可选
+type UpdateUserInput = Partial<User>;
+
+// Required - 所有属性必需
+type CompleteUser = Required<User>;
+
+// Pick - 选择特定属性
+type UserSummary = Pick<User, 'id' | 'name' | 'email'>;
+
+// Omit - 排除特定属性
+type UserWithoutDates = Omit<User, 'createdAt' | 'updatedAt'>;
+
+// Record - 键值对类型
+type UserRoles = Record<string, 'admin' | 'user' | 'guest'>;
+
+// Readonly - 只读
+type ReadonlyUser = Readonly<User>;
+```
+
+### 自定义工具类型
+```typescript
+// 深度只读
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+
+// 可空类型
+type Nullable<T> = T | null;
+
+// 异步函数返回类型
+type AsyncReturnType<T extends (...args: any[]) => Promise<any>> = 
+  T extends (...args: any[]) => Promise<infer R> ? R : never;
+```
+
+## React 类型
+
+### 组件类型
+```typescript
+// 函数组件
+interface ButtonProps {
+  variant?: 'primary' | 'secondary';
+  children: ReactNode;
+  onClick?: () => void;
+}
+
+export function Button({ variant = 'primary', children, onClick }: ButtonProps) {
+  return <button onClick={onClick}>{children}</button>;
+}
+
+// 带泛型的组件
+interface ListProps<T> {
+  items: T[];
+  renderItem: (item: T) => ReactNode;
+  keyExtractor: (item: T) => string;
+}
+
+export function List<T>({ items, renderItem, keyExtractor }: ListProps<T>) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={keyExtractor(item)}>{renderItem(item)}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 事件类型
+```typescript
+// 表单事件
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+};
+
+// 输入变化
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  console.log(e.target.value);
+};
+
+// 点击事件
+const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  console.log(e.currentTarget.dataset.id);
+};
+```
+
+## 类型断言
+
+### 安全的类型断言
+```typescript
+// ✅ 正确：验证后断言
+const element = document.getElementById('my-input');
+if (element instanceof HTMLInputElement) {
+  console.log(element.value);
+}
+
+// ✅ 正确：使用 as const
+const ROUTES = {
+  HOME: '/',
+  LECTURES: '/lectures',
+  ORGANIZATIONS: '/organizations',
+} as const;
+
+type Route = typeof ROUTES[keyof typeof ROUTES];
+```
+
+### 避免强制断言
+```typescript
+// ❌ 错误：强制断言可能导致运行时错误
+const value = (data as any).nested.property;
+
+// ✅ 正确：安全访问
+const value = data?.nested?.property;
+```
+
+## 枚举 vs 联合类型
+
+### 优先使用联合类型
+```typescript
+// ✅ 推荐：联合类型
+export type LectureStatus = 'pending' | 'ongoing' | 'completed';
+
+// 使用对象实现枚举效果
+export const LECTURE_STATUS = {
+  PENDING: 'pending',
+  ONGOING: 'ongoing',
+  COMPLETED: 'completed',
+} as const;
+
+type LectureStatusType = typeof LECTURE_STATUS[keyof typeof LECTURE_STATUS];
+```
+
+### 枚举使用场景
+```typescript
+// 当需要反向映射时使用枚举
+enum HttpStatus {
+  OK = 200,
+  NotFound = 404,
+  InternalError = 500,
+}
+
+// 可以通过值获取键
+console.log(HttpStatus[200]); // "OK"
+```
+
+## 类型测试
+
+```typescript
+// 类型相等测试
+type Equals<X, Y> = 
+  (<T>() => T extends X ? 1 : 2) extends 
+  (<T>() => T extends Y ? 1 : 2) ? true : false;
+
+// 测试类型
+type Test1 = Equals<string, string>; // true
+type Test2 = Equals<string, number>; // false
+
+// 期望类型
+type Expect<T extends true> = T;
+
+// 使用测试
+type _Test1 = Expect<Equals<UserResponse, DateToString<DBUser>>>;
+```

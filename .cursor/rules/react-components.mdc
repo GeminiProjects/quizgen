@@ -1,0 +1,451 @@
+---
+description: React 组件开发规范 - UI 组件和交互逻辑
+globs:
+  - "apps/web/src/components/**/*.tsx"
+  - "apps/web/src/app/**/*.tsx"
+  - "!apps/web/src/app/actions/**"
+alwaysApply: false
+---
+
+# React 组件开发规范
+
+## 组件结构模板
+
+```typescript
+'use client'; // 仅在需要客户端功能时添加
+
+import { useState } from 'react';
+import type { ComponentProps } from '@/types';
+
+interface ComponentNameProps {
+  // Props 定义
+  required: string;
+  optional?: number;
+  children?: React.ReactNode;
+}
+
+/**
+ * 组件描述
+ */
+export function ComponentName({ 
+  required,
+  optional = 0,
+  children 
+}: ComponentNameProps) {
+  // Hooks 必须在组件顶部
+  const [state, setState] = useState(false);
+  
+  // 事件处理函数
+  const handleClick = () => {
+    setState(!state);
+  };
+  
+  // 渲染逻辑
+  return (
+    <div className="space-y-4">
+      {children}
+    </div>
+  );
+}
+```
+
+## 客户端 vs 服务端组件
+
+### 服务端组件（默认）
+- 无需 'use client' 指令
+- 可以直接访问数据库
+- 支持 async/await
+- 不能使用浏览器 API、事件处理、状态
+
+```typescript
+// app/(dashboard)/lectures/page.tsx
+import { getLectures } from '@/app/actions/lectures';
+
+export default async function LecturesPage() {
+  const lectures = await getLectures();
+  
+  return (
+    <div>
+      {lectures.map(lecture => (
+        <LectureCard key={lecture.id} lecture={lecture} />
+      ))}
+    </div>
+  );
+}
+```
+
+### 客户端组件
+- 必须添加 'use client' 指令
+- 支持交互、状态、浏览器 API
+- 通过 Server Actions 获取数据
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { createLecture } from '@/app/actions/lectures';
+
+export function CreateLectureForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleSubmit = async (formData: FormData) => {
+    setIsLoading(true);
+    const result = await createLecture(formData);
+    setIsLoading(false);
+  };
+  
+  return <form action={handleSubmit}>...</form>;
+}
+```
+
+## 样式规范
+
+### 使用 Tailwind CSS
+```typescript
+// ✅ 正确：使用 Tailwind 类
+<button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+  点击
+</button>
+
+// ❌ 错误：内联样式
+<button style={{ padding: '8px 16px', backgroundColor: 'blue' }}>
+  点击
+</button>
+```
+
+### 颜色系统
+使用项目定义的颜色变量：
+
+```typescript
+// 状态颜色
+<div className="bg-success/10 text-success">成功</div>
+<div className="bg-warning/10 text-warning">警告</div>
+<div className="bg-destructive/10 text-destructive">错误</div>
+<div className="bg-info/10 text-info">信息</div>
+
+// 图标容器
+<div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+  <Icon className="h-5 w-5 text-primary" />
+</div>
+```
+
+### 响应式设计
+```typescript
+<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  {/* 移动端单列，平板双列，桌面三列 */}
+</div>
+```
+
+## 表单处理
+
+### 使用 Server Actions
+```typescript
+'use client';
+
+import { useFormStatus } from 'react-dom';
+import { createLecture } from '@/app/actions/lectures';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? '提交中...' : '提交'}
+    </Button>
+  );
+}
+
+export function LectureForm() {
+  return (
+    <form action={createLecture}>
+      <input name="title" required />
+      <textarea name="description" />
+      <SubmitButton />
+    </form>
+  );
+}
+```
+
+### 客户端验证
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { z } from 'zod';
+
+const formSchema = z.object({
+  title: z.string().min(1, '标题不能为空'),
+  description: z.string().optional(),
+});
+
+export function ValidatedForm() {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    try {
+      const data = formSchema.parse(Object.fromEntries(formData));
+      // 提交数据
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors(error.flatten().fieldErrors);
+      }
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="title" />
+      {errors.title && <span className="text-destructive">{errors.title}</span>}
+    </form>
+  );
+}
+```
+
+## 数据获取模式
+
+### 服务端组件直接获取
+```typescript
+export default async function LecturePage({ params }: { params: { id: string } }) {
+  const lecture = await getLecture(params.id);
+  
+  if (!lecture) {
+    notFound();
+  }
+  
+  return <LectureDetails lecture={lecture} />;
+}
+```
+
+### 客户端组件使用 Hook
+```typescript
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getLecture } from '@/app/actions/lectures';
+
+export function LectureViewer({ lectureId }: { lectureId: string }) {
+  const [lecture, setLecture] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    getLecture(lectureId).then(result => {
+      if (result.success) {
+        setLecture(result.data);
+      }
+      setLoading(false);
+    });
+  }, [lectureId]);
+  
+  if (loading) return <Skeleton />;
+  if (!lecture) return <EmptyState />;
+  
+  return <LectureContent lecture={lecture} />;
+}
+```
+
+## 组件组合模式
+
+### 复合组件
+```typescript
+// Card 组件家族
+export function Card({ children, className }: CardProps) {
+  return (
+    <div className={cn("rounded-lg border bg-card", className)}>
+      {children}
+    </div>
+  );
+}
+
+Card.Header = function CardHeader({ children, className }: CardHeaderProps) {
+  return (
+    <div className={cn("border-b p-6", className)}>
+      {children}
+    </div>
+  );
+};
+
+Card.Content = function CardContent({ children, className }: CardContentProps) {
+  return (
+    <div className={cn("p-6", className)}>
+      {children}
+    </div>
+  );
+};
+
+// 使用
+<Card>
+  <Card.Header>标题</Card.Header>
+  <Card.Content>内容</Card.Content>
+</Card>
+```
+
+### 渲染属性模式
+```typescript
+interface DialogProps {
+  trigger: React.ReactNode;
+  children: (props: { close: () => void }) => React.ReactNode;
+}
+
+export function Dialog({ trigger, children }: DialogProps) {
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <>
+      <div onClick={() => setOpen(true)}>{trigger}</div>
+      {open && (
+        <div className="dialog">
+          {children({ close: () => setOpen(false) })}
+        </div>
+      )}
+    </>
+  );
+}
+```
+
+## 性能优化
+
+### 使用 React.memo
+```typescript
+import { memo } from 'react';
+
+interface ExpensiveComponentProps {
+  data: ComplexData;
+}
+
+export const ExpensiveComponent = memo(function ExpensiveComponent({ 
+  data 
+}: ExpensiveComponentProps) {
+  // 仅在 props 改变时重新渲染
+  return <div>{/* 复杂渲染逻辑 */}</div>;
+});
+```
+
+### 使用 useMemo 和 useCallback
+```typescript
+'use client';
+
+import { useMemo, useCallback } from 'react';
+
+export function DataList({ items, filter }: DataListProps) {
+  // 缓存过滤结果
+  const filteredItems = useMemo(
+    () => items.filter(item => item.name.includes(filter)),
+    [items, filter]
+  );
+  
+  // 缓存回调函数
+  const handleItemClick = useCallback((id: string) => {
+    // 处理点击
+  }, []);
+  
+  return (
+    <ul>
+      {filteredItems.map(item => (
+        <li key={item.id} onClick={() => handleItemClick(item.id)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 错误边界
+
+```typescript
+'use client';
+
+import { Component, ErrorInfo, ReactNode } from 'react';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<
+  { children: ReactNode },
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { hasError: false, error: null };
+  
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('错误边界捕获:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 text-center">
+          <h2 className="text-lg font-semibold text-destructive">
+            出错了
+          </h2>
+          <p className="text-muted-foreground">
+            {this.state.error?.message}
+          </p>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+```
+
+## 无障碍性
+
+```typescript
+// 使用语义化 HTML
+<nav aria-label="主导航">
+  <ul>
+    <li><a href="/home">首页</a></li>
+  </ul>
+</nav>
+
+// 表单标签
+<label htmlFor="email">邮箱</label>
+<input id="email" type="email" required />
+
+// 按钮状态
+<button
+  aria-busy={isLoading}
+  aria-disabled={isDisabled}
+  disabled={isDisabled}
+>
+  {isLoading ? '加载中...' : '提交'}
+</button>
+
+// 实时区域
+<div aria-live="polite" aria-atomic="true">
+  {message && <p>{message}</p>}
+</div>
+```
+
+## 测试建议
+
+```typescript
+// 组件测试示例
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from './button';
+
+describe('Button', () => {
+  it('should render with text', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeInTheDocument();
+  });
+  
+  it('should call onClick handler', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click</Button>);
+    
+    fireEvent.click(screen.getByText('Click'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```

@@ -1,0 +1,229 @@
+---
+description: 通用开发规范 - 适用于所有文件的基础规则
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+alwaysApply: true
+---
+
+# QuizGen 通用开发规范
+
+## 语言设置
+- **始终使用中文**进行代码注释和交流
+- Git commit message 使用中文
+- 错误信息和用户提示使用中文
+
+## 包管理器
+- **必须使用 Bun** 作为包管理器
+- 安装依赖时添加 `--no-cache` 参数：`bun install --no-cache`
+- 不要使用 npm、yarn 或 pnpm
+
+## 开发流程
+
+### 1. 代码修改前
+- 先阅读相关文件了解上下文
+- 检查现有代码风格和模式
+- 确认修改不会破坏现有功能
+
+### 2. 代码验证
+每次修改后必须执行：
+```bash
+cd apps/web && bun check    # TypeScript + Biome 检查
+cd ../.. && bun format      # 格式化代码
+```
+
+### 3. 提交前检查
+- 确保所有测试通过
+- 确保代码格式正确
+- 确保没有 TypeScript 错误
+
+## 导入规范
+
+### 导入顺序（Biome 强制）
+```typescript
+// 1. 外部包
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+// 2. 内部包 (@repo/*)
+import { auth } from '@repo/auth';
+import { db } from '@repo/db';
+
+// 3. 应用内导入 (@/*)
+import { createLecture } from '@/app/actions/lectures';
+import { cn } from '@/lib/utils';
+
+// 4. 类型导入
+import type { User, Lecture } from '@/types';
+```
+
+### 路径别名
+- `@/` - 指向 `apps/web/src/`
+- `@repo/` - 指向 packages 中的包
+
+## 错误处理
+
+### 统一的错误格式
+```typescript
+interface ActionResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+// 成功返回
+return { success: true, data: result };
+
+// 错误返回
+return { success: false, error: '操作失败' };
+```
+
+### 错误日志
+```typescript
+console.error('[FunctionName] 错误描述:', error);
+// 不要暴露敏感信息到客户端
+```
+
+## 注释规范
+
+### 函数注释
+```typescript
+/**
+ * 创建新的演讲
+ * @param data 演讲数据
+ * @returns 创建的演讲对象
+ */
+export async function createLecture(data: CreateLectureInput) {
+  // 实现
+}
+```
+
+### 复杂逻辑注释
+```typescript
+// 检查用户是否有权限访问该资源
+// 条件：1) 用户是资源所有者 2) 用户属于资源所在组织
+if (isOwner || isMember) {
+  // 允许访问
+}
+```
+
+## 命名规范
+
+### 文件命名
+- 组件文件：`PascalCase.tsx` (如 `LectureCard.tsx`)
+- 工具文件：`kebab-case.ts` (如 `api-utils.ts`)
+- Server Actions：`camelCase.ts` (如 `lectures.ts`)
+
+### 变量命名
+- 组件：PascalCase - `LectureCard`
+- 函数：camelCase - `createLecture`
+- 常量：UPPER_SNAKE_CASE - `MAX_RETRIES`
+- 类型/接口：PascalCase - `User`, `LectureProps`
+
+## 安全规范
+
+### 永远不要
+- 在代码中硬编码密钥或密码
+- 在客户端暴露敏感信息
+- 信任用户输入（始终验证）
+- 在日志中记录敏感数据
+
+### 始终要
+- 验证所有用户输入
+- 使用环境变量存储敏感配置
+- 在 Server Actions 中进行身份验证
+- 对数据库查询使用参数化查询
+
+## Git 规范
+
+### 分支命名
+- 功能：`feature/功能描述`
+- 修复：`fix/问题描述`
+- 文档：`docs/文档描述`
+
+### Commit 消息
+```
+<类型>: <描述>
+
+[可选的详细说明]
+
+[可选的相关 issue]
+```
+
+类型包括：
+- feat: 新功能
+- fix: 修复问题
+- docs: 文档更新
+- style: 代码格式
+- refactor: 重构
+- test: 测试
+- chore: 构建或辅助工具
+
+## 性能考虑
+
+### 避免
+- 在循环中进行数据库查询
+- 不必要的重渲染
+- 同步阻塞操作
+- 过度的数据获取
+
+### 优先
+- 批量数据库操作
+- 适当的缓存策略
+- 懒加载和代码分割
+- 优化的图片和资源
+
+## Monorepo 结构
+
+```
+quizgen/
+├── apps/
+│   └── web/          # Next.js 应用
+├── packages/
+│   ├── auth/         # 认证包
+│   ├── db/           # 数据库包
+│   └── ui/           # UI 组件包
+└── turbo.json        # Turborepo 配置
+```
+
+### 跨包引用
+- 使用 `@repo/包名` 引用内部包
+- 确保依赖正确声明在 package.json 中
+- 运行 `bun install` 安装内部包依赖
+
+## 调试技巧
+
+### 开发服务器
+```bash
+bun dev              # 启动所有应用
+bun dev --filter=web # 只启动 web 应用
+```
+
+### 数据库调试
+```bash
+bun db:studio        # 打开 Drizzle Studio
+bun db:push          # 推送 schema 变更
+```
+
+### 日志级别
+- 开发环境：详细日志
+- 生产环境：仅错误和警告
+
+## 常见问题解决
+
+### TypeScript 错误
+1. 先运行 `bun check` 查看具体错误
+2. 检查类型导入是否使用 `import type`
+3. 确保没有使用 `any` 类型
+
+### 构建错误
+1. 清理缓存：`rm -rf .next`
+2. 重新安装依赖：`bun install --no-cache`
+3. 检查环境变量配置
+
+### 格式化问题
+1. 运行 `bun format` 自动修复
+2. 检查 Biome 配置
+3. 确保编辑器配置正确

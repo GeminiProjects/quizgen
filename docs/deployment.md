@@ -104,7 +104,7 @@ graph TB
    ```
    Framework Preset: Next.js
    Root Directory: ./
-   Build Command: bun run build
+   Build Command: (默认)
    Output Directory: (默认)
    Install Command: bun install
    ```
@@ -114,56 +114,6 @@ graph TB
 
 4. **部署**
    点击 "Deploy" 开始部署
-
-### 方法二：通过 CLI
-
-1. **安装 Vercel CLI**
-   ```bash
-   bun add -g vercel
-   ```
-
-2. **登录 Vercel**
-   ```bash
-   vercel login
-   ```
-
-3. **部署项目**
-   ```bash
-   # 在项目根目录执行
-   vercel
-   
-   # 按照提示进行配置
-   # - Link to existing project? No
-   # - What's your project's name? quizgen
-   # - In which directory is your code located? ./
-   # - Want to modify these settings? No
-   ```
-
-4. **配置环境变量**
-   ```bash
-   # 设置生产环境变量
-   vercel env add GOOGLE_API_KEY production
-   vercel env add DATABASE_URL production
-   # ... 添加其他环境变量
-   ```
-
-### 部署配置文件
-
-创建 `vercel.json` 优化部署：
-
-```json
-{
-  "buildCommand": "bun run build",
-  "installCommand": "bun install",
-  "framework": "nextjs",
-  "regions": ["sin1"],
-  "functions": {
-    "app/api/quiz/generate/route.ts": {
-      "maxDuration": 30
-    }
-  }
-}
-```
 
 ## 数据库配置
 
@@ -184,27 +134,6 @@ graph TB
    ```bash
    # 本地运行迁移到生产数据库
    DATABASE_URL="your-neon-connection-string" bun db:push
-   ```
-
-### 数据库优化
-
-1. **索引优化**
-   ```sql
-   -- 确保关键查询有合适的索引
-   CREATE INDEX idx_lectures_owner_id ON lectures(owner_id);
-   CREATE INDEX idx_quiz_items_lecture_id ON quiz_items(lecture_id);
-   CREATE INDEX idx_attempts_user_quiz ON attempts(user_id, quiz_id);
-   ```
-
-2. **连接池配置**
-   ```typescript
-   // packages/db/src/index.ts
-   import { neon } from '@neondatabase/serverless';
-   
-   const sql = neon(process.env.DATABASE_URL!, {
-     pooled: true,
-     fetchConnectionCache: true,
-   });
    ```
 
 ## 环境变量
@@ -319,76 +248,6 @@ graph TB
    };
    ```
 
-### 错误追踪
-
-集成 Sentry 或类似服务：
-
-```typescript
-// app/layout.tsx
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-});
-```
-
-## 性能优化
-
-### 1. 图片优化
-
-```typescript
-// 使用 Next.js Image 组件
-import Image from 'next/image';
-
-<Image
-  src="/hero.png"
-  alt="Hero"
-  width={1200}
-  height={600}
-  priority
-  placeholder="blur"
-/>
-```
-
-### 2. 缓存策略
-
-```typescript
-// app/api/lectures/route.ts
-export async function GET() {
-  return new Response(JSON.stringify(data), {
-    headers: {
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-    },
-  });
-}
-```
-
-### 3. 数据库查询优化
-
-```typescript
-// 使用适当的查询和索引
-const lectures = await db
-  .select()
-  .from(lecturesTable)
-  .where(eq(lecturesTable.userId, userId))
-  .limit(10)
-  .offset(offset);
-```
-
-### 4. Edge 函数
-
-将轻量级 API 移至 Edge Runtime：
-
-```typescript
-// app/api/health/route.ts
-export const runtime = 'edge';
-
-export async function GET() {
-  return Response.json({ status: 'ok' });
-}
-```
-
 ## 故障排查
 
 ### 常见问题
@@ -449,69 +308,6 @@ const ratelimit = new Ratelimit({
      hasGeminiKey: !!process.env.GOOGLE_API_KEY,
    });
    ```
-
-## 备份与恢复
-
-### 数据库备份
-
-#### 自动备份
-
-Neon 提供自动备份功能：
-- 每日自动备份
-- 保留 7 天（免费版）或 30 天（付费版）
-
-#### 手动备份
-
-```bash
-# 导出数据
-pg_dump $DATABASE_URL > backup.sql
-
-# 恢复数据
-psql $DATABASE_URL < backup.sql
-```
-
-### 应用备份
-
-1. **代码备份**
-   - 使用 Git 标签标记版本
-   - 保持多个部署版本
-
-2. **配置备份**
-   ```bash
-   # 导出环境变量
-   vercel env pull .env.backup
-   ```
-
-### 灾难恢复计划
-
-1. **数据恢复**
-   - 从 Neon 备份恢复
-   - 使用时间点恢复
-
-2. **应用回滚**
-   ```bash
-   # 回滚到上一个部署
-   vercel rollback
-   ```
-
-3. **DNS 故障转移**
-   - 准备备用域名
-   - 配置健康检查
-
-## 生产检查清单
-
-部署到生产环境前，确保完成以下检查：
-
-- [ ] 所有环境变量已正确设置
-- [ ] 数据库迁移已执行
-- [ ] SSL 证书已配置
-- [ ] 监控和日志已启用
-- [ ] 错误追踪已配置
-- [ ] 备份策略已实施
-- [ ] 性能优化已应用
-- [ ] 安全头已配置
-- [ ] Rate limiting 已实施
-- [ ] 健康检查端点可用
 
 ## 总结
 

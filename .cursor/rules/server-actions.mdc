@@ -1,0 +1,241 @@
+---
+description: Server Actions 开发规范 - 数据操作和业务逻辑
+globs:
+  - "apps/web/src/app/actions/**/*.ts"
+  - "apps/web/src/app/**/actions.ts"
+alwaysApply: false
+---
+
+# Server Actions 开发规范
+
+## 核心原则
+Server Actions 是 QuizGen 中处理所有数据操作的首选方式。每个 Server Action 必须遵循严格的模式以确保安全性、一致性和可维护性。
+
+## 标准结构模板
+
+```typescript
+'use server';
+
+import { requireAuth } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import type { ActionResponse } from '@/types';
+
+// 1. 定义输入验证 Schema
+const actionSchema = z.object({
+  // 具体字段定义
+});
+
+// 2. 定义输入类型
+type ActionInput = z.infer<typeof actionSchema>;
+
+// 3. 实现 Server Action
+export async function actionName(input: ActionInput): Promise<ActionResponse<OutputType>> {
+  // 身份验证
+  const { user } = await requireAuth();
+  
+  // 参数验证
+  const validated = actionSchema.parse(input);
+  
+  try {
+    // 数据库操作（使用事务）
+    const result = await db.transaction(async (tx) => {
+      // 业务逻辑
+    });
+    
+    // 路径重验证
+    revalidatePath('/relevant-path');
+    
+    // 返回成功响应
+    return {
+      success: true,
+      data: serializeData(result),
+    };
+  } catch (error) {
+    // 统一错误处理
+    console.error('[ActionName] 错误:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '操作失败',
+    };
+  }
+}
+```
+
+## 必须遵守的规则
+
+### 1. 身份验证
+- 除公开接口外，所有 Server Actions 必须调用 `requireAuth()`
+- 将用户信息存储在变量中以便后续使用
+- 检查用户权限和资源所有权
+
+### 2. 参数验证
+- 使用 Zod schema 验证所有输入
+- 在函数开始处立即进行验证
+- 为复杂对象创建可重用的 schema
+
+### 3. 错误处理
+- 使用 try-catch 包裹所有数据库操作
+- 返回统一的 `ActionResponse<T>` 格式
+- 记录错误日志但不暴露敏感信息
+
+### 4. 数据库操作
+- 使用事务处理多个相关操作
+- 避免 N+1 查询问题
+- 使用 Drizzle ORM 的类型安全查询
+
+### 5. 缓存管理
+- 数据变更后必须调用 `revalidatePath()`
+- 精确指定需要重验证的路径
+- 考虑相关页面的缓存失效
+
+## 实际示例
+
+### 创建资源
+```typescript
+export async function createLecture(input: CreateLectureInput) {
+  const { user } = await requireAuth();
+  const validated = createLectureSchema.parse(input);
+  
+  try {
+    const lecture = await db.transaction(async (tx) => {
+      // 创建演讲
+      const [lecture] = await tx
+        .insert(schema.lectures)
+        .values({
+          ...validated,
+          userId: user.id,
+          status: 'pending',
+        })
+        .returning();
+      
+      // 创建相关资源
+      if (validated.materials) {
+        await tx.insert(schema.materials).values(
+          validated.materials.map(m => ({
+            ...m,
+            lectureId: lecture.id,
+          }))
+        );
+      }
+      
+      return lecture;
+    });
+    
+    revalidatePath('/lectures');
+    revalidatePath(`/organizations/${validated.organizationId}`);
+    
+    return { success: true, data: lecture };
+  } catch (error) {
+    console.error('[CreateLecture] 错误:', error);
+    return { success: false, error: '创建演讲失败' };
+  }
+}
+```
+
+### 更新状态
+```typescript
+export async function updateLectureStatus(
+  lectureId: string,
+  status: LectureStatus
+) {
+  const { user } = await requireAuth();
+  
+  try {
+    // 验证权限
+    const lecture = await db.query.lectures.findFirst({
+      where: and(
+        eq(schema.lectures.id, lectureId),
+        eq(schema.lectures.userId, user.id)
+      ),
+    });
+    
+    if (!lecture) {
+      return { success: false, error: '演讲不存在或无权限' };
+    }
+    
+    // 更新状态
+    const [updated] = await db
+      .update(schema.lectures)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(schema.lectures.id, lectureId))
+      .returning();
+    
+    revalidatePath('/lectures');
+    revalidatePath(`/lectures/${lectureId}`);
+    
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error('[UpdateLectureStatus] 错误:', error);
+    return { success: false, error: '更新状态失败' };
+  }
+}
+```
+
+## 常见错误模式
+
+### ❌ 错误：忘记身份验证
+```typescript
+export async function deleteResource(id: string) {
+  // 危险：没有验证用户身份
+  await db.delete(schema.resources).where(eq(schema.resources.id, id));
+}
+```
+
+### ❌ 错误：直接返回数据库错误
+```typescript
+catch (error) {
+  return { success: false, error: error.message }; // 可能泄露敏感信息
+}
+```
+
+### ❌ 错误：忘记重验证路径
+```typescript
+const result = await db.insert(schema.lectures).values(data);
+// 缺少 revalidatePath，页面不会更新
+return { success: true, data: result };
+```
+
+## 性能优化建议
+
+1. **批量操作**
+   ```typescript
+   // 使用单个插入语句而不是循环
+   await db.insert(schema.items).values(items);
+   ```
+
+2. **选择性查询**
+   ```typescript
+   // 只选择需要的字段
+   const lectures = await db.query.lectures.findMany({
+     columns: { id: true, title: true, status: true },
+   });
+   ```
+
+3. **预加载关联数据**
+   ```typescript
+   // 使用 with 预加载关联数据
+   const lecture = await db.query.lectures.findFirst({
+     where: eq(schema.lectures.id, id),
+     with: { materials: true, quizItems: true },
+   });
+   ```
+
+## 日期序列化处理
+
+Server Actions 返回的 Date 对象会被自动序列化为 string，使用 `DateToString<T>` 类型处理：
+
+```typescript
+import type { DateToString } from '@/types';
+
+// 数据库返回类型
+type DBLecture = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// Server Action 返回类型
+type LectureResponse = DateToString<DBLecture>;
+// { id: string; createdAt: string; updatedAt: string; }
+```
