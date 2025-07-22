@@ -9,260 +9,246 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
+import { Progress } from '@repo/ui/components/progress';
 import {
-  AlertCircle,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   MessageSquare,
   Play,
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
-import useSWR from 'swr';
+import type { LectureStatus, ParticipatedQuizItem } from '@/types';
+import QuizTest from './quiz-test';
 
 interface QuizTestTabProps {
-  lectureId: string;
+  lecture: {
+    id: string;
+    status: LectureStatus;
+    quizzes: ParticipatedQuizItem[];
+  };
 }
 
-interface QuizItem {
-  id: string;
-  question: string;
-  options: string[];
-  ts: string;
-  created_at: string;
-  status?: 'pending' | 'completed' | 'failed';
-}
+export default function QuizTestTab({ lecture }: QuizTestTabProps) {
+  const [selectedQuiz, setSelectedQuiz] = useState<ParticipatedQuizItem | null>(
+    null
+  );
+  const [showQuizDialog, setShowQuizDialog] = useState(false);
 
-// 获取测验数据
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-/**
- * 参与测验标签页组件
- * 显示可参与的测验列表
- */
-export default function QuizTestTab({ lectureId }: QuizTestTabProps) {
-  const { data, error: fetchError } = useSWR(
-    `/api/lectures/${lectureId}/quiz-items`,
-    fetcher
+  const unattemptedQuizzes = lecture.quizzes.filter((q) => !q.attempted);
+  const attemptedQuizzes = lecture.quizzes.filter((q) => q.attempted);
+  const correctQuizzes = attemptedQuizzes.filter(
+    (q) => q.my_attempt?.is_correct
   );
 
-  const quizzes: QuizItem[] = data?.success ? data.data : [];
-  const [loading, setLoading] = useState<string | null>(null);
+  const progress =
+    lecture.quizzes.length > 0
+      ? (attemptedQuizzes.length / lecture.quizzes.length) * 100
+      : 0;
 
-  // 格式化时间
-  const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const handleStartQuiz = (quiz: ParticipatedQuizItem) => {
+    setSelectedQuiz(quiz);
+    setShowQuizDialog(true);
   };
 
-  // 格式化相对时间
-  const formatRelativeTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
-    );
-
-    if (diffInMinutes < 1) return '刚刚';
-    if (diffInMinutes < 60) return `${diffInMinutes}分钟前`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}小时前`;
-    return date.toLocaleDateString('zh-CN');
+  const handleQuizComplete = () => {
+    setShowQuizDialog(false);
+    setSelectedQuiz(null);
   };
 
-  // 获取测验状态图标
-  const getStatusIcon = (status?: string) => {
-    switch (status) {
-      case 'completed': {
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      }
-      case 'failed': {
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      }
-      default: {
-        return <Clock className="h-4 w-4 text-muted-foreground" />;
-      }
-    }
-  };
-
-  // 获取测验状态标签
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <Badge className="bg-green-100 text-green-800" variant="default">
-            已完成
-          </Badge>
-        );
-      case 'failed':
-        return <Badge variant="destructive">已失败</Badge>;
-      default:
-        return <Badge variant="secondary">待参与</Badge>;
-    }
-  };
-
-  // 处理参与测验
-  const handleParticipate = (quizId: string) => {
-    setLoading(quizId);
-    try {
-      // 这里可以添加参与测验的逻辑
-      // 比如记录参与状态、跳转到答题页面等
-      toast.success('正在进入测验...');
-      // 可以跳转到具体的答题页面
-      // router.push(`/participation/quiz/${quizId}`);
-    } catch (err) {
-      toast.error('参与测验失败，请重试');
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  if (fetchError) {
+  if (lecture.quizzes.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <AlertCircle className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">加载测验失败，请刷新重试</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!quizzes || quizzes.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 className="mb-2 font-semibold text-lg">暂无测验</h3>
-          <p className="text-muted-foreground">当前演讲还没有发布测验题目</p>
-        </div>
+      <div className="py-12 text-center">
+        <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h3 className="mb-2 font-semibold text-lg">暂无测验题目</h3>
+        <p className="text-muted-foreground">演讲者还未发布任何测验题目</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* 测验统计 */}
+    <div className="space-y-6">
+      {/* 答题进度 */}
       <Card>
         <CardHeader>
-          <CardTitle>测验概览</CardTitle>
-          <CardDescription>当前演讲的测验参与情况</CardDescription>
+          <CardTitle className="text-base">答题进度</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="text-center">
-              <div className="font-bold text-2xl">{quizzes.length}</div>
-              <div className="text-muted-foreground text-sm">总测验数</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-2xl text-green-600">
-                {quizzes.filter((q) => q.status === 'completed').length}
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">完成进度</span>
+            <span className="font-medium">
+              {attemptedQuizzes.length} / {lecture.quizzes.length} 题
+            </span>
+          </div>
+          <Progress className="h-2" value={progress} />
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="font-semibold text-2xl">
+                {unattemptedQuizzes.length}
               </div>
-              <div className="text-muted-foreground text-sm">已完成</div>
+              <div className="text-muted-foreground text-xs">未答题</div>
             </div>
-            <div className="text-center">
-              <div className="font-bold text-2xl text-blue-600">
-                {quizzes.filter((q) => !q.status).length}
+            <div>
+              <div className="font-semibold text-2xl text-green-600">
+                {correctQuizzes.length}
               </div>
-              <div className="text-muted-foreground text-sm">待参与</div>
+              <div className="text-muted-foreground text-xs">答对</div>
+            </div>
+            <div>
+              <div className="font-semibold text-2xl text-red-600">
+                {attemptedQuizzes.length - correctQuizzes.length}
+              </div>
+              <div className="text-muted-foreground text-xs">答错</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 测验列表 */}
-      <div className="space-y-3">
-        {quizzes.map((quiz) => (
-          <Card className="transition-all hover:shadow-md" key={quiz.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-start gap-3">
-                    <div className="mt-1 flex-shrink-0">
-                      {getStatusIcon(quiz.status)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="line-clamp-2 font-medium text-base">
+      {/* 未答题目 */}
+      {unattemptedQuizzes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-lg">待答题目</h3>
+            <Badge variant="secondary">{unattemptedQuizzes.length} 题</Badge>
+          </div>
+          <div className="grid gap-3">
+            {unattemptedQuizzes.map((quiz) => (
+              <Card
+                className="transition-colors hover:bg-muted/50"
+                key={quiz.id}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-1">
+                      <CardTitle className="line-clamp-2 text-base">
                         {quiz.question}
-                      </h4>
-                      <div className="mt-1 flex items-center gap-2">
-                        {getStatusBadge(quiz.status)}
-                        <span className="text-muted-foreground text-xs">
-                          {quiz.options.length} 个选项
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-2 text-xs">
+                        <Clock className="h-3 w-3" />
+                        {new Date(quiz.created_at).toLocaleString('zh-CN', {
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      disabled={lecture.status === 'ended'}
+                      onClick={() => handleStartQuiz(quiz)}
+                      size="sm"
+                    >
+                      <Play className="mr-1 h-3 w-3" />
+                      开始答题
+                    </Button>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 已答题目 */}
+      {attemptedQuizzes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-lg">答题记录</h3>
+            <Badge variant="secondary">{attemptedQuizzes.length} 题</Badge>
+          </div>
+          <div className="grid gap-3">
+            {attemptedQuizzes.map((quiz) => (
+              <Card
+                className="transition-colors hover:bg-muted/50"
+                key={quiz.id}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-1">
+                      <CardTitle className="line-clamp-2 text-base">
+                        {quiz.question}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(quiz.created_at).toLocaleString('zh-CN', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </span>
-                      </div>
+                        <span className="flex items-center gap-1">
+                          你的答案：
+                          {['A', 'B', 'C', 'D'][quiz.my_attempt?.selected || 0]}
+                        </span>
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {quiz.my_attempt?.is_correct ? (
+                        <Badge
+                          className="bg-green-500/10 text-green-600"
+                          variant="secondary"
+                        >
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                          正确
+                        </Badge>
+                      ) : (
+                        <Badge
+                          className="bg-red-500/10 text-red-600"
+                          variant="secondary"
+                        >
+                          <XCircle className="mr-1 h-3 w-3" />
+                          错误
+                        </Badge>
+                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-4 text-muted-foreground text-xs">
-                    <span>发布时间：{formatTime(quiz.ts)}</span>
-                    <span>创建时间：{formatRelativeTime(quiz.created_at)}</span>
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0">
-                  {quiz.status === 'completed' ? (
-                    <Button disabled size="sm" variant="outline">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      已完成
-                    </Button>
-                  ) : quiz.status === 'failed' ? (
-                    <Button
-                      disabled={loading === quiz.id}
-                      onClick={() => handleParticipate(quiz.id)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      {loading === quiz.id ? (
-                        '加载中...'
-                      ) : (
-                        <>
-                          <Play className="mr-2 h-4 w-4" />
-                          重新参与
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled={loading === quiz.id}
-                      onClick={() => handleParticipate(quiz.id)}
-                      size="sm"
-                    >
-                      {loading === quiz.id ? (
-                        '加载中...'
-                      ) : (
-                        <>
-                          <Play className="mr-2 h-4 w-4" />
-                          参与测验
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* 参与提示 */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 h-4 w-4 text-blue-600" />
-            <div className="space-y-1">
-              <p className="font-medium text-blue-900 text-sm">参与提示</p>
-              <p className="text-blue-700 text-sm">
-                点击"参与测验"按钮开始答题。每个测验都有时间限制，请合理安排答题时间。
-                完成测验后可以查看正确答案和解释。
-              </p>
-            </div>
+                </CardHeader>
+                {quiz.my_attempt && (
+                  <CardContent className="pt-0">
+                    <div className="grid gap-2 text-sm">
+                      {quiz.options.map((option, index) => (
+                        <div
+                          className={`flex items-center gap-2 rounded-md px-3 py-2 ${
+                            index === quiz.my_attempt?.selected
+                              ? quiz.my_attempt.is_correct
+                                ? 'bg-green-500/10 text-green-700'
+                                : 'bg-red-500/10 text-red-700'
+                              : 'text-muted-foreground'
+                          }`}
+                          key={`quiz-option-${quiz.id}-${index}`}
+                        >
+                          <span className="font-medium">
+                            {['A', 'B', 'C', 'D'][index]}.
+                          </span>
+                          <span>{option}</span>
+                          {index === quiz.my_attempt?.selected && (
+                            <span className="ml-auto text-xs">
+                              {quiz.my_attempt.is_correct ? '✓' : '✗'}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* 测验对话框 */}
+      {selectedQuiz && (
+        <QuizTest
+          lectureId={lecture.id}
+          onComplete={handleQuizComplete}
+          onOpenChange={setShowQuizDialog}
+          open={showQuizDialog}
+          quiz={selectedQuiz}
+        />
+      )}
     </div>
   );
 }

@@ -101,14 +101,57 @@ export interface Attempt extends DateToString<DBAttempt> {
 }
 
 export type ParticipationHistory = {
-    attempt: Attempt;
-    quizItem: QuizItem;
+  attempt: Attempt;
+  quizItem: QuizItem;
 }[];
 
 // ============= 参与者相关 =============
 export interface LectureParticipant extends DateToString<DBLectureParticipant> {
   participant?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
   lecture?: Pick<Lecture, 'id' | 'title'>;
+}
+
+// 参与者角色
+export type ParticipantRole = 'speaker' | 'audience' | 'assistant';
+
+// 参与者状态
+export type ParticipantStatus = 'joined' | 'active' | 'left' | 'kicked';
+
+// 测验答题记录
+export interface QuizAttempt {
+  quiz_id: string;
+  selected: number;
+  is_correct: boolean;
+}
+
+// 参与的演讲测验题目
+export interface ParticipatedQuizItem {
+  id: string;
+  question: string;
+  options: string[];
+  ts: string;
+  created_at: string;
+  attempted: boolean;
+  my_attempt?: QuizAttempt;
+}
+
+// 参与的演讲（包含完整信息）
+export interface ParticipatedLecture {
+  id: string;
+  title: string;
+  description: string | null;
+  owner_id: string;
+  org_id: string | null;
+  status: LectureStatus;
+  starts_at: string;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+  owner_name: string | null;
+  participant_role: ParticipantRole;
+  participant_status: ParticipantStatus;
+  joined_at: string;
+  quizzes: ParticipatedQuizItem[];
 }
 
 // ============= 转录相关 =============

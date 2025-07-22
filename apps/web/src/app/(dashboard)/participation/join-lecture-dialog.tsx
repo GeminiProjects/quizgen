@@ -10,13 +10,15 @@ import {
 } from '@repo/ui/components/dialog';
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
-import React, { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { joinLectureByCode } from '@/app/actions/participation';
 
 interface JoinLectureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (lecture: Record<string, unknown>) => void;
+  onSuccess: () => void;
 }
 
 /**
@@ -28,7 +30,8 @@ export default function JoinLectureDialog({
   onOpenChange,
   onSuccess,
 }: JoinLectureDialogProps) {
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [joinCode, setJoinCode] = useState('');
 
   // 重置表单
@@ -37,48 +40,40 @@ export default function JoinLectureDialog({
   }, []);
 
   // 关闭对话框时重置表单
-  // 只要关闭就重置
   React.useEffect(() => {
     if (!open) {
       resetForm();
     }
   }, [open, resetForm]);
 
-  // 表单校验
-  const validateForm = () => {
+  // 提交加入
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!joinCode.trim()) {
       toast.error('请输入演讲码');
-      return false;
-    }
-    return true;
-  };
-
-  // 提交加入
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) {
       return;
     }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/lectures/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ join_code: joinCode.trim() }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        toast.error(data.error || '加入演讲失败');
-        return;
+
+    startTransition(async () => {
+      try {
+        const result = await joinLectureByCode({ join_code: joinCode.trim() });
+
+        if (result.already_joined) {
+          toast.info('您已经加入过这个演讲了');
+        } else {
+          toast.success('成功加入演讲');
+        }
+
+        onSuccess();
+        onOpenChange(false);
+
+        // 跳转到演讲详情页
+        router.push(`/participation/${result.id}`);
+      } catch (error) {
+        toast.error((error as Error)?.message || '加入演讲失败');
       }
-      toast.success(data.message || '成功加入演讲');
-      onSuccess(data.data);
-      onOpenChange(false);
-    } catch (error) {
-      toast.error((error as Error)?.message || '加入演讲失败');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -92,6 +87,7 @@ export default function JoinLectureDialog({
             <Label htmlFor="join_code">演讲码 *</Label>
             <Input
               autoFocus
+              disabled={isPending}
               id="join_code"
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder="请输入演讲码"
@@ -101,14 +97,15 @@ export default function JoinLectureDialog({
           </div>
           <DialogFooter>
             <Button
+              disabled={isPending}
               onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
             >
               取消
             </Button>
-            <Button disabled={loading} type="submit">
-              {loading ? '加入中...' : '加入演讲'}
+            <Button disabled={isPending} type="submit">
+              {isPending ? '加入中...' : '加入演讲'}
             </Button>
           </DialogFooter>
         </form>

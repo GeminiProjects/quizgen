@@ -31,6 +31,7 @@ export {
   type OrganizationUpdateRequest,
   organizationSchemas,
 } from './organization';
+export * from './participation';
 // 导出测验题目相关模式
 export * from './quiz-item';
 export {
@@ -40,4 +41,3 @@ export {
   type QuizItemUpdateRequest,
   quizItemSchemas,
 } from './quiz-item';
-export * from "./participation";

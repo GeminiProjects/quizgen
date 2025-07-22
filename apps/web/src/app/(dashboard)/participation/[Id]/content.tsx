@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
   Card,
@@ -14,18 +15,27 @@ import {
   TabsList,
   TabsTrigger,
 } from '@repo/ui/components/tabs';
-import { ArrowLeft, Calendar, Clock, Hash, Timer, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Hash,
+  MessageSquare,
+  Timer,
+  User,
+  Users,
+} from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
-import type { LectureData, QuizItem } from '@/types';
+import { lectureStatusConfig, type ParticipatedLecture } from '@/types';
 import ExitLectureDialog from './exit-lecture';
 import QuizTestTab from './quiz-test-tab';
 
 interface LectureContentProps {
-  lecture: LectureData;
+  lecture: ParticipatedLecture;
 }
 
 export default function LectureContent({ lecture }: LectureContentProps) {
@@ -44,33 +54,16 @@ export default function LectureContent({ lecture }: LectureContentProps) {
   // 计算参与相关的统计数据
   const participationStats = {
     totalQuizzes: lecture.quizzes?.length || 0,
-    totalQuestions:
-      lecture.quizzes?.reduce(
-        (sum: number, quiz: QuizItem) => sum + (quiz.options?.length || 0),
-        0
-      ) || 0,
-    avgOptionsPerQuiz:
-      lecture.quizzes?.length > 0
-        ? (
-            lecture.quizzes.reduce(
-              (sum: number, quiz: QuizItem) =>
-                sum + (quiz.options?.length || 0),
-              0
-            ) / lecture.quizzes.length
-          ).toFixed(1)
-        : '0',
-    lectureDuration: lecture.ends_at
+    attemptedQuizzes: lecture.quizzes?.filter((q) => q.attempted).length || 0,
+    correctAnswers:
+      lecture.quizzes?.filter((q) => q.my_attempt?.is_correct).length || 0,
+    accuracy: lecture.quizzes?.filter((q) => q.attempted).length
       ? Math.round(
-          (new Date(lecture.ends_at).getTime() -
-            new Date(lecture.starts_at).getTime()) /
-            (1000 * 60)
+          (lecture.quizzes.filter((q) => q.my_attempt?.is_correct).length /
+            lecture.quizzes.filter((q) => q.attempted).length) *
+            100
         )
       : 0,
-    contextSize:
-      lecture.quizzes?.reduce(
-        (sum: number, quiz: QuizItem) => sum + (quiz.question?.length || 0),
-        0
-      ) || 0,
   };
 
   const breadcrumbItems = [
@@ -88,15 +81,28 @@ export default function LectureContent({ lecture }: LectureContentProps) {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="font-bold text-3xl">{lecture.title}</h1>
+            <Badge
+              className={lectureStatusConfig[lecture.status]?.className}
+              variant={lectureStatusConfig[lecture.status]?.variant}
+            >
+              {lectureStatusConfig[lecture.status]?.label}
+            </Badge>
           </div>
           {lecture.description && (
             <p className="text-lg text-muted-foreground">
               {lecture.description}
             </p>
           )}
-          <p className="text-muted-foreground text-sm">
-            开始时间：{formatDate(lecture.starts_at)}
-          </p>
+          <div className="flex items-center gap-4 text-muted-foreground text-sm">
+            <span className="flex items-center gap-1">
+              <User className="h-4 w-4" />
+              演讲者：{lecture.owner_name || '未知'}
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              开始时间：{formatDate(lecture.starts_at)}
+            </span>
+          </div>
         </div>
 
         {/* 操作按钮 */}
@@ -112,39 +118,31 @@ export default function LectureContent({ lecture }: LectureContentProps) {
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className="lg:col-span-2">
-          <StatsCard
-            description="总选项数"
-            icon={Hash}
-            title="题目选项"
-            value={participationStats.totalQuestions}
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <StatsCard
-            description="演讲时长"
-            icon={Clock}
-            title="演讲时长"
-            value={
-              participationStats.lectureDuration > 0
-                ? `${participationStats.lectureDuration}分钟`
-                : '进行中'
-            }
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <StatsCard
-            description="题目总字数"
-            icon={Hash}
-            title="内容大小"
-            value={
-              participationStats.contextSize > 1000
-                ? `${(participationStats.contextSize / 1000).toFixed(1)}k`
-                : participationStats.contextSize
-            }
-          />
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          description="测验题目总数"
+          icon={MessageSquare}
+          title="题目数"
+          value={participationStats.totalQuizzes}
+        />
+        <StatsCard
+          description="已答题数"
+          icon={Hash}
+          title="已答题"
+          value={`${participationStats.attemptedQuizzes}/${participationStats.totalQuizzes}`}
+        />
+        <StatsCard
+          description="正确答题数"
+          icon={CheckCircle}
+          title="正确数"
+          value={participationStats.correctAnswers}
+        />
+        <StatsCard
+          description="答题正确率"
+          icon={Timer}
+          title="正确率"
+          value={`${participationStats.accuracy}%`}
+        />
       </div>
 
       {/* 演讲信息卡片 */}
@@ -211,7 +209,7 @@ export default function LectureContent({ lecture }: LectureContentProps) {
             </TabsList>
 
             <TabsContent value="quiz">
-              <QuizTestTab lectureId={lecture.id} />
+              <QuizTestTab lecture={lecture} />
             </TabsContent>
 
             <TabsContent value="progress">
@@ -232,9 +230,6 @@ export default function LectureContent({ lecture }: LectureContentProps) {
       {/* 退出演讲对话框 */}
       <ExitLectureDialog
         lectureId={lecture.id}
-        onExit={() => {
-          router.push('/participation');
-        }}
         onOpenChange={setShowExit}
         open={showExit}
       />

@@ -4,17 +4,19 @@ import { Button } from '@repo/ui/components/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@repo/ui/components/dialog';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { exitLecture } from '@/app/actions/participation';
 
 interface ExitLectureProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onExit: () => void;
   lectureId: string;
 }
 
@@ -24,32 +26,22 @@ interface ExitLectureProps {
 export default function ExitLectureDialog({
   open,
   onOpenChange,
-  onExit,
   lectureId,
 }: ExitLectureProps) {
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const handleExit = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/participation/${lectureId}`, {
-        method: 'DELETE',
-      });
-      const result = await response.json();
-
-      if (result.success) {
+  const handleExit = () => {
+    startTransition(async () => {
+      try {
+        await exitLecture(lectureId);
         toast.success('成功退出演讲');
-        onExit();
         onOpenChange(false);
-      } else {
-        toast.error(result.message || '退出演讲失败');
+        router.push('/participation');
+      } catch (error) {
+        toast.error((error as Error)?.message || '退出演讲失败');
       }
-    } catch (error) {
-      console.error('Failed to exit lecture:', error);
-      toast.error('网络请求失败，请稍后再试');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
@@ -57,14 +49,27 @@ export default function ExitLectureDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>退出演讲</DialogTitle>
+          <DialogDescription>
+            退出后您将不再收到该演讲的测验推送，但仍可查看历史答题记录。
+          </DialogDescription>
         </DialogHeader>
-        <p>确定要退出当前演讲吗？</p>
+        <p className="text-muted-foreground">
+          确定要退出当前演讲吗？此操作无法撤销。
+        </p>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)} variant="outline">
+          <Button
+            disabled={isPending}
+            onClick={() => onOpenChange(false)}
+            variant="outline"
+          >
             取消
           </Button>
-          <Button disabled={loading} onClick={handleExit} variant="destructive">
-            {loading ? '正在退出...' : '确认退出'}
+          <Button
+            disabled={isPending}
+            onClick={handleExit}
+            variant="destructive"
+          >
+            {isPending ? '正在退出...' : '确认退出'}
           </Button>
         </DialogFooter>
       </DialogContent>

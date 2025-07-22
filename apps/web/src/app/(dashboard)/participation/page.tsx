@@ -1,7 +1,4 @@
-'use client';
-
 import { Badge } from '@repo/ui/components/badge';
-import { Button } from '@repo/ui/components/button';
 import {
   Card,
   CardContent,
@@ -9,76 +6,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card';
-import { Input } from '@repo/ui/components/input';
-import { Skeleton } from '@repo/ui/components/skeleton';
 import {
   ArrowRight,
   Calendar,
   CheckCircle,
-  LogIn,
+  MessageSquare,
   Play,
-  Search,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import useSWR from 'swr';
+import { getParticipatedLectures } from '@/app/actions/participation';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
-import { type Lecture, lectureStatusConfig } from '@/types';
-import JoinLectureDialog from './join-lecture-dialog';
+import { lectureStatusConfig } from '@/types';
+import { ParticipationSearch } from './participation-search';
 
-// 定义参与演讲类型，兼容 API 返回的 owner_name、joined_at 字段
-interface Participation extends Lecture {
-  owner_name?: string;
-  joined_at?: string;
-}
-
-// 获取参与演讲数据
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-export default function ParticipationPage() {
-  const { data, error, isValidating, mutate } = useSWR(
-    '/api/participation',
-    fetcher
-  );
-  const participations: Participation[] = data?.success ? data.data : [];
-  const [showJoinDialog, setShowJoinDialog] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // 页面获得焦点时刷新数据
-  useEffect(() => {
-    const handleFocus = () => {
-      if (document.visibilityState === 'visible') {
-        mutate();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleFocus);
-    };
-  }, [mutate]);
-
-  // 错误处理
-  useEffect(() => {
-    if (error) {
-      toast.error('获取参与记录失败');
-    }
-  }, [error]);
-
-  // 过滤演讲列表
-  const filteredParticipations =
-    participations?.filter(
-      (p) =>
-        (p.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-        (p.description?.toLowerCase() || '').includes(
-          searchQuery.toLowerCase()
-        ) ||
-        (p.owner_name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-    ) || [];
+export default async function ParticipationPage() {
+  const { data: participations } = await getParticipatedLectures();
 
   // 格式化相对时间
   const formatRelativeTime = (dateStr: string) => {
@@ -109,65 +53,20 @@ export default function ParticipationPage() {
       (sum, p) => sum + (p._count?.quiz_items || 0),
       0
     ),
-    avgQuizzesPerLecture:
-      participations.length > 0
-        ? (
-            participations.reduce(
-              (sum, p) => sum + (p._count?.quiz_items || 0),
-              0
-            ) / participations.length
-          ).toFixed(1)
-        : '0',
   };
 
   const breadcrumbItems = [{ label: '参与演讲' }];
-
-  // 骨架屏
-  if (isValidating && !participations) {
-    return (
-      <div className="space-y-6">
-        <BreadcrumbNav items={breadcrumbItems} />
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="mb-2 h-8 w-32" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-10 w-24" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton className="h-32" key={i} />
-          ))}
-        </div>
-        <Skeleton className="h-10 w-full" />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton className="h-48" key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       {/* 面包屑导航 */}
       <BreadcrumbNav items={breadcrumbItems} />
 
-      {/* 页面头部 */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-bold text-2xl">参与演讲</h1>
-          <p className="text-muted-foreground">查看您参与的演讲和测评</p>
-        </div>
-        <Button onClick={() => setShowJoinDialog(true)}>
-          <LogIn className="mr-2 h-4 w-4" />
-          加入演讲
-        </Button>
-      </div>
+      {/* 页面头部和搜索 */}
+      <ParticipationSearch />
 
       {/* 统计卡片 */}
-      {participations && participations.length > 0 && (
+      {participations.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <StatsCard
@@ -196,43 +95,20 @@ export default function ParticipationPage() {
         </div>
       )}
 
-      {/* 搜索栏 */}
-      {participations && participations.length > 0 && (
-        <div className="relative">
-          <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索演讲标题、描述或演讲者..."
-            value={searchQuery}
-          />
-        </div>
-      )}
-
       {/* 演讲列表 */}
-      {filteredParticipations.length === 0 ? (
+      {participations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 font-semibold text-lg">
-              {searchQuery ? '没有找到匹配的演讲' : '还没有参与任何演讲'}
-            </h3>
+            <h3 className="mb-2 font-semibold text-lg">还没有参与任何演讲</h3>
             <p className="mb-4 text-center text-muted-foreground">
-              {searchQuery
-                ? '尝试使用其他关键词搜索'
-                : '输入演讲码加入您的第一场演讲！'}
+              输入演讲码加入您的第一场演讲！
             </p>
-            {!searchQuery && (
-              <Button onClick={() => setShowJoinDialog(true)}>
-                <LogIn className="mr-2 h-4 w-4" />
-                加入演讲
-              </Button>
-            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filteredParticipations.map((p) => (
+          {participations.map((p) => (
             <Card
               className="group relative overflow-hidden transition-all duration-200 hover:shadow-md"
               key={p.id}
@@ -265,8 +141,9 @@ export default function ParticipationPage() {
                       <Play className="h-4 w-4" />
                     ) : p.status === 'ended' ? (
                       <CheckCircle className="h-4 w-4" />
-                    ) : // Removed MessageSquare as it's no longer imported
-                    null}
+                    ) : (
+                      <MessageSquare className="h-4 w-4" />
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -276,7 +153,7 @@ export default function ParticipationPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                    {/* Removed MessageSquare as it's no longer imported */}
+                    <MessageSquare className="h-3.5 w-3.5" />
                     <span>{p._count?.quiz_items || 0} 道题</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -289,15 +166,6 @@ export default function ParticipationPage() {
           ))}
         </div>
       )}
-
-      {/* 加入演讲对话框 */}
-      <JoinLectureDialog
-        onOpenChange={setShowJoinDialog}
-        onSuccess={() => {
-          mutate();
-        }}
-        open={showJoinDialog}
-      />
     </div>
   );
 }
