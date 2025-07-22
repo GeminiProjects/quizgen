@@ -211,23 +211,23 @@ graph TB
 
 ### 必需的环境变量
 
-| 变量名 | 描述 | 示例 |
-|--------|------|------|
-| `DATABASE_URL` | Neon 数据库连接字符串 | `postgresql://...@neon.tech/...?sslmode=require` |
-| `GOOGLE_API_KEY` | Google Gemini API Key | `AIza...` |
-| `BETTER_AUTH_SECRET` | Better Auth 加密密钥 | 32位随机字符串 |
-| `BETTER_AUTH_URL` | 应用 URL | `https://your-app.vercel.app` |
-| `GITHUB_CLIENT_ID` | GitHub OAuth Client ID | `Iv1...` |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | `abc123...` |
+| 变量名                 | 描述                       | 示例                                             |
+| ---------------------- | -------------------------- | ------------------------------------------------ |
+| `DATABASE_URL`         | Neon 数据库连接字符串      | `postgresql://...@neon.tech/...?sslmode=require` |
+| `GOOGLE_API_KEY`       | Google Gemini API Key      | `AIza...`                                        |
+| `BETTER_AUTH_SECRET`   | Better Auth 加密密钥       | 32位随机字符串                                   |
+| `BETTER_AUTH_URL`      | 应用 URL                   | `https://your-app.vercel.app`                    |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth Client ID     | `Iv1...`                                         |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | `abc123...`                                      |
 
 ### 可选的环境变量
 
-| 变量名 | 描述 | 默认值 |
-|--------|------|--------|
-| `NEXT_PUBLIC_APP_URL` | 公开的应用 URL | 自动检测 |
-| `GEMINI_MODEL` | Gemini 模型版本 | `gemini-2.0-flash-exp` |
-| `LOG_LEVEL` | 日志级别 | `info` |
-| `ENABLE_ANALYTICS` | 启用分析 | `true` |
+| 变量名                | 描述            | 默认值                 |
+| --------------------- | --------------- | ---------------------- |
+| `NEXT_PUBLIC_APP_URL` | 公开的应用 URL  | 自动检测               |
+| `GEMINI_MODEL`        | Gemini 模型版本 | `gemini-2.0-flash-exp` |
+| `LOG_LEVEL`           | 日志级别        | `info`                 |
+| `ENABLE_ANALYTICS`    | 启用分析        | `true`                 |
 
 ### 在 Vercel 中设置环境变量
 
