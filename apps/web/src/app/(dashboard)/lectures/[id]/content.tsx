@@ -40,11 +40,13 @@ import { toast } from 'sonner';
 import { endLecture, pauseLecture, startLecture } from '@/app/actions/lectures';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { type LectureDetailClientProps, lectureStatusConfig } from '@/types';
 import DeleteLectureDialog from './delete-lecture-dialog';
 import EditLectureDialog from './edit-lecture-dialog';
 import LectureControlSection from './lecture-control-section';
 import MaterialsTab from './materials-tab';
+import QuizManagementTab from './quiz-management-tab';
 
 /**
  * 演讲详情客户端组件
@@ -57,6 +59,12 @@ export default function LectureDetailContent({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // 使用 localStorage 持久化当前选中的标签
+  const [activeTab, setActiveTab] = useLocalStorage(
+    `lecture-${lecture.id}-active-tab`,
+    'materials'
+  );
 
   /**
    * 格式化日期
@@ -225,11 +233,15 @@ export default function LectureDetailContent({
           <CardDescription>查看和管理演讲的各项数据</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="materials">
+          <Tabs onValueChange={setActiveTab} value={activeTab}>
             <TabsList className="mb-4">
               <TabsTrigger value="materials">
                 <FileText className="mr-2 h-4 w-4" />
                 材料管理
+              </TabsTrigger>
+              <TabsTrigger value="quiz">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                题库管理
               </TabsTrigger>
               <TabsTrigger value="analytics">
                 <ChartBar className="mr-2 h-4 w-4" />
@@ -239,6 +251,10 @@ export default function LectureDetailContent({
 
             <TabsContent value="materials">
               <MaterialsTab lectureId={lecture.id} />
+            </TabsContent>
+
+            <TabsContent value="quiz">
+              <QuizManagementTab lectureId={lecture.id} />
             </TabsContent>
 
             <TabsContent value="analytics">

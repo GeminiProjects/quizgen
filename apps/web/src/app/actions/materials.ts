@@ -316,7 +316,7 @@ export async function deleteMaterials(
 export async function getMaterialStats(lectureId: string): Promise<
   ActionResult<{
     totalCount: number;
-    totalSize: number;
+    totalTextLength: number;
     typeDistribution: Record<string, number>;
   }>
 > {
@@ -341,6 +341,7 @@ export async function getMaterialStats(lectureId: string): Promise<
     const materialsData = await db
       .select({
         type: materials.file_type,
+        textContent: materials.text_content,
       })
       .from(materials)
       .where(eq(materials.lecture_id, lectureId));
@@ -348,14 +349,19 @@ export async function getMaterialStats(lectureId: string): Promise<
     // 计算统计信息
     const stats = {
       totalCount: materialsData.length,
-      totalSize: 0, // 现在不再存储文件大小
+      totalTextLength: 0,
       typeDistribution: {} as Record<string, number>,
     };
 
-    // 统计类型分布
+    // 统计类型分布和文本总长度
     for (const material of materialsData) {
       stats.typeDistribution[material.type] =
         (stats.typeDistribution[material.type] || 0) + 1;
+
+      // 计算文本长度
+      if (material.textContent) {
+        stats.totalTextLength += material.textContent.length;
+      }
     }
 
     return createSuccessResponse(stats);

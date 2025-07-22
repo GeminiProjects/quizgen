@@ -42,6 +42,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import { StatsCard } from '@/components/stats-card';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { LectureWithDate, OrganizationDetailClientProps } from '@/types';
 import DeleteOrganizationDialog from './delete-org-dialog';
 import EditOrganizationDialog from './edit-org-dialog';
@@ -57,6 +58,12 @@ export default function OrganizationDetailContent({
   const [showPassword, setShowPassword] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // 使用 localStorage 持久化当前选中的标签
+  const [activeTab, setActiveTab] = useLocalStorage(
+    `org-${organization.id}-active-tab`,
+    'lectures'
+  );
 
   /**
    * 复制密码到剪贴板
@@ -201,7 +208,11 @@ export default function OrganizationDetailContent({
       </div>
 
       {/* 标签页 */}
-      <Tabs className="space-y-6" defaultValue="lectures">
+      <Tabs
+        className="space-y-6"
+        onValueChange={setActiveTab}
+        value={activeTab}
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="lectures">演讲列表</TabsTrigger>
           <TabsTrigger value="details">详细信息</TabsTrigger>

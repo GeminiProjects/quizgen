@@ -361,7 +361,47 @@ export async function deleteQuizItem(
 }
 
 /**
+ * 清空测验题目
+ *
+ * @param lectureId - 演讲 ID
+ * @returns 是否清空成功
+ */
+
+export async function clearQuizItems(
+  lectureId: string
+): Promise<ActionResult<boolean>> {
+  try {
+    // 验证用户身份
+    const session = await requireAuth();
+
+    // 验证演讲所有权
+    const [lecture] = await db
+      .select({ owner_id: lectures.owner_id })
+      .from(lectures)
+      .where(eq(lectures.id, lectureId))
+      .limit(1);
+
+    if (!lecture) {
+      return createErrorResponse('演讲不存在');
+    }
+
+    assertOwnership(lecture.owner_id, session.user.id, '演讲');
+
+    // 清空测验题目
+    await db.delete(quizItems).where(eq(quizItems.lecture_id, lectureId));
+
+    // 重验证演讲详情页
+    revalidatePath(`/lectures/${lectureId}`);
+
+    return createSuccessResponse(true);
+  } catch (error) {
+    return handleActionError(error);
+  }
+}
+
+/**
  * 推送测验题目给参与者
+ * TODO
  *
  * @param lectureId - 演讲 ID
  * @param quizId - 测验题目 ID
@@ -517,9 +557,9 @@ export async function generateQuizItems(input: {
     });
 
     // 生成题目
-    const count = Math.min(input.count || 10, 10); // 最多生成 10 道题
+    const count = Math.min(input.count || 10, 50); // 最多生成 50 道题
     const result = await generateQuestions({
-      model: google('gemini-2.0-flash-exp'),
+      model: google('gemini-2.5-flash'),
       context,
       count,
       timeoutOptions: {
@@ -543,6 +583,7 @@ export async function generateQuizItems(input: {
           question: quiz.question,
           options: quiz.options,
           answer: quiz.answer,
+          explanation: quiz.explanation,
           ts: new Date(),
         })
         .returning();
