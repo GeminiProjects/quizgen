@@ -12,7 +12,7 @@ import {
   sql,
 } from '@repo/db';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { getServerSideSession, requireAuth } from '@/lib/auth';
 import type { ActionResult, DateToString, Lecture, QuizItem } from '@/types';
 import {
   createErrorResponse,
@@ -161,8 +161,16 @@ export async function getParticipatedLectures(): Promise<
   ActionResult<ParticipatedLectureData[]>
 > {
   try {
-    // 验证用户身份
-    const session = await requireAuth();
+    // 获取用户会话（不强制登录）
+    const session = await getServerSideSession();
+
+    // 如果用户未登录，返回空数组
+    if (!session) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
 
     // 查询参与的演讲
     const participatedData = await db

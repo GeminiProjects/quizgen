@@ -5,9 +5,9 @@ import { GitHubLogin } from '@/components/auth/github-login';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* 主要内容区域 */}
-      <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
         <div className="w-full max-w-md text-center">
           {/* Logo - 使用 CSS 处理主题切换 */}
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center sm:mb-8 sm:h-24 sm:w-24">
@@ -98,7 +98,7 @@ export default function LandingPage() {
       </div>
 
       {/* 页脚 */}
-      <div className="absolute bottom-0 w-full px-4 py-3 text-center sm:py-4">
+      <footer className="w-full px-4 py-3 text-center sm:py-4">
         <p className="text-muted-foreground text-xs sm:text-sm">
           Made by{' '}
           <a
@@ -111,7 +111,7 @@ export default function LandingPage() {
           </a>{' '}
           from NJUST
         </p>
-      </div>
+      </footer>
     </div>
   );
 }
