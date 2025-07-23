@@ -97,11 +97,10 @@ cp .env.example .env.local
 DATABASE_URL="postgresql://..."
 
 # Google Gemini API
-GOOGLE_API_KEY="AIza..."
+GOOGLE_GENERATIVE_AI_API_KEY="AIza..."
 
 # Better Auth
 BETTER_AUTH_SECRET="random-32-char-string"
-BETTER_AUTH_URL="http://localhost:3000"
 
 # GitHub OAuth (可选)
 GITHUB_CLIENT_ID="..."
@@ -148,7 +147,10 @@ quizgen/
 │   └── web/                    # Next.js 主应用
 │       ├── src/
 │       │   ├── app/           # App Router
-│       │   │   ├── (dashboard)/  # 分组路由
+│       │   │   ├── (dashboard)/  # 主功能模块
+│       │   │   │   ├── lectures/    # 演讲管理
+│       │   │   │   ├── organizations/ # 组织管理
+│       │   │   │   └── participation/ # 参与互动
 │       │   │   ├── actions/     # Server Actions
 │       │   │   ├── api/         # API 路由
 │       │   │   └── globals.css  # 全局样式

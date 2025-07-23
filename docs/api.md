@@ -276,20 +276,21 @@ async function getMaterials(lectureId: string): Promise<
 >
 ```
 
-#### uploadMaterial
+#### createMaterial
 
-上传演讲材料。
+创建演讲材料记录。
 
 ```typescript
-async function uploadMaterial(input: {
-  lecture_id: string;
-  name: string;
-  type: 'document' | 'slides' | 'video' | 'audio';
-  url: string;
-  size: number;
-  metadata?: Record<string, unknown>;
+async function createMaterial(input: {
+  lecture_id: string;    // 演讲 ID
+  name: string;          // 文件名
+  type: string;          // MIME 类型
+  url: string;           // 文件 URL 或内容
+  size?: number;         // 文件大小（可选）
 }): Promise<ActionResult<Material>>
 ```
+
+**注意**：此 action 创建材料记录，实际的文件上传由单独的 API 路由处理。
 
 #### deleteMaterial
 
@@ -301,27 +302,38 @@ async function deleteMaterial(id: string): Promise<ActionResult<boolean>>
 
 ### 参与互动
 
-#### joinLecture
+#### joinLectureByCode
 
-加入演讲（通过邀请码）。
+使用演讲码加入演讲。
 
 ```typescript
-async function joinLecture(
-  joinCode: string
+async function joinLectureByCode(
+  code: string,
+  nickname?: string  // 昵称（可选，匿名用户必填）
 ): Promise<ActionResult<{
-  lecture: Lecture;
-  participant: LectureParticipant;
+  participant: Participant;
+  lecture: DateToString<Lecture>;
 }>>
 ```
 
-#### leaveLecture
+#### getParticipatedLectures
 
-离开演讲。
+获取用户参与的演讲列表。
 
 ```typescript
-async function leaveLecture(
-  lectureId: string
-): Promise<ActionResult<boolean>>
+async function getParticipatedLectures(): Promise<
+  ActionResult<ParticipatedLectureData[]>
+>
+
+interface ParticipatedLectureData {
+  participant: Participant;
+  lecture: DateToString<Lecture>;
+  stats: {
+    totalQuizzes: number;
+    answeredQuizzes: number;
+    correctAnswers: number;
+  };
+}
 ```
 
 #### submitAnswer
@@ -330,12 +342,13 @@ async function leaveLecture(
 
 ```typescript
 async function submitAnswer(input: {
-  quiz_id: string;      // 题目 ID
+  quizId: string;       // 题目 ID
   selected: number;     // 选择的答案（0-3）
-  start_time: number;   // 开始答题时间戳
+  latencyMs?: number;   // 答题耗时（毫秒）
 }): Promise<ActionResult<{
-  is_correct: boolean;
-  correct_answer: number;
+  isCorrect: boolean;
+  correctAnswer: number;
+  explanation?: string;
 }>>
 ```
 
@@ -344,26 +357,49 @@ async function submitAnswer(input: {
 const startTime = Date.now();
 // 用户选择答案
 const result = await submitAnswer({
-  quiz_id: "quiz_123",
+  quizId: "quiz_123",
   selected: 2,
-  start_time: startTime
+  latencyMs: Date.now() - startTime
 });
 
 if (result.success) {
-  console.log('答案是否正确:', result.data.is_correct);
-  console.log('正确答案是:', result.data.correct_answer);
+  console.log('答案是否正确:', result.data.isCorrect);
+  console.log('正确答案是:', result.data.correctAnswer);
+  if (result.data.explanation) {
+    console.log('解释:', result.data.explanation);
+  }
 }
 ```
 
-#### getParticipationHistory
+#### getLatestQuiz
 
-获取用户的参与历史。
+获取演讲的最新题目（用于轮询）。
 
 ```typescript
-async function getParticipationHistory(params?: {
-  page?: number;
-  limit?: number;
-}): Promise<ActionResult<PaginatedResult<ParticipatedLecture>>>
+async function getLatestQuiz(
+  lectureId: string,
+  lastQuizId?: string  // 上一次获取的题目 ID
+): Promise<ActionResult<QuizItem | null>>
+```
+
+#### getAnswerHistory
+
+获取答题历史记录。
+
+```typescript
+async function getAnswerHistory(
+  lectureId: string
+): Promise<ActionResult<AttemptRecord[]>>
+
+interface AttemptRecord {
+  quiz_id: string;
+  user_id: string;
+  selected: number;
+  is_correct: boolean;
+  latency_ms: number;
+  created_at: string;
+  quiz: QuizItem;
+}
 ```
 
 ## 数据类型
@@ -380,8 +416,8 @@ type ParticipantRole = 'speaker' | 'audience' | 'assistant';
 // 参与者状态
 type ParticipantStatus = 'joined' | 'active' | 'left' | 'kicked';
 
-// 材料类型
-type MaterialType = 'document' | 'slides' | 'video' | 'audio';
+// 材料状态
+type MaterialStatus = 'processing' | 'completed' | 'timeout';
 ```
 
 ### 响应类型
@@ -461,12 +497,13 @@ interface QuizItem {
   question: string;
   options: string[];
   answer: number;
+  explanation: string | null;  // 题目解释
   ts: string;
   created_at: string;
+  pushed_at: string | null;    // 推送时间
   _count?: {
     attempts: number;
   };
-  correctRate?: number;
 }
 
 // 答题记录

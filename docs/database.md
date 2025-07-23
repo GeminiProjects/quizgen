@@ -77,7 +77,7 @@ erDiagram
     users ||--o{ lectures : "创建"
     users ||--o{ lecture_participants : "参与"
     users ||--o{ attempts : "答题"
-    users ||--o{ materials : "上传"
+    users ||--o{ materials : "创建"
     
     organizations ||--o{ lectures : "包含"
     
@@ -128,8 +128,10 @@ erDiagram
         text question "问题"
         json options "选项数组"
         integer answer "正确答案"
+        text explanation "题目解释"
         timestamp ts "时间戳"
         timestamp created_at "创建时间"
+        timestamp pushed_at "推送时间"
     }
     
     attempts {
@@ -156,12 +158,12 @@ erDiagram
     materials {
         uuid id PK "材料ID"
         uuid lecture_id FK "演讲ID"
-        string uploader_id FK "上传者ID"
-        string name "文件名"
-        enum type "类型"
-        string url "文件URL"
-        integer size "文件大小"
-        json metadata "元数据"
+        text file_name "文件名"
+        text file_type "文件类型"
+        text text_content "文本内容"
+        string status "处理状态"
+        text error_message "错误信息"
+        text created_by FK "创建者ID"
         timestamp created_at "创建时间"
         timestamp updated_at "更新时间"
     }
@@ -182,19 +184,7 @@ erDiagram
 
 ### 1. 用户表 (users)
 
-由 Better Auth 管理，存储用户基本信息。
-
-```sql
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    name TEXT,
-    image TEXT,
-    emailVerified BOOLEAN DEFAULT false,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+由 Better Auth 管理，存储用户基本信息。具体字段由 Better Auth 框架定义。
 
 ### 2. 组织表 (organizations)
 
@@ -255,8 +245,10 @@ CREATE TABLE quiz_items (
     question TEXT NOT NULL,
     options JSON NOT NULL,
     answer INTEGER NOT NULL CHECK (answer >= 0 AND answer <= 3),
+    explanation TEXT,
     ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pushed_at TIMESTAMP
 );
 
 CREATE INDEX idx_quiz_items_lecture_id ON quiz_items(lecture_id);
@@ -266,7 +258,9 @@ CREATE INDEX idx_quiz_items_timestamp ON quiz_items(ts);
 **字段说明**：
 - `options`: JSON 数组，存储 4 个选项
 - `answer`: 正确答案索引 (0-3)
+- `explanation`: 题目解释，帮助理解答案
 - `ts`: 题目生成时的时间戳，用于排序
+- `pushed_at`: 题目推送给听众的时间，null 表示尚未推送
 
 ### 5. 答题记录表 (attempts)
 
@@ -326,21 +320,28 @@ CREATE UNIQUE INDEX idx_participants_lecture_user ON lecture_participants(lectur
 CREATE TABLE materials (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lecture_id UUID NOT NULL REFERENCES lectures(id) ON DELETE CASCADE,
-    uploader_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    type material_type NOT NULL,
-    url TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    metadata JSON,
+    file_name TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    text_content TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'processing',
+    error_message TEXT,
+    created_by TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TYPE material_type AS ENUM ('document', 'slides', 'video', 'audio');
-
 CREATE INDEX idx_materials_lecture_id ON materials(lecture_id);
-CREATE INDEX idx_materials_uploader_id ON materials(uploader_id);
 ```
+
+**字段说明**：
+- `file_name`: 上传的文件名
+- `file_type`: 文件MIME类型
+- `text_content`: 从文件中提取的文本内容
+- `status`: 处理状态 - 'processing'（处理中）、'completed'（成功）、'timeout'（超时）
+- `error_message`: 当状态为 timeout 时存储错误信息
+- `created_by`: 创建者用户ID
+
+**注意**：处理失败的材料会被自动删除，不会保存在数据库中
 
 ### 8. 转录表 (transcripts)
 

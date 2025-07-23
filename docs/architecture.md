@@ -34,13 +34,13 @@ QuizGen 是一个演讲即时智能评测系统，旨在帮助演讲者实时了
 ```mermaid
 graph TB
     subgraph "前端技术"
-        A[React 19] --> B[Next.js 15.4]
+        A[React 19] --> B[Next.js 15.4.2-canary]
         B --> C[App Router]
-        D[TailwindCSS 4] --> E[shadcn/ui]
+        D[TailwindCSS 4.1] --> E[shadcn/ui]
     end
     
     subgraph "后端技术"
-        F[Node.js Runtime] --> G[Bun 1.2]
+        F[Node.js Runtime] --> G[Bun 1.2.18]
         H[Server Actions] --> I[API Routes]
     end
     
@@ -55,7 +55,7 @@ graph TB
     end
     
     subgraph "AI 服务"
-        P[Google Gemini 2.0] --> Q[Quiz Generation]
+        P[Google Gemini 2.5] --> Q[Quiz Generation]
         P --> R[Content Analysis]
     end
 ```
@@ -64,12 +64,12 @@ graph TB
 
 | 技术              | 选择理由                                                                                   |
 | ----------------- | ------------------------------------------------------------------------------------------ |
-| **Next.js 15**    | - App Router 提供更好的性能和 DX<br>- Server Actions 简化数据交互<br>- 内置优化和 SEO 支持 |
+| **Next.js 15.4.2**| - App Router 提供更好的性能和 DX<br>- Server Actions 简化数据交互<br>- 内置优化和 SEO 支持 |
 | **Bun**           | - 极快的包安装和脚本执行速度<br>- 原生 TypeScript 支持<br>- 统一的工具链                   |
 | **Drizzle ORM**   | - 完全类型安全的数据库操作<br>- 轻量级，性能优异<br>- 优秀的开发体验                       |
 | **Better Auth**   | - 现代化的认证解决方案<br>- 支持多种认证方式<br>- 与 Next.js 深度集成                      |
-| **TailwindCSS 4** | - JIT 编译，极小的 CSS 体积<br>- 组件化开发友好<br>- 完善的设计系统                        |
-| **Google Gemini** | - 强大的多模态理解能力<br>- 高质量的内容生成<br>- 成本效益高                               |
+| **TailwindCSS 4.1**| - 最新的 CSS 引擎，极速编译<br>- 组件化开发友好<br>- 完善的设计系统                       |
+| **Google Gemini 2.5**| - 强大的多模态理解能力<br>- 高质量的内容生成<br>- 成本效益高                            |
 
 ## 应用架构
 
@@ -162,7 +162,7 @@ graph TD
 #### 3. 实时互动模块
 
 - **功能**：推送题目、接收答案、统计结果
-- **技术**：Server-Sent Events (SSE) 实现实时推送
+- **技术**：轮询机制实现题目获取（`getLatestQuiz`）
 - **优化**：批量处理答案，减少数据库压力
 
 #### 4. 数据分析模块
@@ -201,6 +201,7 @@ erDiagram
         enum role
         enum status
         timestamp joined_at
+        timestamp left_at
     }
     
     QuizItem {
@@ -209,7 +210,10 @@ erDiagram
         string question
         json options
         int answer
+        string explanation
         timestamp ts
+        timestamp created_at
+        timestamp pushed_at
     }
     
     Attempt {
@@ -367,7 +371,7 @@ graph TB
 
 2. **微服务预留**
    - 测验生成服务可独立部署
-   - 实时通信可升级为 WebSocket
+   - 实时通信可从轮询升级为 SSE/WebSocket
    - 数据分析可独立为服务
 
 ### 性能优化

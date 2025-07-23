@@ -11,7 +11,6 @@
 7. [监控与日志](#监控与日志)
 8. [性能优化](#性能优化)
 9. [故障排查](#故障排查)
-10. [备份与恢复](#备份与恢复)
 
 ## 概述
 
@@ -140,23 +139,21 @@ graph TB
 
 ### 必需的环境变量
 
-| 变量名                 | 描述                       | 示例                                             |
-| ---------------------- | -------------------------- | ------------------------------------------------ |
-| `DATABASE_URL`         | Neon 数据库连接字符串      | `postgresql://...@neon.tech/...?sslmode=require` |
-| `GOOGLE_API_KEY`       | Google Gemini API Key      | `AIza...`                                        |
-| `BETTER_AUTH_SECRET`   | Better Auth 加密密钥       | 32位随机字符串                                   |
-| `BETTER_AUTH_URL`      | 应用 URL                   | `https://your-app.vercel.app`                    |
-| `GITHUB_CLIENT_ID`     | GitHub OAuth Client ID     | `Iv1...`                                         |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | `abc123...`                                      |
+| 变量名                         | 描述                       | 示例                                             |
+| ------------------------------ | -------------------------- | ------------------------------------------------ |
+| `DATABASE_URL`                 | Neon 数据库连接字符串      | `postgresql://...@neon.tech/...?sslmode=require` |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API Key      | `AIza...`                                        |
+| `BETTER_AUTH_SECRET`           | Better Auth 加密密钥       | 32位随机字符串                                   |
+| `GITHUB_CLIENT_ID`             | GitHub OAuth Client ID     | `Iv1...`                                         |
+| `GITHUB_CLIENT_SECRET`         | GitHub OAuth Client Secret | `abc123...`                                      |
 
 ### 可选的环境变量
 
-| 变量名                | 描述            | 默认值                 |
-| --------------------- | --------------- | ---------------------- |
-| `NEXT_PUBLIC_APP_URL` | 公开的应用 URL  | 自动检测               |
-| `GEMINI_MODEL`        | Gemini 模型版本 | `gemini-2.0-flash-exp` |
-| `LOG_LEVEL`           | 日志级别        | `info`                 |
-| `ENABLE_ANALYTICS`    | 启用分析        | `true`                 |
+| 变量名        | 描述                            | 默认值 |
+| ------------- | ------------------------------- | ------ |
+| `HTTP_PROXY`  | HTTP 代理设置（遇到网络问题时） | 无     |
+| `HTTPS_PROXY` | HTTPS 代理设置                  | 无     |
+| `ALL_PROXY`   | 全局代理设置                    | 无     |
 
 ### 在 Vercel 中设置环境变量
 
@@ -169,9 +166,10 @@ graph TB
    ```bash
    # 添加生产环境变量
    vercel env add DATABASE_URL production
-   
-   # 从 .env 文件导入
-   vercel env pull .env.production
+   vercel env add GOOGLE_GENERATIVE_AI_API_KEY production
+   vercel env add BETTER_AUTH_SECRET production
+   vercel env add GITHUB_CLIENT_ID production
+   vercel env add GITHUB_CLIENT_SECRET production
    ```
 
 ## 自定义域名
@@ -305,7 +303,9 @@ const ratelimit = new Ratelimit({
    ```typescript
    console.log('环境变量检查:', {
      hasDatabase: !!process.env.DATABASE_URL,
-     hasGeminiKey: !!process.env.GOOGLE_API_KEY,
+     hasGeminiKey: !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+     hasAuthSecret: !!process.env.BETTER_AUTH_SECRET,
+     hasGitHubOAuth: !!process.env.GITHUB_CLIENT_ID,
    });
    ```
 
