@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { exec as execCallback } from 'node:child_process';
+import { exec as execCallback, spawn } from 'node:child_process';
 import { existsSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import * as readline from 'node:readline/promises';
@@ -227,9 +227,26 @@ DATABASE_URL=${config.DATABASE_URL}
   if (!dbUrl) {
     console.log('\n📊 正在初始化数据库...');
     try {
-      const result = await exec('bun db:push', { cwd: rootDir });
-      console.log('✅ 数据库迁移完成！');
-      console.log(result.stdout);
+      // 使用 spawn 来支持交互式输入
+      const dbPush = spawn('bun', ['db:push'], {
+        cwd: rootDir,
+        stdio: 'inherit', // 继承父进程的输入输出，允许交互
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        dbPush.on('close', (code) => {
+          if (code === 0) {
+            console.log('✅ 数据库迁移完成！');
+            resolve();
+          } else {
+            reject(new Error(`数据库迁移失败，退出码: ${code}`));
+          }
+        });
+
+        dbPush.on('error', (error) => {
+          reject(error);
+        });
+      });
     } catch (error) {
       console.error('❌ 数据库迁移失败:', error);
     }
