@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui/components/dialog';
-import { Progress } from '@repo/ui/components/progress';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { Skeleton } from '@repo/ui/components/skeleton';
 import {
@@ -44,8 +43,6 @@ interface MaterialProcessingState {
   elapsedSeconds: number;
   /** 实时提取的文本内容 */
   streamedContent?: string;
-  /** 处理进度 (0-100) */
-  progress: number;
 }
 
 /**
@@ -124,7 +121,6 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
                   next.set(material.id, {
                     startTime: Date.now(),
                     elapsedSeconds: 0,
-                    progress: 0,
                   });
                 }
                 return next;
@@ -177,7 +173,6 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
                 next.set(material.id, {
                   startTime: Date.now(),
                   elapsedSeconds: 0,
-                  progress: 0,
                 });
                 return next;
               });
@@ -265,7 +260,6 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
                 if (state) {
                   next.set(materialId, {
                     ...state,
-                    progress: data.progress,
                     elapsedSeconds: data.elapsedSeconds,
                   });
                 }
@@ -377,7 +371,6 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
               next.set(material.id, {
                 startTime: Date.now(),
                 elapsedSeconds: 0,
-                progress: 0,
               });
               return next;
             });
@@ -655,39 +648,6 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
                     </Button>
                   </div>
                 </div>
-
-                {/* 处理进度条和实时内容预览 */}
-                {material.status === 'processing' && processingState && (
-                  <div className="space-y-3 border-t bg-muted/20 p-4">
-                    {/* 进度条 */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">处理进度</span>
-                        <span className="font-medium">
-                          {processingState.progress}%
-                        </span>
-                      </div>
-                      <Progress
-                        className="h-2"
-                        value={processingState.progress}
-                      />
-                    </div>
-
-                    {/* 实时提取的内容预览 */}
-                    {processingState.streamedContent && (
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">
-                          正在提取的内容：
-                        </p>
-                        <div className="max-h-32 overflow-y-auto rounded-md bg-muted/50 p-3">
-                          <pre className="whitespace-pre-wrap font-mono text-muted-foreground text-xs">
-                            {processingState.streamedContent}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}

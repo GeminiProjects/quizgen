@@ -1,6 +1,5 @@
 'use server';
 
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateQuestions } from '@repo/ai';
 import {
   and,
@@ -18,6 +17,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { quizItemSchemas } from '@/lib/schemas';
+import { defaultModel } from '@/models';
 import type { ActionResult, QuizItem } from '@/types';
 import {
   assertOwnership,
@@ -73,6 +73,7 @@ export async function getQuizItems(lectureId: string): Promise<
         answer: quizItems.answer,
         explanation: quizItems.explanation,
         created_at: quizItems.created_at,
+        pushed_at: quizItems.pushed_at,
         _count: {
           attempts: sql<number>`(select count(*) from ${attempts} where ${attempts.quiz_id} = ${quizItems.id})`,
           correctAttempts: sql<number>`(select count(*) from ${attempts} where ${attempts.quiz_id} = ${quizItems.id} and ${attempts.selected} = ${quizItems.answer})`,
@@ -402,19 +403,19 @@ export async function clearQuizItems(
 
 /**
  * 推送测验题目给参与者
- * TODO
  *
  * @param lectureId - 演讲 ID
- * @param quizId - 测验题目 ID
+ * @param quizId - 测验题目 ID（可选，不传则随机选择未推送的题目）
  * @returns 推送结果
  */
 export async function pushQuizItem(
   lectureId: string,
-  quizId: string
+  quizId?: string
 ): Promise<
   ActionResult<{
     success: boolean;
     pushedCount: number;
+    quiz: QuizItem;
   }>
 > {
   try {
@@ -442,26 +443,72 @@ export async function pushQuizItem(
       return createErrorResponse('只能在进行中的演讲推送题目');
     }
 
-    // 验证测验题目存在且属于该演讲
-    const [quiz] = await db
-      .select({ id: quizItems.id })
-      .from(quizItems)
-      .where(and(eq(quizItems.id, quizId), eq(quizItems.lecture_id, lectureId)))
-      .limit(1);
+    let quizToPush: QuizItem | null = null;
 
-    if (!quiz) {
-      return createErrorResponse('测验题目不存在或不属于该演讲');
+    if (quizId) {
+      // 如果指定了题目ID，验证题目存在且属于该演讲
+      const [quiz] = await db
+        .select()
+        .from(quizItems)
+        .where(
+          and(eq(quizItems.id, quizId), eq(quizItems.lecture_id, lectureId))
+        )
+        .limit(1);
+
+      if (!quiz) {
+        return createErrorResponse('测验题目不存在或不属于该演讲');
+      }
+      quizToPush = {
+        ...quiz,
+        ts: quiz.ts.toISOString(),
+        created_at: quiz.created_at.toISOString(),
+        pushed_at: quiz.pushed_at?.toISOString() || null,
+      };
+    } else {
+      // 随机选择一个未推送的题目
+      const [quiz] = await db
+        .select()
+        .from(quizItems)
+        .where(
+          and(
+            eq(quizItems.lecture_id, lectureId),
+            sql`${quizItems.pushed_at} is null`
+          )
+        )
+        .orderBy(sql`RANDOM()`)
+        .limit(1);
+
+      if (!quiz) {
+        return createErrorResponse('没有可推送的题目');
+      }
+      quizToPush = {
+        ...quiz,
+        ts: quiz.ts.toISOString(),
+        created_at: quiz.created_at.toISOString(),
+        pushed_at: quiz.pushed_at?.toISOString() || null,
+      };
     }
 
-    // 使用 SSE 推送题目
-    // 由于 Server Actions 不能直接访问 SSE 连接，我们通过数据库标记来实现
-    // 参与者客户端会轮询最新题目
+    if (!quizToPush) {
+      return createErrorResponse('无法获取题目信息');
+    }
 
-    // 记录推送日志（可选）
+    // 更新题目的推送时间
+    await db
+      .update(quizItems)
+      .set({ pushed_at: new Date() })
+      .where(eq(quizItems.id, quizToPush.id));
+
+    // 获取当前参与者数量
     const pushedCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(lectureParticipants)
-      .where(eq(lectureParticipants.lecture_id, lectureId))
+      .where(
+        and(
+          eq(lectureParticipants.lecture_id, lectureId),
+          eq(lectureParticipants.status, 'active')
+        )
+      )
       .then(([result]) => Number(result?.count || 0));
 
     // 重验证相关页面
@@ -470,7 +517,77 @@ export async function pushQuizItem(
     return createSuccessResponse({
       success: true,
       pushedCount,
+      quiz: quizToPush,
     });
+  } catch (error) {
+    return handleActionError(error);
+  }
+}
+
+/**
+ * 获取演讲已推送的题目列表
+ *
+ * @param lectureId - 演讲 ID
+ * @returns 已推送的题目列表
+ */
+export async function getPushedQuizItems(
+  lectureId: string
+): Promise<
+  ActionResult<
+    Array<QuizItem & { _count: { attempts: number; correctAttempts: number } }>
+  >
+> {
+  try {
+    // 验证用户身份
+    const session = await requireAuth();
+
+    // 验证演讲所有权
+    const [lecture] = await db
+      .select({ owner_id: lectures.owner_id })
+      .from(lectures)
+      .where(eq(lectures.id, lectureId))
+      .limit(1);
+
+    if (!lecture) {
+      return createErrorResponse('演讲不存在');
+    }
+
+    assertOwnership(lecture.owner_id, session.user.id, '演讲');
+
+    // 查询已推送的题目
+    const data = await db
+      .select({
+        id: quizItems.id,
+        lecture_id: quizItems.lecture_id,
+        ts: quizItems.ts,
+        question: quizItems.question,
+        options: quizItems.options,
+        answer: quizItems.answer,
+        explanation: quizItems.explanation,
+        created_at: quizItems.created_at,
+        pushed_at: quizItems.pushed_at,
+        _count: {
+          attempts: sql<number>`(select count(*) from ${attempts} where ${attempts.quiz_id} = ${quizItems.id})`,
+          correctAttempts: sql<number>`(select count(*) from ${attempts} where ${attempts.quiz_id} = ${quizItems.id} and ${attempts.selected} = ${quizItems.answer})`,
+        },
+      })
+      .from(quizItems)
+      .where(
+        and(
+          eq(quizItems.lecture_id, lectureId),
+          sql`${quizItems.pushed_at} is not null`
+        )
+      )
+      .orderBy(desc(quizItems.pushed_at));
+
+    return createSuccessResponse(
+      data.map((item) => ({
+        ...item,
+        ts: item.ts.toISOString(),
+        created_at: item.created_at.toISOString(),
+        pushed_at: item.pushed_at?.toISOString() || null,
+      }))
+    );
   } catch (error) {
     return handleActionError(error);
   }
@@ -548,25 +665,14 @@ export async function generateQuizItems(input: {
       );
     }
 
-    // 检查 API Key
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error('缺少 GOOGLE_GENERATIVE_AI_API_KEY 环境变量');
-    }
-
-    // 创建 Google AI 客户端
-    const google = createGoogleGenerativeAI({
-      apiKey,
-    });
-
     // 生成题目
     const count = Math.min(input.count || 10, 50); // 最多生成 50 道题
     const result = await generateQuestions({
-      model: google('gemini-2.5-flash'),
+      model: defaultModel,
       context,
       count,
       timeoutOptions: {
-        timeout: 30_000, // 30 秒超时
+        timeout: 60_000, // 60 秒超时
         timeoutMessage: '生成题目超时，请重试',
       },
     });
@@ -595,6 +701,7 @@ export async function generateQuizItems(input: {
         ...created,
         ts: created.ts.toISOString(),
         created_at: created.created_at.toISOString(),
+        pushed_at: created.pushed_at?.toISOString() || null,
         _count: {
           attempts: 0,
         },

@@ -12,23 +12,33 @@ export function useLocalStorage<T>(
     deserialize?: (value: string) => T;
   }
 ): [T, (value: SetValue<T>) => void, () => void] {
-  const serialize = options?.serialize || JSON.stringify;
-  const deserialize = options?.deserialize || JSON.parse;
+  const serialize = useCallback(
+    (value: T) => (options?.serialize || JSON.stringify)(value),
+    [options?.serialize]
+  );
+  const deserialize = useCallback(
+    (value: string) => (options?.deserialize || JSON.parse)(value),
+    [options?.deserialize]
+  );
 
-  // 从 localStorage 读取初始值
-  const [storedValue, setStoredValue] = useState<T>(() => {
+  // 使用初始值，避免 hydration 问题
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+
+  // 在客户端 hydration 后从 localStorage 读取值
+  useEffect(() => {
     if (typeof window === 'undefined') {
-      return initialValue;
+      return;
     }
 
     try {
       const item = window.localStorage.getItem(key);
-      return item ? deserialize(item) : initialValue;
+      if (item) {
+        setStoredValue(deserialize(item));
+      }
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
     }
-  });
+  }, [key, deserialize]);
 
   // 设置值的函数
   const setValue = useCallback(

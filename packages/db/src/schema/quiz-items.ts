@@ -36,6 +36,8 @@ export const quizItems = pgTable(
     ts: timestamp('ts').notNull().defaultNow(),
     // 创建时间
     created_at: timestamp('created_at').notNull().defaultNow(),
+    // 推送时间（null 表示尚未推送）
+    pushed_at: timestamp('pushed_at'),
   },
   (table) => [
     // 为演讲ID创建索引

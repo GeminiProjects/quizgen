@@ -9,9 +9,19 @@ import {
   CardTitle,
 } from '@repo/ui/components/card';
 import { Input } from '@repo/ui/components/input';
-import { Copy, Eye, EyeOff, Pause, Play, QrCode, Timer } from 'lucide-react';
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Pause,
+  Play,
+  QrCode,
+  Send,
+  Timer,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { pushQuizItem } from '@/app/actions/quiz';
 import QRCodeDialog from './qrcode-dialog';
 import TranscriptPanel from './transcript-panel';
 
@@ -35,6 +45,7 @@ export default function LectureControlSection({
 }: LectureControlSectionProps) {
   const [showJoinCode, setShowJoinCode] = useState(false);
   const [showQRDialog, setShowQRDialog] = useState(false);
+  const [pushingQuiz, setPushingQuiz] = useState(false);
 
   /**
    * 复制加入码到剪贴板
@@ -45,6 +56,25 @@ export default function LectureControlSection({
       toast.success('加入码已复制');
     } catch (_error) {
       toast.error('复制失败');
+    }
+  };
+
+  /**
+   * 推送随机题目
+   */
+  const handlePushRandomQuiz = async () => {
+    setPushingQuiz(true);
+    try {
+      const result = await pushQuizItem(lectureId);
+      if (result.success && result.data) {
+        toast.success(`成功推送题目给 ${result.data.pushedCount} 位参与者`);
+      } else {
+        throw new Error('推送失败');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '推送题目失败');
+    } finally {
+      setPushingQuiz(false);
     }
   };
 
@@ -170,6 +200,30 @@ export default function LectureControlSection({
           )}
         </CardContent>
       </Card>
+
+      {/* 题目推送卡片 */}
+      {status === 'in_progress' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>题目推送</CardTitle>
+            <CardDescription>向参与者推送测验题目</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              className="w-full"
+              disabled={pushingQuiz}
+              onClick={handlePushRandomQuiz}
+              size="lg"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {pushingQuiz ? '推送中...' : '随机推送题目'}
+            </Button>
+            <p className="mt-2 text-muted-foreground text-sm">
+              将随机选择一道未推送的题目发送给所有参与者
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 实时转录面板 */}
       {(status === 'in_progress' || status === 'paused') && (

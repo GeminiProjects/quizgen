@@ -17,9 +17,14 @@ import type { QuizItem } from '@/types';
 interface QuizAnswerCardProps {
   quiz: QuizItem;
   onAnswered?: () => void;
+  timeLimit?: number; // 答题时限（秒）
 }
 
-export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
+export function QuizAnswerCard({
+  quiz,
+  onAnswered,
+  timeLimit = 30,
+}: QuizAnswerCardProps) {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{
@@ -28,6 +33,8 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
     explanation?: string;
   } | null>(null);
   const [startTime] = useState(Date.now());
+  const [timeRemaining, setTimeRemaining] = useState(timeLimit);
+  const [isTimeUp, setIsTimeUp] = useState(false);
 
   const handleSubmit = useCallback(async () => {
     if (selectedOption === null || isSubmitting || result) {
@@ -66,12 +73,90 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
     }
   }, [selectedOption, isSubmitting, result, quiz.id, startTime, onAnswered]);
 
+  // 处理超时 - 只设置超时标记，实际提交在 useEffect 中处理
+  const handleTimeout = useCallback(() => {
+    if (result || isTimeUp) {
+      return;
+    }
+    setIsTimeUp(true);
+  }, [result, isTimeUp]);
+
+  // 倒计时效果
+  useEffect(() => {
+    if (result || isTimeUp) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [result, isTimeUp, handleTimeout]);
+
+  // 处理超时后的自动提交
+  useEffect(() => {
+    if (!isTimeUp || result) {
+      return;
+    }
+
+    const handleTimeoutSubmit = async () => {
+      // 如果已选择答案，自动提交
+      if (selectedOption !== null) {
+        await handleSubmit();
+      } else {
+        // 未选择答案，随机选择一个错误答案提交
+        const randomWrongAnswer = Math.floor(
+          Math.random() * quiz.options.length
+        );
+        setSelectedOption(randomWrongAnswer);
+
+        const latencyMs = timeLimit * 1000; // 使用完整时限作为延迟
+
+        try {
+          const response = await submitAnswer({
+            quizId: quiz.id,
+            selected: randomWrongAnswer,
+            latencyMs,
+          });
+
+          if (response.success) {
+            setResult(response.data);
+            toast.error('答题超时！');
+          }
+        } catch (error) {
+          console.error('提交超时答案失败:', error);
+        }
+
+        onAnswered?.();
+      }
+    };
+
+    handleTimeoutSubmit();
+  }, [
+    isTimeUp,
+    result,
+    selectedOption,
+    handleSubmit,
+    quiz.id,
+    quiz.options.length,
+    timeLimit,
+    onAnswered,
+  ]);
+
   // 支持键盘快捷键
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (result) {
+      if (result || isTimeUp) {
         return;
-      } // 已答题不响应
+      } // 已答题或超时不响应
 
       const key = e.key;
       if (key >= '1' && key <= '4') {
@@ -86,7 +171,7 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
 
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [quiz.options.length, selectedOption, result, handleSubmit]);
+  }, [quiz.options.length, selectedOption, result, isTimeUp, handleSubmit]);
 
   const getOptionClassName = (index: number) => {
     if (!result) {
@@ -116,9 +201,16 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
         <div className="flex items-start justify-between">
           <CardTitle className="text-lg">{quiz.question}</CardTitle>
           {!result && (
-            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+            <div
+              className={cn(
+                'flex items-center gap-1 text-sm',
+                timeRemaining <= 10
+                  ? 'text-destructive'
+                  : 'text-muted-foreground'
+              )}
+            >
               <Clock className="h-4 w-4" />
-              <span>答题中</span>
+              <span>{timeRemaining}秒</span>
             </div>
           )}
         </div>
@@ -128,8 +220,9 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
           {quiz.options.map((option, index) => (
             <button
               className={getOptionClassName(index)}
+              disabled={result !== null || isTimeUp}
               key={index}
-              onClick={() => !result && setSelectedOption(index)}
+              onClick={() => !(result || isTimeUp) && setSelectedOption(index)}
               type="button"
             >
               <div className="flex items-start gap-3">
@@ -157,7 +250,7 @@ export function QuizAnswerCard({ quiz, onAnswered }: QuizAnswerCardProps) {
           </div>
         )}
 
-        {!result && (
+        {!(result || isTimeUp) && (
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-xs">
               按数字键 1-4 快速选择，按 Enter 提交

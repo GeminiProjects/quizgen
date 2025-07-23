@@ -81,7 +81,7 @@ export function JoinLectureDialog() {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button>
           <UserPlus className="mr-2 h-4 w-4" />
           加入演讲
         </Button>
@@ -115,26 +115,7 @@ export function JoinLectureDialog() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="nickname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>昵称（可选）</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isLoading}
-                      placeholder="输入您的昵称"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    匿名用户可设置昵称，用于在答题统计中显示
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <div className="flex justify-end gap-2">
               <Button
                 disabled={isLoading}

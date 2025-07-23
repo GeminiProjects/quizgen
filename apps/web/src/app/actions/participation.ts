@@ -11,7 +11,6 @@ import {
   quizItems,
   sql,
 } from '@repo/db';
-import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import type { ActionResult, DateToString, Lecture, QuizItem } from '@/types';
@@ -46,6 +45,19 @@ export interface AttemptRecord {
   latency_ms: number;
   created_at: string;
   quiz: QuizItem;
+}
+
+/**
+ * 参与的演讲数据类型
+ */
+export interface ParticipatedLectureData {
+  participant: Participant;
+  lecture: DateToString<Lecture>;
+  stats: {
+    totalQuizzes: number;
+    answeredQuizzes: number;
+    correctAnswers: number;
+  };
 }
 
 /**
@@ -114,7 +126,6 @@ export async function joinLectureByCode(
     const [participant] = await db
       .insert(lectureParticipants)
       .values({
-        id: nanoid(),
         user_id: session.user.id,
         lecture_id: lecture.id,
         role: 'audience',
@@ -147,17 +158,7 @@ export async function joinLectureByCode(
  * @returns 参与的演讲列表
  */
 export async function getParticipatedLectures(): Promise<
-  ActionResult<
-    Array<{
-      participant: Participant;
-      lecture: DateToString<Lecture>;
-      stats: {
-        totalQuizzes: number;
-        answeredQuizzes: number;
-        correctAnswers: number;
-      };
-    }>
-  >
+  ActionResult<ParticipatedLectureData[]>
 > {
   try {
     // 验证用户身份
@@ -423,6 +424,7 @@ export async function getAnswerHistory(
         ...quiz,
         ts: quiz.ts.toISOString(),
         created_at: quiz.created_at.toISOString(),
+        pushed_at: quiz.pushed_at?.toISOString() || null,
       },
     }));
 
@@ -463,12 +465,17 @@ export async function getLatestQuiz(
       return createErrorResponse('您尚未参与该演讲');
     }
 
-    // 获取最新的题目
+    // 获取最新推送的题目
     const query = db
       .select()
       .from(quizItems)
-      .where(eq(quizItems.lecture_id, lectureId))
-      .orderBy(desc(quizItems.created_at))
+      .where(
+        and(
+          eq(quizItems.lecture_id, lectureId),
+          sql`${quizItems.pushed_at} is not null`
+        )
+      )
+      .orderBy(desc(quizItems.pushed_at))
       .limit(1);
 
     const [latestQuiz] = await query;

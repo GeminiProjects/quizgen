@@ -1,11 +1,10 @@
 'use server';
 
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { generateContext } from '@repo/ai';
+import { createFilePart, generateContext } from '@repo/ai';
 import { db, eq, lectures, materials } from '@repo/db';
-import type { FilePart } from 'ai';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
+import { defaultModel } from '@/models';
 import type { ActionResult, Material } from '@/types';
 import {
   assertOwnership,
@@ -141,31 +140,19 @@ async function processFileAsync(
   }
 ) {
   try {
-    // 检查 API Key
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error('缺少 GOOGLE_GENERATIVE_AI_API_KEY 环境变量');
-    }
-
-    // 创建 Google AI 客户端
-    const google = createGoogleGenerativeAI({
-      apiKey,
-    });
-
     // 将 Base64 转换为 Buffer
     const buffer = Buffer.from(input.fileData, 'base64');
 
-    // 创建文件部分，符合 AI SDK 的 FilePart 类型
-    const filePart: FilePart = {
-      type: 'file',
-      data: buffer,
-      filename: input.fileName,
-      mediaType: input.fileType,
-    };
+    // 创建文件部分
+    const filePart = await createFilePart(
+      buffer,
+      input.fileName,
+      input.fileType
+    );
 
     // 生成上下文（流式处理）
-    const result = generateContext({
-      model: google('gemini-2.0-flash-exp'),
+    const { textStream } = await generateContext({
+      model: defaultModel,
       file: filePart,
     });
 
@@ -173,11 +160,11 @@ async function processFileAsync(
     let fullText = '';
 
     // 处理流式响应
-    for await (const chunk of result.textStream) {
+    for await (const chunk of textStream) {
       fullText += chunk;
 
-      // 定期更新数据库中的部分内容（每 1000 字符更新一次）
-      if (fullText.length % 1000 === 0) {
+      // 定期更新数据库中的部分内容
+      if ((fullText.length / 500) % 2 === 0) {
         await db
           .update(materials)
           .set({

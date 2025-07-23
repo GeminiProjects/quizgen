@@ -135,6 +135,7 @@ async function getLectureData(lectureId: string, userId: string) {
         ...item,
         created_at: item.created_at.toISOString(),
         ts: item.ts.toISOString(),
+        pushed_at: item.pushed_at?.toISOString() || null,
       })),
     },
     stats: {

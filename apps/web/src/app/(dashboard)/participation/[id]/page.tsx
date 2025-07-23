@@ -12,11 +12,12 @@ import { ParticipationContent } from './participation-content';
 export default async function ParticipationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const [detailResult, historyResult] = await Promise.all([
-    getParticipationDetail(params.id),
-    getAnswerHistory(params.id),
+    getParticipationDetail(id),
+    getAnswerHistory(id),
   ]);
 
   if (!detailResult.success) {
@@ -85,6 +86,12 @@ export default async function ParticipationDetailPage({
         </Card>
       )}
 
+      <ParticipationContent
+        answerHistory={answerHistory}
+        lectureId={lecture.id}
+        lectureStatus={lecture.status}
+      />
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
@@ -136,12 +143,6 @@ export default async function ParticipationDetailPage({
           </CardContent>
         </Card>
       </div>
-
-      <ParticipationContent
-        answerHistory={answerHistory}
-        lectureId={lecture.id}
-        lectureStatus={lecture.status}
-      />
     </div>
   );
 }

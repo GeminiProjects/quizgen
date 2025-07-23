@@ -29,11 +29,13 @@ import {
 import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Separator } from '@repo/ui/components/separator';
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs';
 import {
   FileText,
   Hash,
   Loader2,
   RefreshCw,
+  Send,
   Sparkles,
   Trash2,
 } from 'lucide-react';
@@ -45,6 +47,7 @@ import {
   clearQuizItems,
   deleteQuizItem,
   generateQuizItems,
+  getPushedQuizItems,
   getQuizItems,
   pushQuizItem,
 } from '@/app/actions/quiz';
@@ -63,6 +66,7 @@ export default function QuizManagementTab({
 }: QuizManagementTabProps) {
   const router = useRouter();
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
+  const [pushedQuizItems, setPushedQuizItems] = useState<QuizItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
@@ -76,6 +80,7 @@ export default function QuizManagementTab({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pushingId, setPushingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'pushed'>('all');
   const [materialStats, setMaterialStats] = useState<{
     totalCount: number;
     totalTextLength: number;
@@ -92,6 +97,18 @@ export default function QuizManagementTab({
       toast.error('加载题目失败');
     } finally {
       setLoading(false);
+    }
+  }, [lectureId]);
+
+  // 加载已推送的题目
+  const loadPushedQuizItems = useCallback(async () => {
+    try {
+      const result = await getPushedQuizItems(lectureId);
+      if (result.success && result.data) {
+        setPushedQuizItems(result.data);
+      }
+    } catch {
+      toast.error('加载已推送题目失败');
     }
   }, [lectureId]);
 
@@ -112,8 +129,9 @@ export default function QuizManagementTab({
 
   useEffect(() => {
     loadQuizItems();
+    loadPushedQuizItems();
     loadMaterialStats();
-  }, [loadQuizItems, loadMaterialStats]);
+  }, [loadQuizItems, loadPushedQuizItems, loadMaterialStats]);
 
   // 生成题目
   const handleGenerate = async () => {
@@ -194,6 +212,8 @@ export default function QuizManagementTab({
       const result = await pushQuizItem(lectureId, quizId);
       if (result.success) {
         toast.success(`成功推送题目给 ${result.data.pushedCount} 位参与者`);
+        await loadQuizItems();
+        await loadPushedQuizItems();
       } else {
         throw new Error('error' in result ? result.error : '推送失败');
       }
@@ -205,7 +225,8 @@ export default function QuizManagementTab({
   };
 
   // 过滤题目
-  const filteredQuizItems = quizItems.filter((item) =>
+  const displayItems = activeTab === 'pushed' ? pushedQuizItems : quizItems;
+  const filteredQuizItems = displayItems.filter((item) =>
     item.question.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -238,32 +259,39 @@ export default function QuizManagementTab({
             <div>
               <CardTitle>题库管理</CardTitle>
               <CardDescription>
-                共 {quizItems.length} 道题目
-                {quizItems.length > 0 &&
-                  filteredQuizItems.length < quizItems.length &&
+                {activeTab === 'all'
+                  ? `共 ${quizItems.length} 道题目`
+                  : `已推送 ${pushedQuizItems.length} 道题目`}
+                {displayItems.length > 0 &&
+                  filteredQuizItems.length < displayItems.length &&
                   ` • 显示 ${filteredQuizItems.length} 道`}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                disabled={generating}
-                onClick={() => setShowGenerateDialog(true)}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    生成题目
-                  </>
-                )}
-              </Button>
+              {activeTab === 'all' && (
+                <Button
+                  disabled={generating}
+                  onClick={() => setShowGenerateDialog(true)}
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      生成题目
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 disabled={loading}
-                onClick={loadQuizItems}
+                onClick={() => {
+                  loadQuizItems();
+                  loadPushedQuizItems();
+                }}
                 size="icon"
                 variant="outline"
               >
@@ -273,10 +301,24 @@ export default function QuizManagementTab({
           </div>
         </CardHeader>
 
-        {quizItems.length > 0 && (
+        {(quizItems.length > 0 || pushedQuizItems.length > 0) && (
           <>
             <Separator />
             <div className="p-6">
+              <Tabs
+                className="w-full"
+                onValueChange={(v) => setActiveTab(v as 'all' | 'pushed')}
+                value={activeTab}
+              >
+                <TabsList className="mb-4">
+                  <TabsTrigger value="all">
+                    全部题目 ({quizItems.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="pushed">
+                    已推送 ({pushedQuizItems.length})
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
               <div className="mb-4 flex items-center justify-between">
                 <Input
                   className="max-w-sm"
@@ -284,14 +326,16 @@ export default function QuizManagementTab({
                   placeholder="搜索题目..."
                   value={searchQuery}
                 />
-                <Button
-                  onClick={() => setShowClearDialog(true)}
-                  size="sm"
-                  variant="destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  清空题库
-                </Button>
+                {activeTab === 'all' && (
+                  <Button
+                    onClick={() => setShowClearDialog(true)}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    清空题库
+                  </Button>
+                )}
               </div>
             </div>
           </>
@@ -302,17 +346,33 @@ export default function QuizManagementTab({
             <div className="flex h-32 items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : quizItems.length === 0 ? (
+          ) : displayItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Sparkles className="mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 font-semibold text-lg">还没有生成任何题目</h3>
-              <p className="mb-4 text-muted-foreground">
-                基于演讲材料智能生成测验题目
-              </p>
-              <Button onClick={() => setShowGenerateDialog(true)}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                生成第一批题目
-              </Button>
+              {activeTab === 'all' ? (
+                <>
+                  <Sparkles className="mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 font-semibold text-lg">
+                    还没有生成任何题目
+                  </h3>
+                  <p className="mb-4 text-muted-foreground">
+                    基于演讲材料智能生成测验题目
+                  </p>
+                  <Button onClick={() => setShowGenerateDialog(true)}>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    生成第一批题目
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Send className="mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 font-semibold text-lg">
+                    还没有推送任何题目
+                  </h3>
+                  <p className="mb-4 text-muted-foreground">
+                    在演讲进行中推送题目给参与者
+                  </p>
+                </>
+              )}
             </div>
           ) : filteredQuizItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
