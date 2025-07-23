@@ -43,7 +43,10 @@ export default function LandingPage() {
 
           {/* 登录按钮 */}
           <div className="space-y-4">
-            <GitHubLogin className="w-full" />
+            {process.env.GITHUB_CLIENT_ID &&
+              process.env.GITHUB_CLIENT_SECRET && (
+                <GitHubLogin className="w-full" />
+              )}
             {process.env.NODE_ENV === 'development' && <AnnoymousLogin />}
           </div>
 

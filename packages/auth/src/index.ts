@@ -36,13 +36,16 @@ export const auth = betterAuth({
     },
   }),
 
-  // 仅配置 GitHub 社交登录
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    },
-  },
+  // 仅在有环境变量时配置 GitHub 社交登录
+  socialProviders:
+    process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+      ? {
+          github: {
+            clientId: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+          },
+        }
+      : {},
 
   // 基础配置
   baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
