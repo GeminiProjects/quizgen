@@ -16,7 +16,7 @@ import type {
 
 // ============= 基础类型转换 =============
 // 将 Date 类型转换为 string（处理 Server Actions 序列化）
-type DateToString<T> = {
+export type DateToString<T> = {
   [K in keyof T]: T[K] extends Date
     ? string
     : T[K] extends Date | null

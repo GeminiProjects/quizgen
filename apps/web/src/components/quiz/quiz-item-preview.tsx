@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui/components/dialog';
-import { CheckCircle2, Loader2, Trash2 } from 'lucide-react';
-import type { QuizItem } from '@/types';
+import { CheckCircle2, Loader2, Send, Trash2 } from 'lucide-react';
+import type { LectureStatus, QuizItem } from '@/types';
 
 interface QuizItemPreviewDialogProps {
   open: boolean;
@@ -18,6 +18,9 @@ interface QuizItemPreviewDialogProps {
   quizItem: QuizItem | null;
   onDelete?: (id: string) => Promise<void>;
   isDeleting?: boolean;
+  onPush?: (id: string) => Promise<void>;
+  isPushing?: boolean;
+  lectureStatus?: LectureStatus;
 }
 
 export function QuizItemPreviewDialog({
@@ -26,6 +29,9 @@ export function QuizItemPreviewDialog({
   quizItem,
   onDelete,
   isDeleting,
+  onPush,
+  isPushing,
+  lectureStatus,
 }: QuizItemPreviewDialogProps) {
   if (!quizItem) {
     return null;
@@ -37,6 +43,14 @@ export function QuizItemPreviewDialog({
       onOpenChange(false);
     }
   };
+
+  const handlePush = async () => {
+    if (onPush) {
+      await onPush(quizItem.id);
+    }
+  };
+
+  const canPush = lectureStatus === 'in_progress' && onPush;
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -121,28 +135,53 @@ export function QuizItemPreviewDialog({
         </div>
 
         <DialogFooter>
-          {onDelete && (
-            <Button
-              disabled={isDeleting}
-              onClick={handleDelete}
-              variant="destructive"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  删除中...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  删除题目
-                </>
+          <div className="flex w-full justify-between gap-2">
+            <div className="flex gap-2">
+              {onDelete && (
+                <Button
+                  disabled={isDeleting}
+                  onClick={handleDelete}
+                  variant="destructive"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      删除中...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      删除题目
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
-          <Button onClick={() => onOpenChange(false)} variant="outline">
-            关闭
-          </Button>
+            </div>
+            <div className="flex gap-2">
+              {canPush && (
+                <Button
+                  disabled={isPushing}
+                  onClick={handlePush}
+                  variant="default"
+                >
+                  {isPushing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      推送中...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      推送题目
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button onClick={() => onOpenChange(false)} variant="outline">
+                关闭
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -254,7 +254,10 @@ export default function LectureDetailContent({
             </TabsContent>
 
             <TabsContent value="quiz">
-              <QuizManagementTab lectureId={lecture.id} />
+              <QuizManagementTab
+                lectureId={lecture.id}
+                lectureStatus={lecture.status}
+              />
             </TabsContent>
 
             <TabsContent value="analytics">

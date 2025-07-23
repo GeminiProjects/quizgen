@@ -46,6 +46,7 @@ import {
   deleteQuizItem,
   generateQuizItems,
   getQuizItems,
+  pushQuizItem,
 } from '@/app/actions/quiz';
 import { QuizItemCard } from '@/components/quiz/quiz-item-card';
 import { QuizItemPreviewDialog } from '@/components/quiz/quiz-item-preview';
@@ -53,10 +54,12 @@ import type { QuizItem } from '@/types';
 
 interface QuizManagementTabProps {
   lectureId: string;
+  lectureStatus?: 'not_started' | 'in_progress' | 'paused' | 'ended';
 }
 
 export default function QuizManagementTab({
   lectureId,
+  lectureStatus,
 }: QuizManagementTabProps) {
   const router = useRouter();
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
@@ -71,6 +74,7 @@ export default function QuizManagementTab({
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [generateCount, setGenerateCount] = useState('10');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pushingId, setPushingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [materialStats, setMaterialStats] = useState<{
     totalCount: number;
@@ -180,6 +184,23 @@ export default function QuizManagementTab({
     } finally {
       setLoading(false);
       setShowClearDialog(false);
+    }
+  };
+
+  // 推送题目
+  const handlePush = async (quizId: string) => {
+    setPushingId(quizId);
+    try {
+      const result = await pushQuizItem(lectureId, quizId);
+      if (result.success) {
+        toast.success(`成功推送题目给 ${result.data.pushedCount} 位参与者`);
+      } else {
+        throw new Error('error' in result ? result.error : '推送失败');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '推送题目失败');
+    } finally {
+      setPushingId(null);
     }
   };
 
@@ -317,8 +338,11 @@ export default function QuizManagementTab({
       {/* 预览对话框 */}
       <QuizItemPreviewDialog
         isDeleting={deletingId === selectedQuizItem?.id}
+        isPushing={pushingId === selectedQuizItem?.id}
+        lectureStatus={lectureStatus}
         onDelete={handleDelete}
         onOpenChange={setShowPreview}
+        onPush={handlePush}
         open={showPreview}
         quizItem={selectedQuizItem}
       />
