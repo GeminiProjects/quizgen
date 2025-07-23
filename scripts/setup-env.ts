@@ -143,9 +143,9 @@ async function main() {
   console.log('🚀 QuizGen 环境配置向导');
   console.log('========================\n');
 
-  // 检查是否已存在 .env 文件
+  // 检查是否已存在 .env.local 文件
   if (existsSync(envPath)) {
-    const overwrite = await prompt('.env 文件已存在，是否覆盖？(y/N): ');
+    const overwrite = await prompt('.env.local 文件已存在，是否覆盖？(y/N): ');
     if (overwrite.toLowerCase() !== 'y') {
       console.log('已取消配置');
       process.exit(0);
