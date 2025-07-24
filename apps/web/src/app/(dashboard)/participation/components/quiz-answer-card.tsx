@@ -12,6 +12,7 @@ import { CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { submitAnswer } from '@/app/actions/participation';
+import { usePersistentTimer } from '@/hooks/use-persistent-timer';
 import type { QuizItem } from '@/types';
 
 interface QuizAnswerCardProps {
@@ -33,13 +34,26 @@ export function QuizAnswerCard({
     explanation?: string;
   } | null>(null);
   const [startTime] = useState(Date.now());
-  const [timeRemaining, setTimeRemaining] = useState(timeLimit);
-  const [isTimeUp, setIsTimeUp] = useState(false);
+
+  // 使用持久化倒计时 Hook
+  const { timeRemaining, isTimeUp, resetTimer } = usePersistentTimer({
+    quizId: quiz.id,
+    timeLimit,
+    onTimeUp: () => {
+      // 处理超时逻辑
+      if (!result) {
+        handleTimeout();
+      }
+    },
+  });
 
   const handleSubmit = useCallback(async () => {
-    if (selectedOption === null || isSubmitting || result) {
+    if (selectedOption === null || isSubmitting || result || isTimeUp) {
       return;
     }
+
+    // 清除计时器状态
+    resetTimer();
 
     setIsSubmitting(true);
     const latencyMs = Date.now() - startTime;
@@ -71,85 +85,49 @@ export function QuizAnswerCard({
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedOption, isSubmitting, result, quiz.id, startTime, onAnswered]);
-
-  // 处理超时 - 只设置超时标记，实际提交在 useEffect 中处理
-  const handleTimeout = useCallback(() => {
-    if (result || isTimeUp) {
-      return;
-    }
-    setIsTimeUp(true);
-  }, [result, isTimeUp]);
-
-  // 倒计时效果
-  useEffect(() => {
-    if (result || isTimeUp) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleTimeout();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [result, isTimeUp, handleTimeout]);
-
-  // 处理超时后的自动提交
-  useEffect(() => {
-    if (!isTimeUp || result) {
-      return;
-    }
-
-    const handleTimeoutSubmit = async () => {
-      // 如果已选择答案，自动提交
-      if (selectedOption !== null) {
-        await handleSubmit();
-      } else {
-        // 未选择答案，随机选择一个错误答案提交
-        const randomWrongAnswer = Math.floor(
-          Math.random() * quiz.options.length
-        );
-        setSelectedOption(randomWrongAnswer);
-
-        const latencyMs = timeLimit * 1000; // 使用完整时限作为延迟
-
-        try {
-          const response = await submitAnswer({
-            quizId: quiz.id,
-            selected: randomWrongAnswer,
-            latencyMs,
-          });
-
-          if (response.success) {
-            setResult(response.data);
-            toast.error('答题超时！');
-          }
-        } catch (error) {
-          console.error('提交超时答案失败:', error);
-        }
-
-        onAnswered?.();
-      }
-    };
-
-    handleTimeoutSubmit();
   }, [
-    isTimeUp,
-    result,
     selectedOption,
-    handleSubmit,
+    isSubmitting,
+    result,
+    isTimeUp,
     quiz.id,
-    quiz.options.length,
-    timeLimit,
+    startTime,
     onAnswered,
+    resetTimer,
   ]);
+
+  // 处理超时 - 提交超时答案
+  const handleTimeout = useCallback(async () => {
+    if (result) {
+      return;
+    }
+
+    // 清除计时器状态
+    resetTimer();
+
+    // 未选择答案，随机选择一个错误答案提交
+    const randomWrongAnswer = Math.floor(Math.random() * quiz.options.length);
+    setSelectedOption(randomWrongAnswer);
+
+    const latencyMs = timeLimit * 1000; // 使用完整时限作为延迟
+
+    try {
+      const response = await submitAnswer({
+        quizId: quiz.id,
+        selected: randomWrongAnswer,
+        latencyMs,
+      });
+
+      if (response.success) {
+        setResult(response.data);
+        toast.error('答题超时！');
+      }
+    } catch (error) {
+      console.error('提交超时答案失败:', error);
+    }
+
+    onAnswered?.();
+  }, [result, quiz.id, quiz.options.length, timeLimit, onAnswered, resetTimer]);
 
   // 支持键盘快捷键
   useEffect(() => {

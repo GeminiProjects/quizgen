@@ -150,11 +150,23 @@ export function ParticipationContent({
                 <Card key={`${attempt.quiz_id}-${attempt.user_id}-${index}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">
-                        {attempt.quiz.question}
-                      </CardTitle>
+                      <div className="flex items-start gap-2">
+                        <CardTitle className="text-base">
+                          {attempt.quiz.question}
+                        </CardTitle>
+                        {attempt.selected === null && (
+                          <Badge
+                            className="bg-warning/10 text-warning"
+                            variant="secondary"
+                          >
+                            未选择
+                          </Badge>
+                        )}
+                      </div>
                       {attempt.is_correct ? (
                         <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
+                      ) : attempt.selected === null ? (
+                        <Clock className="h-5 w-5 shrink-0 text-warning" />
                       ) : (
                         <XCircle className="h-5 w-5 shrink-0 text-destructive" />
                       )}
@@ -170,7 +182,8 @@ export function ParticipationContent({
                               'bg-success/10 text-success',
                             optionIndex === attempt.selected &&
                               optionIndex !== attempt.quiz.answer &&
-                              'bg-destructive/10 text-destructive'
+                              'bg-destructive/10 text-destructive',
+                            attempt.selected === null && 'opacity-60'
                           )}
                           key={optionIndex}
                         >
@@ -185,6 +198,11 @@ export function ParticipationContent({
                             optionIndex !== attempt.quiz.answer && (
                               <XCircle className="h-4 w-4 shrink-0" />
                             )}
+                          {attempt.selected === null && (
+                            <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-warning text-xs">
+                              未选择
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
