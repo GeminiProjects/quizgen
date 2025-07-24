@@ -14,7 +14,8 @@
       "Bash(npx tsc:*)",
       "Bash(bunx tsc:*)",
       "Bash(npx -p typescript tsc:*)",
-      "Bash(bun run check:*)"
+      "Bash(bun run check:*)",
+      "Bash(npx @biomejs/biome format:*)"
     ],
     "deny": []
   }
