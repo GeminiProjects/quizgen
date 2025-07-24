@@ -107,7 +107,6 @@ export function QuizAnswerCard({
 
     // 未选择答案，使用特殊值-1表示未选择
     const unselectedValue = -1;
-    setSelectedOption(unselectedValue);
 
     const latencyMs = timeLimit * 1000; // 使用完整时限作为延迟
 
@@ -142,9 +141,6 @@ export function QuizAnswerCard({
         if (optionIndex < quiz.options.length) {
           setSelectedOption(optionIndex);
         }
-      } else if (key === '0') {
-        // 按 0 键选择"未选择"选项
-        setSelectedOption(-1);
       } else if (key === 'Enter' && selectedOption !== null) {
         handleSubmit();
       }
@@ -223,30 +219,6 @@ export function QuizAnswerCard({
               </div>
             </button>
           ))}
-          {/* 未选择选项 */}
-          <button
-            className={cn(
-              'relative w-full cursor-pointer rounded-lg border p-4 text-left transition-all',
-              selectedOption === -1
-                ? 'border-primary bg-primary/5'
-                : 'border-muted hover:border-primary/50',
-              result !== null && 'cursor-default',
-              isTimeUp && 'cursor-default'
-            )}
-            disabled={result !== null || isTimeUp}
-            onClick={() => !(result || isTimeUp) && setSelectedOption(-1)}
-            type="button"
-          >
-            <div className="flex items-start gap-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted font-medium text-xs">
-                未
-              </span>
-              <span className="flex-1 text-sm">未选择</span>
-              {result && selectedOption === -1 && (
-                <XCircle className="h-5 w-5 shrink-0 text-destructive" />
-              )}
-            </div>
-          </button>
         </div>
 
         {result?.explanation && (
@@ -261,7 +233,7 @@ export function QuizAnswerCard({
         {!(result || isTimeUp) && (
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-xs">
-              按数字键 1-4 快速选择，按 0 选择"未选择"，按 Enter 提交
+              按数字键 1-4 快速选择，按 Enter 提交
             </p>
             <Button
               disabled={selectedOption === null || isSubmitting}

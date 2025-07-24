@@ -153,19 +153,19 @@ export function ParticipationContent({
                       <div className="flex items-start gap-2">
                         <CardTitle className="text-base">
                           {attempt.quiz.question}
+                          {attempt.selected === -1 && (
+                            <Badge
+                              className="ml-2 bg-warning/10 text-warning"
+                              variant="secondary"
+                            >
+                              未选择
+                            </Badge>
+                          )}
                         </CardTitle>
-                        {attempt.selected === null && (
-                          <Badge
-                            className="bg-warning/10 text-warning"
-                            variant="secondary"
-                          >
-                            未选择
-                          </Badge>
-                        )}
                       </div>
                       {attempt.is_correct ? (
                         <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
-                      ) : attempt.selected === null ? (
+                      ) : attempt.selected === -1 ? (
                         <Clock className="h-5 w-5 shrink-0 text-warning" />
                       ) : (
                         <XCircle className="h-5 w-5 shrink-0 text-destructive" />
@@ -183,7 +183,7 @@ export function ParticipationContent({
                             optionIndex === attempt.selected &&
                               optionIndex !== attempt.quiz.answer &&
                               'bg-destructive/10 text-destructive',
-                            attempt.selected === null && 'opacity-60'
+                            attempt.selected === -1 && 'opacity-60'
                           )}
                           key={optionIndex}
                         >
@@ -198,7 +198,7 @@ export function ParticipationContent({
                             optionIndex !== attempt.quiz.answer && (
                               <XCircle className="h-4 w-4 shrink-0" />
                             )}
-                          {attempt.selected === null && (
+                          {attempt.selected === -1 && (
                             <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-warning text-xs">
                               未选择
                             </span>
