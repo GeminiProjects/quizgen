@@ -198,11 +198,6 @@ export function ParticipationContent({
                             optionIndex !== attempt.quiz.answer && (
                               <XCircle className="h-4 w-4 shrink-0" />
                             )}
-                          {attempt.selected === -1 && (
-                            <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-warning text-xs">
-                              未选择
-                            </span>
-                          )}
                         </div>
                       ))}
                     </div>
