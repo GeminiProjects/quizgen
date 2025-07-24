@@ -41,7 +41,7 @@ interface CommentSectionProps {
 
 export function CommentSection({
   lectureId,
-  userId: _userId,
+  userId,
   isSpeaker,
 }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -172,6 +172,11 @@ export function CommentSection({
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                     {comment.is_anonymous ? (
                       <User className="h-4 w-4 text-primary" />
+                    ) : isSpeaker && comment.user?.id === userId ? (
+                      // 演讲者特殊头像标识
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+                        <span className="font-bold text-white text-xs">讲</span>
+                      </div>
                     ) : (
                       <span className="font-medium text-primary text-xs">
                         {(comment.user?.name || comment.user?.email || 'U')
@@ -187,7 +192,9 @@ export function CommentSection({
                       <span className="font-medium text-sm">
                         {comment.is_anonymous
                           ? '匿名用户'
-                          : comment.user?.name || comment.user?.email}
+                          : isSpeaker && comment.user?.id === userId
+                            ? `${comment.user?.name || comment.user?.email} (演讲者)`
+                            : comment.user?.name || comment.user?.email}
                       </span>
                       <span className="text-muted-foreground text-xs">
                         {formatTime(comment.created_at)}
@@ -241,28 +248,29 @@ export function CommentSection({
 
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                {/* 匿名开关 */}
-                <FormField
-                  control={form.control}
-                  name="is_anonymous"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 space-y-0">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          disabled={isSpeaker}
-                          onCheckedChange={field.onChange} // 演讲者不能匿名
-                        />
-                      </FormControl>
-                      <FormLabel className="cursor-pointer font-normal text-sm">
-                        匿名
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
+                {/* 匿名开关 - 仅对非演讲者显示 */}
+                {!isSpeaker && (
+                  <FormField
+                    control={form.control}
+                    name="is_anonymous"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="cursor-pointer font-normal text-sm">
+                          匿名
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
-                {/* 可见性选择 */}
-                {isSpeaker && (
+                {/* 可见性选择 - 仅对非演讲者显示 */}
+                {!isSpeaker && (
                   <FormField
                     control={form.control}
                     name="visibility"
