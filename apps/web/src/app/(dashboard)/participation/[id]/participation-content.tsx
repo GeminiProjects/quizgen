@@ -150,11 +150,23 @@ export function ParticipationContent({
                 <Card key={`${attempt.quiz_id}-${attempt.user_id}-${index}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-base">
-                        {attempt.quiz.question}
-                      </CardTitle>
+                      <div className="flex items-start gap-2">
+                        <CardTitle className="text-base">
+                          {attempt.quiz.question}
+                          {attempt.selected === -1 && (
+                            <Badge
+                              className="ml-2 bg-warning/10 text-warning"
+                              variant="secondary"
+                            >
+                              未选择
+                            </Badge>
+                          )}
+                        </CardTitle>
+                      </div>
                       {attempt.is_correct ? (
                         <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
+                      ) : attempt.selected === -1 ? (
+                        <Clock className="h-5 w-5 shrink-0 text-warning" />
                       ) : (
                         <XCircle className="h-5 w-5 shrink-0 text-destructive" />
                       )}
@@ -170,7 +182,8 @@ export function ParticipationContent({
                               'bg-success/10 text-success',
                             optionIndex === attempt.selected &&
                               optionIndex !== attempt.quiz.answer &&
-                              'bg-destructive/10 text-destructive'
+                              'bg-destructive/10 text-destructive',
+                            attempt.selected === -1 && 'opacity-60'
                           )}
                           key={optionIndex}
                         >
