@@ -30,6 +30,7 @@ export type DateToString<T> = {
 export interface User extends DateToString<DBUser> {
   avatar_url?: string | null;
   is_anonymous?: boolean;
+  is_speaker?: boolean;
 }
 
 // ============= 组织相关 =============
@@ -210,7 +211,10 @@ export interface Transcript extends DateToString<DBTranscript> {}
 
 // ============= 评论相关 =============
 export interface Comment extends DateToString<DBComment> {
-  user?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url' | 'is_anonymous'>;
+  user?: Pick<
+    User,
+    'id' | 'email' | 'name' | 'avatar_url' | 'is_anonymous' | 'is_speaker'
+  >;
   lecture?: Pick<Lecture, 'id' | 'title'>;
 }
 

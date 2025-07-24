@@ -39,8 +39,7 @@ export function ParticipationContent({
   lectureId,
   lectureStatus,
   answerHistory,
-  userId,
-}: ParticipationContentProps & { userId: string }) {
+}: ParticipationContentProps) {
   const [activeQuiz, setActiveQuiz] = useState<QuizItem | null>(null);
   const [activeTab, setActiveTab] = useState('quiz');
 
@@ -218,11 +217,7 @@ export function ParticipationContent({
         </TabsContent>
 
         <TabsContent className="space-y-4" value="comments">
-          <CommentSection
-            isSpeaker={false}
-            lectureId={lectureId}
-            userId={userId}
-          />
+          <CommentSection isSpeaker={false} lectureId={lectureId} />
         </TabsContent>
       </Tabs>
     </>

@@ -1,6 +1,15 @@
 'use server';
 
-import { and, asc, authUser, comments, count, db, eq } from '@repo/db';
+import {
+  and,
+  asc,
+  authUser,
+  comments,
+  count,
+  db,
+  eq,
+  lectures,
+} from '@repo/db';
 import { revalidatePath } from 'next/cache';
 import type { z } from 'zod';
 
@@ -58,7 +67,7 @@ export async function createComment(
       })
       .returning();
 
-    // 5. 获取用户信息
+    // 5. 获取用户信息和演讲者信息
     const [userResult] = await db
       .select({
         id: authUser.id,
@@ -70,12 +79,22 @@ export async function createComment(
       .from(authUser)
       .where(eq(authUser.id, user.id));
 
-    // 6. 处理日期字段，将其转换为字符串
+    // 6. 获取演讲信息以确定演讲者
+    const [lectureResult] = await db
+      .select({
+        owner_id: lectures.owner_id,
+      })
+      .from(lectures)
+      .where(eq(lectures.id, validated.lecture_id));
+
+    // 7. 处理日期字段，将其转换为字符串
     const serializedComment = {
       ...newComment,
       user: {
         ...userResult,
         is_anonymous: userResult.is_anonymous,
+        // 添加演讲者标识
+        is_speaker: userResult.id === lectureResult?.owner_id,
         created_at: undefined, // 移除用户对象中的created_at字段
         updated_at: undefined, // 移除用户对象中的updated_at字段
       },
@@ -122,7 +141,7 @@ export async function getComments(
       conditions.push(eq(comments.user_id, validated.user_id));
     }
 
-    // 4. 查询评论列表（包含用户信息）
+    // 4. 查询评论列表（包含用户信息和演讲者信息）
     const [data, totalResult] = await Promise.all([
       db
         .select({
@@ -134,9 +153,14 @@ export async function getComments(
             image: authUser.image,
             is_anonymous: authUser.isAnonymous,
           },
+          // 获取演讲信息以确定演讲者
+          lecture: {
+            owner_id: lectures.owner_id,
+          },
         })
         .from(comments)
         .innerJoin(authUser, eq(comments.user_id, authUser.id))
+        .innerJoin(lectures, eq(comments.lecture_id, lectures.id))
         .where(and(...conditions))
         .orderBy(asc(comments.created_at))
         .limit(validated.limit)
@@ -148,11 +172,13 @@ export async function getComments(
     ]);
 
     // 5. 处理日期字段，将其转换为字符串
-    const serializedData = data.map(({ comment, user }) => ({
+    const serializedData = data.map(({ comment, user, lecture }) => ({
       ...comment,
       user: {
         ...user,
         is_anonymous: user.is_anonymous,
+        // 添加演讲者标识
+        is_speaker: user.id === lecture.owner_id,
         created_at: undefined, // 移除用户对象中的created_at字段
         updated_at: undefined, // 移除用户对象中的updated_at字段
       },

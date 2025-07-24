@@ -90,7 +90,6 @@ export default async function ParticipationDetailPage({
         answerHistory={answerHistory}
         lectureId={lecture.id}
         lectureStatus={lecture.status}
-        userId={participant.user_id}
       />
 
       <div className="grid gap-4 md:grid-cols-4">

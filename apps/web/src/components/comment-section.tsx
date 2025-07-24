@@ -35,15 +35,10 @@ import type { Comment } from '@/types';
 
 interface CommentSectionProps {
   lectureId: string;
-  userId: string;
   isSpeaker: boolean;
 }
 
-export function CommentSection({
-  lectureId,
-  userId,
-  isSpeaker,
-}: CommentSectionProps) {
+export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalComments, setTotalComments] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -172,7 +167,7 @@ export function CommentSection({
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                     {comment.is_anonymous ? (
                       <User className="h-4 w-4 text-primary" />
-                    ) : isSpeaker && comment.user?.id === userId ? (
+                    ) : comment.user?.is_speaker ? (
                       // 演讲者特殊头像标识
                       <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
                         <span className="font-bold text-white text-xs">讲</span>
@@ -197,7 +192,7 @@ export function CommentSection({
                       <span className="font-medium text-sm">
                         {comment.is_anonymous
                           ? '匿名用户'
-                          : isSpeaker && comment.user?.id === userId
+                          : comment.user?.is_speaker
                             ? `${comment.user?.name || comment.user?.email} (演讲者)`
                             : comment.user?.is_anonymous
                               ? '游客'

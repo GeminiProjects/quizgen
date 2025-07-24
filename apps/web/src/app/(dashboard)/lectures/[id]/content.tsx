@@ -266,11 +266,7 @@ export default function LectureDetailContent({
             </TabsContent>
 
             <TabsContent value="comments">
-              <CommentSection
-                isSpeaker={true}
-                lectureId={lecture.id}
-                userId={lecture.owner_id}
-              />
+              <CommentSection isSpeaker={true} lectureId={lecture.id} />
             </TabsContent>
 
             <TabsContent value="analytics">
