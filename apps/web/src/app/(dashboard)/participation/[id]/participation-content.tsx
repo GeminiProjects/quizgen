@@ -14,9 +14,17 @@ import {
   TabsTrigger,
 } from '@repo/ui/components/tabs';
 import { cn } from '@repo/ui/lib/utils';
-import { Bell, CheckCircle2, Clock, FileQuestion, XCircle } from 'lucide-react';
+import {
+  Bell,
+  CheckCircle2,
+  Clock,
+  FileQuestion,
+  MessageSquare,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { AttemptRecord } from '@/app/actions/participation';
+import { CommentSection } from '@/components/comment-section';
 import type { LectureStatus, QuizItem } from '@/types';
 import { QuizAnswerCard } from '../components/quiz-answer-card';
 import { RealtimeQuizListener } from '../components/realtime-quiz-listener';
@@ -60,7 +68,7 @@ export function ParticipationContent({
         onValueChange={setActiveTab}
         value={activeTab}
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger className="relative" value="quiz">
             答题
             {activeQuiz && (
@@ -77,6 +85,10 @@ export function ParticipationContent({
                 {answerHistory.length}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="comments">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            讨论区
           </TabsTrigger>
         </TabsList>
 
@@ -202,6 +214,10 @@ export function ParticipationContent({
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent className="space-y-4" value="comments">
+          <CommentSection isSpeaker={false} lectureId={lectureId} />
         </TabsContent>
       </Tabs>
     </>

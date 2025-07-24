@@ -20,6 +20,17 @@ export * from './auth';
 // 工具函数导出
 export { timestamps } from './columns.helpers';
 
+// 评论表
+export {
+  type Comment,
+  comments,
+  commentsRelations,
+  commentVisibilityEnum,
+  insertCommentSchema,
+  type NewComment,
+  selectCommentSchema,
+} from './comments';
+
 // 演讲参与者表
 export {
   insertLectureParticipantSchema,
