@@ -308,7 +308,8 @@ export async function submitAnswer(input: {
     const session = await requireAuth();
 
     // 验证输入
-    if (input.selected < 0 || input.selected > 3) {
+    // -1 表示未选择，0-3 表示选项 A-D
+    if (input.selected < -1 || input.selected > 3) {
       return createErrorResponse('无效的答案选择');
     }
 
@@ -356,7 +357,8 @@ export async function submitAnswer(input: {
     }
 
     // 判断答案是否正确
-    const isCorrect = input.selected === quiz.answer;
+    // -1 表示未选择，标记为错误答案
+    const isCorrect = input.selected === quiz.answer && input.selected !== -1;
 
     // 创建答题记录
     await db.insert(attempts).values({
