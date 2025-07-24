@@ -10,6 +10,18 @@ export {
   type AttemptSubmitRequest,
   attemptSchemas,
 } from './attempt';
+// 导出评论相关模式
+export * from './comment';
+export {
+  type CommentListQuery,
+  type CreateCommentRequest,
+  commentListQuerySchema,
+  createCommentSchema,
+  type DeleteCommentRequest,
+  deleteCommentSchema,
+  type UpdateCommentRequest,
+  updateCommentSchema,
+} from './comment';
 // 导出通用模式
 export * from './common';
 // 导出演讲相关模式
@@ -32,6 +44,7 @@ export {
   organizationSchemas,
 } from './organization';
 export * from './participation';
+
 // 导出测验题目相关模式
 export * from './quiz-item';
 export {

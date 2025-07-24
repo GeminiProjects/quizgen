@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun db:generate:*)",
+      "Bash(bun db:push:*)",
+      "Bash(ls:*)",
+      "Bash(bun db:list:*)",
+      "Bash(cat:*)",
+      "Bash(bun check:*)",
+      "Bash(bun format:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  }
+}

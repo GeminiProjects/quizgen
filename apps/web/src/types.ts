@@ -3,6 +3,8 @@
  * 基于数据库类型进行扩展，处理序列化后的日期字段
  */
 
+// 由于 Comment 类型在数据库客户端中可能不存在，我们需要单独定义
+import type { Comment as DBComment } from '@repo/db';
 import type {
   Attempt as DBAttempt,
   Lecture as DBLecture,
@@ -204,6 +206,15 @@ export interface ParticipatedLecture {
 
 // ============= 转录相关 =============
 export interface Transcript extends DateToString<DBTranscript> {}
+
+// ============= 评论相关 =============
+export interface Comment extends DateToString<DBComment> {
+  user?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
+  lecture?: Pick<Lecture, 'id' | 'title'>;
+}
+
+// 评论可见性
+export type CommentVisibility = 'public' | 'speaker_only';
 
 // ============= 统计相关 =============
 export interface LectureStats {

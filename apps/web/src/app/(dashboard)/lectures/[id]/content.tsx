@@ -39,6 +39,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { endLecture, pauseLecture, startLecture } from '@/app/actions/lectures';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
+import { CommentSection } from '@/components/comment-section';
 import { StatsCard } from '@/components/stats-card';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { type LectureDetailClientProps, lectureStatusConfig } from '@/types';
@@ -243,6 +244,10 @@ export default function LectureDetailContent({
                 <MessageSquare className="mr-2 h-4 w-4" />
                 题库管理
               </TabsTrigger>
+              <TabsTrigger value="comments">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                讨论区
+              </TabsTrigger>
               <TabsTrigger value="analytics">
                 <ChartBar className="mr-2 h-4 w-4" />
                 数据分析
@@ -257,6 +262,14 @@ export default function LectureDetailContent({
               <QuizManagementTab
                 lectureId={lecture.id}
                 lectureStatus={lecture.status}
+              />
+            </TabsContent>
+
+            <TabsContent value="comments">
+              <CommentSection
+                isSpeaker={true}
+                lectureId={lecture.id}
+                userId={lecture.owner_id}
               />
             </TabsContent>
 
