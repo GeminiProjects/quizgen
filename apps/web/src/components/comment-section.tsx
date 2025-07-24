@@ -177,6 +177,11 @@ export function CommentSection({
                       <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
                         <span className="font-bold text-white text-xs">讲</span>
                       </div>
+                    ) : comment.user?.is_anonymous ? (
+                      // 游客用户头像
+                      <span className="font-medium text-primary text-xs">
+                        游客
+                      </span>
                     ) : (
                       <span className="font-medium text-primary text-xs">
                         {(comment.user?.name || comment.user?.email || 'U')
@@ -194,7 +199,9 @@ export function CommentSection({
                           ? '匿名用户'
                           : isSpeaker && comment.user?.id === userId
                             ? `${comment.user?.name || comment.user?.email} (演讲者)`
-                            : comment.user?.name || comment.user?.email}
+                            : comment.user?.is_anonymous
+                              ? '游客'
+                              : comment.user?.name || comment.user?.email}
                       </span>
                       <span className="text-muted-foreground text-xs">
                         {formatTime(comment.created_at)}

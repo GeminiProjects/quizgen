@@ -6,7 +6,6 @@ import {
   pgEnum,
   pgTable,
   text,
-  timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';

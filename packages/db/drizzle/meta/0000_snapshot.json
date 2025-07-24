@@ -83,12 +83,8 @@
           "name": "attempts_quiz_id_quiz_items_id_fk",
           "tableFrom": "attempts",
           "tableTo": "quiz_items",
-          "columnsFrom": [
-            "quiz_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["quiz_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -96,12 +92,8 @@
           "name": "attempts_user_id_auth_user_id_fk",
           "tableFrom": "attempts",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -109,10 +101,7 @@
       "compositePrimaryKeys": {
         "attempts_quiz_id_user_id_pk": {
           "name": "attempts_quiz_id_user_id_pk",
-          "columns": [
-            "quiz_id",
-            "user_id"
-          ]
+          "columns": ["quiz_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -209,12 +198,8 @@
           "name": "auth_account_user_id_auth_user_id_fk",
           "tableFrom": "auth_account",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -284,12 +269,8 @@
           "name": "auth_session_user_id_auth_user_id_fk",
           "tableFrom": "auth_session",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -299,9 +280,7 @@
         "auth_session_token_unique": {
           "name": "auth_session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -369,9 +348,7 @@
         "auth_user_email_unique": {
           "name": "auth_user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -538,12 +515,8 @@
           "name": "comments_lecture_id_lectures_id_fk",
           "tableFrom": "comments",
           "tableTo": "lectures",
-          "columnsFrom": [
-            "lecture_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lecture_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -551,12 +524,8 @@
           "name": "comments_user_id_auth_user_id_fk",
           "tableFrom": "comments",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -692,12 +661,8 @@
           "name": "lecture_participants_lecture_id_lectures_id_fk",
           "tableFrom": "lecture_participants",
           "tableTo": "lectures",
-          "columnsFrom": [
-            "lecture_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lecture_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -705,12 +670,8 @@
           "name": "lecture_participants_user_id_auth_user_id_fk",
           "tableFrom": "lecture_participants",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -849,12 +810,8 @@
           "name": "lectures_owner_id_auth_user_id_fk",
           "tableFrom": "lectures",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -862,12 +819,8 @@
           "name": "lectures_org_id_organizations_id_fk",
           "tableFrom": "lectures",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "org_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -877,9 +830,7 @@
         "lectures_join_code_unique": {
           "name": "lectures_join_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "join_code"
-          ]
+          "columns": ["join_code"]
         }
       },
       "policies": {},
@@ -977,12 +928,8 @@
           "name": "materials_lecture_id_lectures_id_fk",
           "tableFrom": "materials",
           "tableTo": "lectures",
-          "columnsFrom": [
-            "lecture_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lecture_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1065,12 +1012,8 @@
           "name": "organizations_owner_id_auth_user_id_fk",
           "tableFrom": "organizations",
           "tableTo": "auth_user",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1180,12 +1123,8 @@
           "name": "quiz_items_lecture_id_lectures_id_fk",
           "tableFrom": "quiz_items",
           "tableTo": "lectures",
-          "columnsFrom": [
-            "lecture_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lecture_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1271,12 +1210,8 @@
           "name": "transcripts_lecture_id_lectures_id_fk",
           "tableFrom": "transcripts",
           "tableTo": "lectures",
-          "columnsFrom": [
-            "lecture_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lecture_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1292,39 +1227,22 @@
     "public.comment_visibility": {
       "name": "comment_visibility",
       "schema": "public",
-      "values": [
-        "public",
-        "speaker_only"
-      ]
+      "values": ["public", "speaker_only"]
     },
     "public.lecture_status": {
       "name": "lecture_status",
       "schema": "public",
-      "values": [
-        "not_started",
-        "in_progress",
-        "paused",
-        "ended"
-      ]
+      "values": ["not_started", "in_progress", "paused", "ended"]
     },
     "public.participant_role": {
       "name": "participant_role",
       "schema": "public",
-      "values": [
-        "speaker",
-        "audience",
-        "assistant"
-      ]
+      "values": ["speaker", "audience", "assistant"]
     },
     "public.participant_status": {
       "name": "participant_status",
       "schema": "public",
-      "values": [
-        "joined",
-        "active",
-        "left",
-        "kicked"
-      ]
+      "values": ["joined", "active", "left", "kicked"]
     }
   },
   "schemas": {},

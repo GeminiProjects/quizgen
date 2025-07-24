@@ -22,13 +22,13 @@ export { timestamps } from './columns.helpers';
 
 // 评论表
 export {
-  commentVisibilityEnum,
+  type Comment,
   comments,
   commentsRelations,
+  commentVisibilityEnum,
   insertCommentSchema,
   type NewComment,
   selectCommentSchema,
-  type Comment,
 } from './comments';
 
 // 演讲参与者表
