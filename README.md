@@ -65,17 +65,6 @@ QuizGen 使用 [Turborepo](https://turbo.build/repo/docs) 管理 Monorepo 架构
 quizgen/
 ├── apps/
 │   └── web/                    # Next.js 全栈应用
-│       ├── src/
-│       │   ├── app/           # App Router 页面和 API 路由
-│       │   │   ├── api/       # API 路由
-│       │   │   ├── layout.tsx # 根布局
-│       │   │   └── page.tsx   # 首页
-│       │   ├── components/    # 应用级组件
-│       │   ├── lib/           # 工具函数
-│       │   └── middleware.ts  # 中间件
-│       ├── public/            # 静态资源
-│       ├── next.config.ts     # Next.js 配置
-│       └── package.json
 ├── packages/
 │   ├── ai/                    # AI 功能封装
 │   ├── auth/                  # Better Auth 身份认证
