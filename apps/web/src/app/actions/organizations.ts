@@ -283,7 +283,7 @@ export async function getPublicOrganizations(): Promise<
           id: users.id,
           email: users.email,
           name: users.name,
-          avatar_url: users.image,
+          image: users.image,
         },
       })
       .from(organizations)

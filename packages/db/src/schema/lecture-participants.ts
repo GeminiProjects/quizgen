@@ -1,6 +1,7 @@
 import { authUser } from '@repo/auth/schema';
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
   index,
   pgEnum,
   pgTable,
@@ -56,6 +57,10 @@ export const lectureParticipants = pgTable(
     joined_at: timestamp('joined_at').notNull().defaultNow(),
     // 离开时间
     left_at: timestamp('left_at'),
+    // 是否在线
+    is_online: boolean('is_online').notNull().default(false),
+    // 最后活跃时间
+    last_active_at: timestamp('last_active_at').notNull().defaultNow(),
     // 时间戳
     ...timestamps,
   },
@@ -66,6 +71,12 @@ export const lectureParticipants = pgTable(
     index('participants_user_id_idx').on(table.user_id),
     // 复合唯一索引：一个用户在一个演讲中只能有一条活跃记录
     index('participants_lecture_user_idx').on(table.lecture_id, table.user_id),
+    // 在线状态索引
+    index('participants_online_status_idx').on(
+      table.lecture_id,
+      table.is_online,
+      table.last_active_at
+    ),
   ]
 );
 

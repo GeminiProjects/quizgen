@@ -132,7 +132,7 @@ export function OrganizationSelector({
                           <Avatar className="h-12 w-12 flex-shrink-0">
                             <AvatarImage
                               alt={org.owner?.name || org.owner?.email || ''}
-                              src={org.owner?.avatar_url || undefined}
+                              src={org.owner?.image || undefined}
                             />
                             <AvatarFallback className="text-lg">
                               {(org.owner?.name || org.owner?.email || 'U')

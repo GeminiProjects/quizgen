@@ -1,6 +1,7 @@
 import { Button } from '@repo/ui/components/button';
 import { Card, CardContent } from '@repo/ui/components/card';
 import { ArrowLeft, Clock, FileQuestion, Trophy, Users } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -8,6 +9,11 @@ import {
   getParticipationDetail,
 } from '@/app/actions/participation';
 import { ParticipationContent } from './participation-content';
+
+export const metadata: Metadata = {
+  title: '参与详情',
+  description: '参与详情',
+};
 
 export default async function ParticipationDetailPage({
   params,

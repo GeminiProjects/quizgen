@@ -1,22 +1,15 @@
 import {
   and,
-  authUser,
-  comments,
   db,
   eq,
+  gt,
   lectureParticipants,
   lectures,
   quizItems,
+  sql,
 } from '@repo/db';
 import type { NextRequest } from 'next/server';
 import { getServerSideSession } from '@/lib/auth';
-import type { Comment } from '@/types';
-
-// 存储活跃的 SSE 连接
-const activeConnections = new Map<
-  string,
-  Set<ReadableStreamDefaultController>
->();
 
 export async function GET(
   request: NextRequest,
@@ -30,7 +23,7 @@ export async function GET(
     return new Response('Unauthorized', { status: 401 });
   }
 
-  // 验证演讲是否存在
+  // 验证演讲是否存在且正在进行中
   const [lecture] = await db
     .select()
     .from(lectures)
@@ -41,8 +34,12 @@ export async function GET(
     return new Response('Lecture not found', { status: 404 });
   }
 
-  // 检查是否为参与者（可选，用于权限控制）
-  const [_participant] = await db
+  if (lecture.status !== 'in_progress') {
+    return new Response('Lecture is not in progress', { status: 400 });
+  }
+
+  // 检查用户是否为参与者
+  const [participant] = await db
     .select()
     .from(lectureParticipants)
     .where(
@@ -53,39 +50,149 @@ export async function GET(
     )
     .limit(1);
 
-  // 创建 SSE 响应
-  const stream = new ReadableStream({
-    start(controller) {
-      // 添加到活跃连接列表
-      if (!activeConnections.has(lectureId)) {
-        activeConnections.set(lectureId, new Set());
-      }
-      activeConnections.get(lectureId)?.add(controller);
+  if (!participant) {
+    return new Response('Not a participant', { status: 403 });
+  }
 
+  // 创建 SSE 响应流
+  const stream = new ReadableStream({
+    async start(controller) {
       // 发送初始连接消息
       controller.enqueue(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
-      // 设置心跳，防止连接超时
-      const heartbeat = setInterval(() => {
-        try {
+      // 记录连接活跃状态
+      await db
+        .update(lectureParticipants)
+        .set({
+          last_active_at: new Date(),
+          is_online: true,
+        })
+        .where(
+          and(
+            eq(lectureParticipants.user_id, session.user.id),
+            eq(lectureParticipants.lecture_id, lectureId)
+          )
+        );
+
+      // 获取最近推送的题目（如果有）
+      const [latestPushedQuiz] = await db
+        .select()
+        .from(quizItems)
+        .where(
+          and(
+            eq(quizItems.lecture_id, lectureId),
+            sql`${quizItems.pushed_at} is not null`
+          )
+        )
+        .orderBy(sql`${quizItems.pushed_at} desc`)
+        .limit(1);
+
+      // 如果有最近推送的题目，立即发送给新连接的用户
+      if (latestPushedQuiz?.pushed_at) {
+        const pushedTime = new Date(latestPushedQuiz.pushed_at).getTime();
+        const now = Date.now();
+        // 如果题目是在最近5分钟内推送的，发送给用户
+        if (now - pushedTime < 5 * 60 * 1000) {
           controller.enqueue(
-            `data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`
+            `data: ${JSON.stringify({
+              type: 'new_quiz',
+              quiz: {
+                ...latestPushedQuiz,
+                ts: latestPushedQuiz.ts.toISOString(),
+                created_at: latestPushedQuiz.created_at.toISOString(),
+                pushed_at: latestPushedQuiz.pushed_at.toISOString(),
+              },
+            })}\n\n`
           );
-        } catch {
-          clearInterval(heartbeat);
         }
-      }, 30_000); // 每30秒发送一次心跳
+      }
+
+      // 跟踪最后推送的题目ID
+      let lastPushedQuizId = latestPushedQuiz?.id || null;
+
+      // 轮询检查新题目
+      const pollInterval = setInterval(async () => {
+        try {
+          // 检查演讲状态
+          const [currentLecture] = await db
+            .select()
+            .from(lectures)
+            .where(eq(lectures.id, lectureId))
+            .limit(1);
+
+          if (!currentLecture || currentLecture.status !== 'in_progress') {
+            controller.enqueue(
+              `data: ${JSON.stringify({ type: 'lecture_ended' })}\n\n`
+            );
+            clearInterval(pollInterval);
+            controller.close();
+            return;
+          }
+
+          // 更新活跃时间
+          await db
+            .update(lectureParticipants)
+            .set({ last_active_at: new Date() })
+            .where(
+              and(
+                eq(lectureParticipants.user_id, session.user.id),
+                eq(lectureParticipants.lecture_id, lectureId)
+              )
+            );
+
+          // 检查是否有新题目
+          const [newQuiz] = await db
+            .select()
+            .from(quizItems)
+            .where(
+              and(
+                eq(quizItems.lecture_id, lectureId),
+                sql`${quizItems.pushed_at} is not null`
+              )
+            )
+            .orderBy(sql`${quizItems.pushed_at} desc`)
+            .limit(1);
+
+          if (newQuiz && newQuiz.id !== lastPushedQuizId) {
+            // 发现新题目
+            lastPushedQuizId = newQuiz.id;
+            controller.enqueue(
+              `data: ${JSON.stringify({
+                type: 'new_quiz',
+                quiz: {
+                  ...newQuiz,
+                  ts: newQuiz.ts.toISOString(),
+                  created_at: newQuiz.created_at.toISOString(),
+                  pushed_at: newQuiz.pushed_at?.toISOString(),
+                },
+              })}\n\n`
+            );
+          } else {
+            // 发送心跳
+            controller.enqueue(
+              `data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`
+            );
+          }
+        } catch (error) {
+          console.error('SSE polling error:', error);
+          clearInterval(pollInterval);
+          controller.close();
+        }
+      }, 3000); // 每3秒轮询一次，确保快速响应
 
       // 清理函数
       request.signal.addEventListener('abort', () => {
-        clearInterval(heartbeat);
-        const connections = activeConnections.get(lectureId);
-        if (connections) {
-          connections.delete(controller);
-          if (connections.size === 0) {
-            activeConnections.delete(lectureId);
-          }
-        }
+        clearInterval(pollInterval);
+        // 标记用户离线
+        db.update(lectureParticipants)
+          .set({ is_online: false })
+          .where(
+            and(
+              eq(lectureParticipants.user_id, session.user.id),
+              eq(lectureParticipants.lecture_id, lectureId)
+            )
+          )
+          .catch(console.error);
       });
     },
   });
@@ -93,133 +200,30 @@ export async function GET(
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
       Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no', // 禁用 Nginx 缓冲
     },
   });
 }
 
-// 推送题目给所有连接的参与者
-export async function pushQuizToParticipants(
-  lectureId: string,
-  quizId: string
-) {
-  const connections = activeConnections.get(lectureId);
-  if (!connections || connections.size === 0) {
-    return 0;
-  }
+// 获取活跃参与者数量
+export async function getActiveParticipantCount(
+  lectureId: string
+): Promise<number> {
+  // 获取最近30秒内活跃的参与者
+  const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
 
-  // 获取题目信息
-  const [quiz] = await db
-    .select()
-    .from(quizItems)
-    .where(eq(quizItems.id, quizId))
-    .limit(1);
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(lectureParticipants)
+    .where(
+      and(
+        eq(lectureParticipants.lecture_id, lectureId),
+        eq(lectureParticipants.is_online, true),
+        gt(lectureParticipants.last_active_at, thirtySecondsAgo)
+      )
+    );
 
-  if (!quiz) {
-    return 0;
-  }
-
-  const message = JSON.stringify({
-    type: 'new_quiz',
-    quiz: {
-      ...quiz,
-      ts: quiz.ts.toISOString(),
-      created_at: quiz.created_at.toISOString(),
-    },
-  });
-
-  let pushedCount = 0;
-  const deadConnections: ReadableStreamDefaultController[] = [];
-
-  // 推送给所有连接
-  for (const controller of connections) {
-    try {
-      controller.enqueue(`data: ${message}\n\n`);
-      pushedCount++;
-    } catch {
-      // 记录失效的连接
-      deadConnections.push(controller);
-    }
-  }
-
-  // 清理失效连接
-  for (const controller of deadConnections) {
-    connections.delete(controller);
-  }
-
-  return pushedCount;
-}
-
-// 推送评论给所有连接的参与者
-export async function pushCommentToParticipants(
-  lectureId: string,
-  commentId: string
-) {
-  const connections = activeConnections.get(lectureId);
-  if (!connections || connections.size === 0) {
-    return 0;
-  }
-
-  // 获取评论信息（包含用户信息）
-  const [result] = await db
-    .select({
-      comment: comments,
-      user: {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        image: authUser.image,
-        is_anonymous: authUser.isAnonymous,
-      },
-      lecture: {
-        owner_id: lectures.owner_id,
-      },
-    })
-    .from(comments)
-    .innerJoin(authUser, eq(comments.user_id, authUser.id))
-    .innerJoin(lectures, eq(comments.lecture_id, lectures.id))
-    .where(eq(comments.id, commentId))
-    .limit(1);
-
-  if (!result) {
-    return 0;
-  }
-
-  // 构建评论对象
-  const comment: Comment = {
-    ...result.comment,
-    user: {
-      ...result.user,
-      is_speaker: result.user.id === result.lecture.owner_id,
-    },
-    created_at: result.comment.created_at.toISOString(),
-    updated_at: result.comment.updated_at.toISOString(),
-  };
-
-  const message = JSON.stringify({
-    type: 'new_comment',
-    comment,
-  });
-
-  let pushedCount = 0;
-  const deadConnections: ReadableStreamDefaultController[] = [];
-
-  // 推送给所有连接
-  for (const controller of connections) {
-    try {
-      controller.enqueue(`data: ${message}\n\n`);
-      pushedCount++;
-    } catch {
-      // 记录失效的连接
-      deadConnections.push(controller);
-    }
-  }
-
-  // 清理失效连接
-  for (const controller of deadConnections) {
-    connections.delete(controller);
-  }
-
-  return pushedCount;
+  return result[0]?.count || 0;
 }

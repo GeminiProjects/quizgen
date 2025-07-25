@@ -498,14 +498,16 @@ export async function pushQuizItem(
       .set({ pushed_at: new Date() })
       .where(eq(quizItems.id, quizToPush.id));
 
-    // 通过 SSE 推送题目给参与者
-    const { pushQuizToParticipants } = await import(
+    // 获取当前在线参与者数量
+    const { getActiveParticipantCount } = await import(
       '@/app/api/sse/[lectureId]/route'
     );
-    const pushedCount = await pushQuizToParticipants(lectureId, quizToPush.id);
+    const pushedCount = await getActiveParticipantCount(lectureId);
 
     // 重验证相关页面
     revalidatePaths([`/lectures/${lectureId}`, `/participation/${lectureId}`]);
+
+    // 触发SSE更新（通过重验证路径，让参与者的轮询获取新题目）
 
     return createSuccessResponse({
       success: true,

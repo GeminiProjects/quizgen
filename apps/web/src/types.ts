@@ -28,14 +28,13 @@ export type DateToString<T> = {
 
 // ============= 用户相关 =============
 export interface User extends DateToString<DBUser> {
-  avatar_url?: string | null;
   is_anonymous?: boolean;
   is_speaker?: boolean;
 }
 
 // ============= 组织相关 =============
 export interface Organization extends DateToString<DBOrganization> {
-  owner?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
+  owner?: Pick<User, 'id' | 'email' | 'name' | 'image'>;
   _count?: {
     lectures: number;
   };
@@ -43,7 +42,7 @@ export interface Organization extends DateToString<DBOrganization> {
 
 // ============= 演讲相关 =============
 export interface Lecture extends DateToString<DBLecture> {
-  speaker?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
+  speaker?: Pick<User, 'id' | 'email' | 'name' | 'image'>;
   organization?: Pick<Organization, 'id' | 'name' | 'owner_id'>;
   _count?: {
     quiz_items: number;
@@ -144,7 +143,7 @@ export interface QuizItem extends DateToString<DBQuizItem> {
 }
 
 export interface Attempt extends DateToString<DBAttempt> {
-  user?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
+  user?: Pick<User, 'id' | 'email' | 'name' | 'image'>;
   quiz?: QuizItem;
 }
 
@@ -155,7 +154,7 @@ export type ParticipationHistory = {
 
 // ============= 参与者相关 =============
 export interface LectureParticipant extends DateToString<DBLectureParticipant> {
-  participant?: Pick<User, 'id' | 'email' | 'name' | 'avatar_url'>;
+  participant?: Pick<User, 'id' | 'email' | 'name' | 'image'>;
   lecture?: Pick<Lecture, 'id' | 'title'>;
 }
 
@@ -213,7 +212,7 @@ export interface Transcript extends DateToString<DBTranscript> {}
 export interface Comment extends DateToString<DBComment> {
   user?: Pick<
     User,
-    'id' | 'email' | 'name' | 'avatar_url' | 'is_anonymous' | 'is_speaker'
+    'id' | 'email' | 'name' | 'image' | 'is_anonymous' | 'is_speaker'
   >;
   lecture?: Pick<Lecture, 'id' | 'title'>;
 }

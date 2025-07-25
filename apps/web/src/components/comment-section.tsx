@@ -87,55 +87,54 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
     loadComments();
   }, [lectureId]);
 
-  // 建立 SSE 连接，接收实时评论
+  // 定期轮询新评论
   useEffect(() => {
-    const eventSource = new EventSource(`/api/sse/${lectureId}`);
+    let lastCommentId = comments.at(-1)?.id || '';
 
-    eventSource.onmessage = (event) => {
+    const pollInterval = setInterval(async () => {
       try {
-        const data = JSON.parse(event.data);
+        const response = await getComments({
+          lecture_id: lectureId,
+          limit: 20,
+          offset: 0,
+        });
 
-        if (data.type === 'new_comment') {
-          // 添加新评论到列表
-          setComments((prev) => [...prev, data.comment]);
-          setTotalComments((prev) => prev + 1);
+        if (response.success && response.data) {
+          const newComments = response.data.data;
 
-          // 滚动到底部
-          if (scrollAreaRef.current) {
-            const scrollViewport = scrollAreaRef.current.querySelector(
-              '[data-radix-scroll-area-viewport]'
-            );
-            if (scrollViewport) {
-              setTimeout(() => {
-                scrollViewport.scrollTop = scrollViewport.scrollHeight;
-              }, 100);
+          // 检查是否有新评论
+          const lastComment = newComments.at(-1);
+          if (
+            newComments.length > 0 &&
+            lastComment &&
+            lastComment.id !== lastCommentId
+          ) {
+            setComments(newComments);
+            setTotalComments(response.data.total);
+            lastCommentId = lastComment.id;
+
+            // 滚动到底部
+            if (scrollAreaRef.current) {
+              const scrollViewport = scrollAreaRef.current.querySelector(
+                '[data-radix-scroll-area-viewport]'
+              );
+              if (scrollViewport) {
+                setTimeout(() => {
+                  scrollViewport.scrollTop = scrollViewport.scrollHeight;
+                }, 100);
+              }
             }
           }
         }
       } catch (error) {
-        console.error('处理SSE消息失败:', error);
+        console.error('轮询评论失败:', error);
       }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error('SSE连接错误:', error);
-      // 尝试重连（可能是网络中断）
-      if (eventSource.readyState === EventSource.CONNECTING) {
-        console.log('SSE正在重连...');
-      } else if (eventSource.readyState === EventSource.CLOSED) {
-        console.error('SSE连接已关闭');
-        // 可以在这里实现重连逻辑
-      }
-    };
-
-    eventSource.onopen = () => {
-      console.log('SSE连接已建立');
-    };
+    }, 2000); // 每2秒轮询一次
 
     return () => {
-      eventSource.close();
+      clearInterval(pollInterval);
     };
-  }, [lectureId]);
+  }, [lectureId, comments]);
 
   // 滚动到底部
   useEffect(() => {
@@ -157,9 +156,8 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
       const response = await createComment(data);
 
       if (response.success && response.data) {
-        // 更新评论列表
-        setComments((prev) => [...prev, response.data as Comment]);
-        setTotalComments((prev) => prev + 1);
+        // 不再手动添加评论到列表，让 SSE 统一处理
+        // 这样可以确保所有用户（包括发送者）看到的评论顺序一致
 
         // 清空表单
         form.reset({
@@ -238,7 +236,7 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
                       <>
                         <AvatarImage
                           alt={comment.user?.name || '用户'}
-                          src={comment.user?.avatar_url || undefined}
+                          src={comment.user?.image || undefined}
                         />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {comment.user?.is_speaker ? (

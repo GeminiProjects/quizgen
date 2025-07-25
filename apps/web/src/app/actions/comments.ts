@@ -12,7 +12,6 @@ import {
 } from '@repo/db';
 import { revalidatePath } from 'next/cache';
 import type { z } from 'zod';
-import { pushCommentToParticipants } from '@/app/api/sse/[lectureId]/route';
 
 import { requireAuth } from '@/lib/auth';
 import {
@@ -106,15 +105,7 @@ export async function createComment(
     // 7. 重新验证相关路径
     revalidatePath(`/lectures/${validated.lecture_id}`);
 
-    // 8. 推送评论给所有在线参与者
-    try {
-      await pushCommentToParticipants(validated.lecture_id, newComment.id);
-    } catch (error) {
-      console.error('推送评论失败:', error);
-      // 不阻止评论创建
-    }
-
-    // 9. 返回结果
+    // 8. 返回结果
     return {
       success: true,
       data: serializedComment,
