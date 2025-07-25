@@ -26,7 +26,7 @@
     "@biomejs/biome": "2.1.2",
     "turbo": "^2.5.5",
     "typescript": "5.8.3",
-    "ultracite": "5.0.47"
+    "ultracite": "5.0.48"
   },
   "packageManager": "bun@1.2.18",
   "workspaces": [
