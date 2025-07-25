@@ -2,433 +2,445 @@
 
 ## 目录
 
-1. [概述](#概述)
-2. [认证](#认证)
-3. [Server Actions API](#server-actions-api)
-   - [演讲管理](#演讲管理)
-   - [组织管理](#组织管理)
-   - [测验管理](#测验管理)
-   - [材料管理](#材料管理)
-   - [参与互动](#参与互动)
-4. [数据类型](#数据类型)
-5. [错误处理](#错误处理)
-6. [最佳实践](#最佳实践)
+- [概述](#概述)
+- [认证](#认证)
+- [Server Actions](#server-actions)
+  - [演讲管理](#演讲管理)
+  - [组织管理](#组织管理)
+  - [测验管理](#测验管理)
+  - [材料管理](#材料管理)
+  - [参与互动](#参与互动)
+  - [评论系统](#评论系统)
+  - [数据分析](#数据分析)
+- [响应格式](#响应格式)
+- [错误处理](#错误处理)
+- [最佳实践](#最佳实践)
 
 ## 概述
 
-QuizGen 采用 Next.js 15 的 Server Actions 作为主要的数据交互方式。Server Actions 提供了类型安全、自动序列化和内置的错误处理机制。
+QuizGen 使用 Next.js 15 Server Actions 作为主要的数据交互方式，提供类型安全、自动序列化的 API 接口。
 
-### 为什么选择 Server Actions
+### 核心优势
 
-- **类型安全**：端到端的 TypeScript 支持
-- **简化开发**：无需手动处理 API 路由和请求
-- **更好的性能**：自动优化和批处理
-- **内置安全**：CSRF 保护和自动验证
+- **类型安全** - 端到端 TypeScript 类型推导
+- **零配置** - 无需手动定义 API 路由
+- **内置安全** - CSRF 保护和自动验证
+- **优化性能** - 自动批处理和缓存
 
-### 基本使用方式
+### 基本用法
 
 ```typescript
-// 客户端组件中调用
+// 客户端调用
 import { createLecture } from '@/app/actions/lectures';
 
-const handleSubmit = async (data: CreateLectureData) => {
-  const result = await createLecture(data);
-  
-  if (result.success) {
-    console.log('演讲创建成功:', result.data);
-  } else {
-    console.error('创建失败:', result.error);
-  }
-};
+const result = await createLecture({
+  title: "演讲标题",
+  description: "演讲描述"
+});
+
+if (result.success) {
+  console.log('创建成功:', result.data);
+} else {
+  console.error('创建失败:', result.error);
+}
 ```
 
 ## 认证
 
-所有需要身份验证的 Server Actions 都会在内部调用 `requireAuth()` 函数。如果用户未登录，将返回错误。
+所有需要身份验证的 Server Actions 内部调用 `requireAuth()` 函数验证用户身份。
 
 ```typescript
-// 认证错误响应示例
+// 认证失败响应
 {
   success: false,
   error: "请先登录"
 }
 ```
 
-## Server Actions API
+## Server Actions
 
 ### 演讲管理
 
 #### getLectures
-
-获取用户的演讲列表，支持分页、筛选和搜索。
+获取演讲列表，支持分页、筛选和搜索。
 
 ```typescript
-async function getLectures(params?: {
-  page?: number;      // 页码，默认 1
-  limit?: number;     // 每页数量，默认 50
-  org_id?: string;    // 组织 ID（可选）
-  status?: LectureStatus; // 演讲状态（可选）
-  search?: string;    // 搜索关键词（可选）
+getLectures(params?: {
+  page?: number;       // 页码，默认 1
+  limit?: number;      // 每页数量，默认 50
+  org_id?: string;     // 组织 ID 筛选
+  status?: LectureStatus; // 状态筛选
+  search?: string;     // 搜索关键词
 }): Promise<ActionResult<PaginatedResult<Lecture>>>
 ```
 
-**示例响应**：
+#### getLecture
+获取单个演讲详情。
+
 ```typescript
-{
-  success: true,
-  data: {
-    data: [
-      {
-        id: "uuid",
-        title: "React 性能优化",
-        description: "深入讲解 React 性能优化技巧",
-        owner_id: "user_id",
-        org_id: "org_id",
-        join_code: "ABC123",
-        status: "not_started",
-        starts_at: "2024-01-20T10:00:00Z",
-        ends_at: null,
-        created_at: "2024-01-15T08:00:00Z",
-        updated_at: "2024-01-15T08:00:00Z",
-        _count: {
-          quiz_items: 5,
-          participants: 30,
-          materials: 2,
-          transcripts: 1
-        }
-      }
-    ],
-    total: 10,
-    page: 1,
-    limit: 50,
-    totalPages: 1,
-    hasMore: false
-  }
-}
+getLecture(id: string): Promise<ActionResult<Lecture>>
 ```
 
 #### createLecture
-
-创建新的演讲。
+创建新演讲。
 
 ```typescript
-async function createLecture(input: {
-  title: string;              // 演讲标题
-  description?: string;       // 演讲描述（可选）
-  organization_id?: string;   // 组织 ID（可选）
+createLecture(input: {
+  title: string;
+  description?: string;
+  organization_id?: string;
 }): Promise<ActionResult<Lecture>>
 ```
 
-**示例请求**：
-```typescript
-const result = await createLecture({
-  title: "TypeScript 高级特性",
-  description: "深入探讨 TypeScript 的高级类型系统",
-  organization_id: "org_123"
-});
-```
-
 #### updateLecture
-
 更新演讲信息。
 
 ```typescript
-async function updateLecture(
-  id: string,
-  input: {
-    title?: string;
-    description?: string;
-  }
-): Promise<ActionResult<Lecture>>
+updateLecture(id: string, input: {
+  title?: string;
+  description?: string;
+}): Promise<ActionResult<Lecture>>
 ```
 
 #### updateLectureStatus
-
-更新演讲状态（开始、暂停、结束等）。
+更新演讲状态。
 
 ```typescript
-async function updateLectureStatus(
+updateLectureStatus(
   id: string,
-  status: LectureStatus
+  status: 'not_started' | 'in_progress' | 'paused' | 'ended'
 ): Promise<ActionResult<Lecture>>
 ```
 
-**状态值**：
-- `not_started`: 未开始
-- `in_progress`: 进行中
-- `paused`: 已暂停
-- `ended`: 已结束
-
 #### deleteLecture
-
-删除演讲（软删除）。
+删除演讲。
 
 ```typescript
-async function deleteLecture(id: string): Promise<ActionResult<boolean>>
+deleteLecture(id: string): Promise<ActionResult<boolean>>
+```
+
+#### regenerateLectureCode
+重新生成演讲加入码。
+
+```typescript
+regenerateLectureCode(id: string): Promise<ActionResult<string>>
 ```
 
 ### 组织管理
 
 #### getOrganizations
-
-获取用户创建的组织列表。
+获取组织列表。
 
 ```typescript
-async function getOrganizations(params?: {
+getOrganizations(params?: {
   page?: number;
   limit?: number;
   search?: string;
 }): Promise<ActionResult<PaginatedResult<Organization>>>
 ```
 
-#### createOrganization
-
-创建新组织。
+#### getOrganization
+获取单个组织详情。
 
 ```typescript
-async function createOrganization(input: {
-  name: string;         // 组织名称
-  description?: string; // 组织描述
-  password?: string;    // 加入密码
+getOrganization(id: string): Promise<ActionResult<Organization>>
+```
+
+#### createOrganization
+创建组织。
+
+```typescript
+createOrganization(input: {
+  name: string;
+  description?: string;
+  access_code?: string;
 }): Promise<ActionResult<Organization>>
 ```
 
 #### updateOrganization
-
 更新组织信息。
 
 ```typescript
-async function updateOrganization(
-  id: string,
-  input: {
-    name?: string;
-    description?: string;
-    password?: string;
-  }
-): Promise<ActionResult<Organization>>
+updateOrganization(id: string, input: {
+  name?: string;
+  description?: string;
+  access_code?: string;
+}): Promise<ActionResult<Organization>>
 ```
 
 #### deleteOrganization
-
 删除组织。
 
 ```typescript
-async function deleteOrganization(id: string): Promise<ActionResult<boolean>>
+deleteOrganization(id: string): Promise<ActionResult<boolean>>
+```
+
+#### verifyOrganizationAccessCode
+验证组织访问密码。
+
+```typescript
+verifyOrganizationAccessCode(
+  orgId: string,
+  accessCode: string
+): Promise<ActionResult<boolean>>
 ```
 
 ### 测验管理
 
 #### getQuizItems
-
-获取演讲的所有测验题目。
+获取演讲的测验题目。
 
 ```typescript
-async function getQuizItems(lectureId: string): Promise<
-  ActionResult<Array<QuizItem & {
+getQuizItems(lectureId: string): Promise<ActionResult<
+  Array<QuizItem & {
     _count: {
       attempts: number;
       correctAttempts: number;
     };
-  }>>
->
+  }>
+>>
 ```
 
 #### generateQuiz
-
-基于演讲内容生成测验题目。
+基于内容生成测验题目。
 
 ```typescript
-async function generateQuiz(input: {
-  lecture_id: string;     // 演讲 ID
-  context: string;        // 上下文内容
-  count?: number;         // 生成题目数量，默认 1
-  difficulty?: 'easy' | 'medium' | 'hard'; // 难度
+generateQuiz(input: {
+  lecture_id: string;
+  context: string;
+  count?: number;  // 默认 1
 }): Promise<ActionResult<QuizItem[]>>
 ```
 
-**示例请求**：
+#### pushQuizItem
+推送题目给参与者。
+
 ```typescript
-const result = await generateQuiz({
-  lecture_id: "lecture_123",
-  context: "React Hooks 允许你在不编写 class 的情况下使用 state...",
-  count: 3,
-  difficulty: 'medium'
-});
+pushQuizItem(quizId: string): Promise<ActionResult<QuizItem>>
 ```
 
 #### deleteQuizItem
-
 删除测验题目。
 
 ```typescript
-async function deleteQuizItem(id: string): Promise<ActionResult<boolean>>
+deleteQuizItem(id: string): Promise<ActionResult<boolean>>
 ```
 
 ### 材料管理
 
 #### getMaterials
-
-获取演讲的材料列表。
+获取演讲材料列表。
 
 ```typescript
-async function getMaterials(lectureId: string): Promise<
-  ActionResult<Material[]>
->
+getMaterials(lectureId: string): Promise<ActionResult<Material[]>>
 ```
 
 #### createMaterial
-
-创建演讲材料记录。
+创建材料记录。
 
 ```typescript
-async function createMaterial(input: {
-  lecture_id: string;    // 演讲 ID
-  name: string;          // 文件名
-  type: string;          // MIME 类型
-  url: string;           // 文件 URL 或内容
-  size?: number;         // 文件大小（可选）
+createMaterial(input: {
+  lecture_id: string;
+  file_name: string;
+  file_type: string;
+  text_content?: string;
 }): Promise<ActionResult<Material>>
 ```
 
-**注意**：此 action 创建材料记录，实际的文件上传由单独的 API 路由处理。
+#### updateMaterialStatus
+更新材料处理状态。
+
+```typescript
+updateMaterialStatus(
+  id: string,
+  status: 'processing' | 'completed' | 'timeout',
+  error?: string
+): Promise<ActionResult<Material>>
+```
 
 #### deleteMaterial
-
 删除材料。
 
 ```typescript
-async function deleteMaterial(id: string): Promise<ActionResult<boolean>>
+deleteMaterial(id: string): Promise<ActionResult<boolean>>
 ```
 
 ### 参与互动
 
 #### joinLectureByCode
-
-使用演讲码加入演讲。
+使用加入码参与演讲。
 
 ```typescript
-async function joinLectureByCode(
+joinLectureByCode(
   code: string,
-  nickname?: string  // 昵称（可选，匿名用户必填）
+  nickname?: string
 ): Promise<ActionResult<{
-  participant: Participant;
-  lecture: DateToString<Lecture>;
+  lecture: Lecture;
+  participant: LectureParticipant;
 }>>
 ```
 
 #### getParticipatedLectures
-
-获取用户参与的演讲列表。
+获取参与的演讲列表。
 
 ```typescript
-async function getParticipatedLectures(): Promise<
-  ActionResult<ParticipatedLectureData[]>
->
+getParticipatedLectures(params?: {
+  status?: 'active' | 'completed';
+  page?: number;
+  limit?: number;
+}): Promise<ActionResult<ParticipatedLecture[]>>
+```
 
-interface ParticipatedLectureData {
-  participant: Participant;
-  lecture: DateToString<Lecture>;
-  stats: {
-    totalQuizzes: number;
-    answeredQuizzes: number;
-    correctAnswers: number;
-  };
-}
+#### getLatestQuiz
+获取最新推送的题目。
+
+```typescript
+getLatestQuiz(
+  lectureId: string,
+  lastQuizId?: string
+): Promise<ActionResult<QuizItem | null>>
 ```
 
 #### submitAnswer
-
-提交测验答案。
+提交答案。
 
 ```typescript
-async function submitAnswer(input: {
-  quizId: string;       // 题目 ID
-  selected: number;     // 选择的答案（0-3）
-  latencyMs?: number;   // 答题耗时（毫秒）
+submitAnswer(input: {
+  quiz_id: string;
+  selected: number;
+  latency_ms?: number;
 }): Promise<ActionResult<{
-  isCorrect: boolean;
-  correctAnswer: number;
+  is_correct: boolean;
+  correct_answer: number;
   explanation?: string;
 }>>
 ```
 
-**示例请求**：
-```typescript
-const startTime = Date.now();
-// 用户选择答案
-const result = await submitAnswer({
-  quizId: "quiz_123",
-  selected: 2,
-  latencyMs: Date.now() - startTime
-});
-
-if (result.success) {
-  console.log('答案是否正确:', result.data.isCorrect);
-  console.log('正确答案是:', result.data.correctAnswer);
-  if (result.data.explanation) {
-    console.log('解释:', result.data.explanation);
-  }
-}
-```
-
-#### getLatestQuiz
-
-获取演讲的最新题目（用于轮询）。
+#### getMyAttempts
+获取个人答题记录。
 
 ```typescript
-async function getLatestQuiz(
-  lectureId: string,
-  lastQuizId?: string  // 上一次获取的题目 ID
-): Promise<ActionResult<QuizItem | null>>
-```
-
-#### getAnswerHistory
-
-获取答题历史记录。
-
-```typescript
-async function getAnswerHistory(
+getMyAttempts(
   lectureId: string
-): Promise<ActionResult<AttemptRecord[]>>
+): Promise<ActionResult<Attempt[]>>
+```
 
-interface AttemptRecord {
-  quiz_id: string;
-  user_id: string;
-  selected: number;
-  is_correct: boolean;
-  latency_ms: number;
-  created_at: string;
+### 评论系统
+
+#### getComments
+获取演讲评论列表。
+
+```typescript
+getComments(params: {
+  lecture_id: string;
+  visibility?: 'all' | 'public' | 'speaker_only';
+  limit?: number;
+  offset?: number;
+}): Promise<ActionResponse<{
+  comments: Comment[];
+  total: number;
+  has_more: boolean;
+}>>
+```
+
+#### createComment
+发表评论。
+
+```typescript
+createComment(data: {
+  lecture_id: string;
+  content: string;
+  is_anonymous?: boolean;
+  visibility?: 'public' | 'speaker_only';
+}): Promise<ActionResponse<Comment>>
+```
+
+#### updateComment
+更新评论。
+
+```typescript
+updateComment(data: {
+  comment_id: string;
+  content?: string;
+  visibility?: 'public' | 'speaker_only';
+}): Promise<ActionResponse<Comment>>
+```
+
+#### deleteComment
+删除评论。
+
+```typescript
+deleteComment(
+  comment_id: string
+): Promise<ActionResponse<boolean>>
+```
+
+### 数据分析
+
+#### getQuizAnalytics
+获取测验题目分析数据。
+
+```typescript
+getQuizAnalytics(
+  quizId: string
+): Promise<ActionResult<{
   quiz: QuizItem;
+  stats: {
+    totalAttempts: number;
+    correctCount: number;
+    correctRate: number;
+    averageLatency: number;
+    optionDistribution: Array<{
+      option: number;
+      count: number;
+      percentage: number;
+    }>;
+  };
+}>>
+```
+
+#### getLectureAnalytics
+获取演讲统计数据。
+
+```typescript
+getLectureAnalytics(
+  lectureId: string
+): Promise<ActionResult<{
+  participantCount: number;
+  quizCount: number;
+  averageCorrectRate: number;
+  engagementRate: number;
+  timeDistribution: Array<{
+    time: string;
+    count: number;
+  }>;
+}>>
+```
+
+## 响应格式
+
+### 统一响应类型
+
+```typescript
+// 成功响应
+type SuccessResult<T> = {
+  success: true;
+  data: T;
 }
+
+// 错误响应
+type ErrorResult = {
+  success: false;
+  error: string;
+}
+
+// 联合类型
+type ActionResult<T> = SuccessResult<T> | ErrorResult;
 ```
 
-## 数据类型
-
-### 基础类型
+### 分页响应
 
 ```typescript
-// 演讲状态
-type LectureStatus = 'not_started' | 'in_progress' | 'paused' | 'ended';
-
-// 参与者角色
-type ParticipantRole = 'speaker' | 'audience' | 'assistant';
-
-// 参与者状态
-type ParticipantStatus = 'joined' | 'active' | 'left' | 'kicked';
-
-// 材料状态
-type MaterialStatus = 'processing' | 'completed' | 'timeout';
-```
-
-### 响应类型
-
-```typescript
-// 统一的 Action 响应类型
-type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-// 分页响应
 interface PaginatedResult<T> {
   data: T[];
   total: number;
@@ -439,225 +451,158 @@ interface PaginatedResult<T> {
 }
 ```
 
-### 实体类型
+### 示例响应
 
 ```typescript
-// 用户
-interface User {
-  id: string;
-  email: string;
-  name: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
+// 成功响应示例
+{
+  success: true,
+  data: {
+    id: "550e8400-e29b-41d4-a716-446655440000",
+    title: "React 性能优化",
+    status: "in_progress",
+    join_code: "ABC123"
+  }
 }
 
-// 组织
-interface Organization {
-  id: string;
-  name: string;
-  description: string | null;
-  password: string;
-  owner_id: string;
-  created_at: string;
-  updated_at: string;
-  owner?: User;
-  _count?: {
-    lectures: number;
-  };
-}
-
-// 演讲
-interface Lecture {
-  id: string;
-  title: string;
-  description: string | null;
-  owner_id: string;
-  org_id: string | null;
-  join_code: string;
-  status: LectureStatus;
-  starts_at: string;
-  ends_at: string | null;
-  created_at: string;
-  updated_at: string;
-  speaker?: User;
-  organization?: Organization;
-  _count?: {
-    quiz_items: number;
-    participants: number;
-    materials: number;
-    transcripts: number;
-  };
-}
-
-// 测验题目
-interface QuizItem {
-  id: string;
-  lecture_id: string;
-  question: string;
-  options: string[];
-  answer: number;
-  explanation: string | null;  // 题目解释
-  ts: string;
-  created_at: string;
-  pushed_at: string | null;    // 推送时间
-  _count?: {
-    attempts: number;
-  };
-}
-
-// 答题记录
-interface Attempt {
-  quiz_id: string;
-  user_id: string;
-  selected: number;
-  is_correct: boolean;
-  latency_ms: number;
-  created_at: string;
+// 错误响应示例
+{
+  success: false,
+  error: "无权访问此资源"
 }
 ```
 
 ## 错误处理
 
-### 错误响应格式
-
-所有错误都遵循统一的格式：
-
-```typescript
-{
-  success: false,
-  error: "错误描述信息"
-}
-```
-
 ### 常见错误
 
-| 错误信息         | 原因               | 解决方案           |
-| ---------------- | ------------------ | ------------------ |
-| "请先登录"       | 用户未认证         | 引导用户登录       |
-| "无权访问此资源" | 权限不足           | 检查用户角色和权限 |
-| "资源不存在"     | ID 无效或已删除    | 检查资源 ID        |
-| "参数验证失败"   | 输入数据不符合要求 | 检查输入格式       |
-| "操作失败"       | 服务器内部错误     | 重试或联系支持     |
+| 错误码            | 错误信息       | 说明               |
+| ----------------- | -------------- | ------------------ |
+| AUTH_REQUIRED     | 请先登录       | 需要用户认证       |
+| PERMISSION_DENIED | 无权访问此资源 | 权限不足           |
+| NOT_FOUND         | 资源不存在     | 资源已删除或ID无效 |
+| VALIDATION_ERROR  | 参数验证失败   | 输入数据格式错误   |
+| DUPLICATE_ENTRY   | 资源已存在     | 唯一性约束冲突     |
+| OPERATION_FAILED  | 操作失败       | 服务器内部错误     |
 
 ### 错误处理示例
 
 ```typescript
 // 组件中的错误处理
-const handleCreateLecture = async (data: CreateLectureData) => {
+const handleSubmit = async (data: FormData) => {
   try {
     const result = await createLecture(data);
     
     if (result.success) {
-      toast.success('演讲创建成功');
+      toast.success('创建成功');
       router.push(`/lectures/${result.data.id}`);
     } else {
-      // 处理业务错误
-      toast.error(result.error);
+      // 业务错误
+      switch (result.error) {
+        case '请先登录':
+          router.push('/login');
+          break;
+        case '参数验证失败':
+          toast.error('请检查输入内容');
+          break;
+        default:
+          toast.error(result.error);
+      }
     }
   } catch (error) {
-    // 处理网络或其他异常
-    console.error('创建演讲失败:', error);
-    toast.error('网络错误，请稍后重试');
+    // 网络或系统错误
+    console.error('系统错误:', error);
+    toast.error('网络连接失败，请稍后重试');
   }
 };
 ```
 
 ## 最佳实践
 
-### 1. 使用 TypeScript
-
-充分利用 TypeScript 的类型系统：
+### 1. 类型导入
 
 ```typescript
-import type { Lecture } from '@/types';
+// 使用类型导入优化打包体积
+import type { Lecture, ActionResult } from '@/types';
 import { createLecture } from '@/app/actions/lectures';
-
-// 类型会自动推导
-const result = await createLecture({
-  title: "演讲标题",
-  // TypeScript 会提示可用的字段
-});
 ```
 
 ### 2. 错误边界
 
-在组件树中使用错误边界捕获异常：
-
 ```typescript
+// 使用错误边界捕获组件错误
 <ErrorBoundary fallback={<ErrorFallback />}>
   <LectureList />
 </ErrorBoundary>
 ```
 
-### 3. 加载状态
-
-使用 React 的 Suspense 处理加载状态：
+### 3. 乐观更新
 
 ```typescript
-<Suspense fallback={<LoadingSkeleton />}>
-  <LectureDetails lectureId={id} />
-</Suspense>
-```
+// 提升用户体验的乐观更新
+const [optimisticStatus, setOptimisticStatus] = useState(lecture.status);
 
-### 4. 乐观更新
-
-对于用户体验要求高的操作，使用乐观更新：
-
-```typescript
-const [optimisticLectures, setOptimisticLectures] = useState(lectures);
-
-const handleStatusUpdate = async (id: string, status: LectureStatus) => {
+const handleStatusChange = async (newStatus: LectureStatus) => {
   // 乐观更新 UI
-  setOptimisticLectures(prev => 
-    prev.map(l => l.id === id ? { ...l, status } : l)
-  );
+  setOptimisticStatus(newStatus);
   
-  // 执行实际更新
-  const result = await updateLectureStatus(id, status);
+  const result = await updateLectureStatus(lecture.id, newStatus);
   
   if (!result.success) {
-    // 回滚乐观更新
-    setOptimisticLectures(lectures);
+    // 回滚
+    setOptimisticStatus(lecture.status);
     toast.error(result.error);
   }
 };
 ```
 
-### 5. 缓存策略
-
-使用 Next.js 的缓存机制优化性能：
+### 4. 防抖处理
 
 ```typescript
-// Server Actions 会自动处理缓存
-// 使用 revalidatePath 或 revalidateTag 更新缓存
-import { revalidatePath } from 'next/cache';
+// 搜索等场景使用防抖
+import { useDebouncedCallback } from 'use-debounce';
 
-export async function createLecture(input: CreateLectureInput) {
-  // ... 创建演讲
+const debouncedSearch = useDebouncedCallback(
+  async (keyword: string) => {
+    const result = await getLectures({ search: keyword });
+    if (result.success) {
+      setLectures(result.data.data);
+    }
+  },
+  500
+);
+```
+
+### 5. 并发控制
+
+```typescript
+// 批量操作时控制并发
+const batchDelete = async (ids: string[]) => {
+  const chunks = chunk(ids, 10); // 每批10个
   
-  // 更新相关页面的缓存
+  for (const batch of chunks) {
+    await Promise.all(
+      batch.map(id => deleteQuizItem(id))
+    );
+  }
+};
+```
+
+### 6. 缓存策略
+
+```typescript
+// Server Action 中的缓存更新
+export async function createLecture(input: CreateLectureInput) {
+  const result = await db.insert(lectures).values(input);
+  
+  // 更新相关路径缓存
   revalidatePath('/lectures');
   revalidatePath('/dashboard');
   
-  return result;
+  return { success: true, data: result };
 }
 ```
 
-### 6. 批量操作
+---
 
-对于批量操作，使用事务保证数据一致性：
-
-```typescript
-export async function batchDeleteQuizItems(ids: string[]) {
-  return await db.transaction(async (tx) => {
-    for (const id of ids) {
-      await tx.delete(quizItems).where(eq(quizItems.id, id));
-    }
-  });
-}
-```
-
-## 总结
-
-QuizGen 的 API 设计遵循了 Next.js 15 的最佳实践，通过 Server Actions 提供了类型安全、高性能的数据交互方式。统一的错误处理和响应格式使得客户端开发更加简单和一致。
+> QuizGen API 通过 Server Actions 提供了简洁、类型安全的数据交互方式，让开发者专注于业务逻辑而非 API 细节。

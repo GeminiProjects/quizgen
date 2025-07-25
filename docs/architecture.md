@@ -1,403 +1,313 @@
-# QuizGen 项目架构文档
+# QuizGen 项目架构
 
 ## 目录
 
-1. [系统概述](#系统概述)
-2. [技术架构](#技术架构)
-3. [应用架构](#应用架构)
-4. [数据架构](#数据架构)
-5. [安全架构](#安全架构)
-6. [部署架构](#部署架构)
-7. [扩展性设计](#扩展性设计)
+- [系统概述](#系统概述)
+- [技术架构](#技术架构)
+- [应用架构](#应用架构)
+- [数据架构](#数据架构)
+- [安全架构](#安全架构)
+- [部署架构](#部署架构)
+- [性能优化](#性能优化)
 
 ## 系统概述
 
-QuizGen 是一个演讲即时智能评测系统，旨在帮助演讲者实时了解听众的理解程度，提高演讲互动性和效果。系统通过 AI 技术自动生成测验题目，实现演讲过程中的即时反馈。
+QuizGen 是一个演讲即时智能评测系统，通过 AI 自动生成测验题目，帮助演讲者实时了解听众理解程度。
 
 ### 核心价值
 
-- **实时反馈**：演讲者可即时了解听众理解程度
-- **智能出题**：基于演讲内容自动生成高质量测验题
-- **低门槛参与**：听众通过简单扫码即可参与互动
-- **数据驱动**：通过统计分析优化演讲效果
+- **实时反馈** - 即时了解听众理解程度
+- **智能出题** - AI 自动生成高质量测验
+- **低门槛参与** - 扫码即可匿名参与
+- **数据驱动** - 统计分析优化演讲效果
 
 ### 用户角色
 
-1. **演讲者 (Speaker)**：创建演讲、上传材料、查看反馈
-2. **听众 (Audience)**：加入演讲、答题互动、查看成绩
-3. **组织者 (Organizer)**：管理系列演讲、查看整体数据
+- **演讲者** - 创建演讲、生成测验、查看数据
+- **听众** - 参与答题、即时反馈、查看成绩
+- **组织者** - 管理演讲系列、查看整体数据
 
 ## 技术架构
 
-### 技术栈选型
+### 技术栈
+
+| 层级       | 技术选型      | 版本    | 选型理由                             |
+| ---------- | ------------- | ------- | ------------------------------------ |
+| **运行时** | Bun           | 1.2.19  | 极速包管理、原生 TypeScript 支持     |
+| **框架**   | Next.js       | 15.4.4  | Server Actions、App Router、性能优化 |
+| **UI**     | React         | 19.1.0  | 最新特性、并发渲染、自动批处理       |
+| **样式**   | TailwindCSS   | 4.1.11  | CSS 引擎重写、极速编译、组件友好     |
+| **组件**   | shadcn/ui     | -       | 可定制、无依赖、类型安全             |
+| **数据库** | PostgreSQL    | 17      | 成熟稳定、JSON 支持、性能优异        |
+| **ORM**    | Drizzle       | 0.44    | 类型安全、轻量级、SQL-like API       |
+| **认证**   | Better Auth   | 1.3.2   | 现代化、灵活配置、Next.js 集成       |
+| **AI**     | Google Gemini | 2.5 Pro | 多模态理解、高质量生成、成本效益     |
+
+### 架构图
 
 ```mermaid
 graph TB
-    subgraph "前端技术"
-        A[React 19] --> B[Next.js 15.4.2-canary]
-        B --> C[App Router]
-        D[TailwindCSS 4.1] --> E[shadcn/ui]
+    subgraph 客户端
+        A[浏览器] --> B[React 19]
+        B --> C[TailwindCSS 4]
     end
     
-    subgraph "后端技术"
-        F[Node.js Runtime] --> G[Bun 1.2.18]
-        H[Server Actions] --> I[API Routes]
+    subgraph 服务端
+        D[Next.js 15] --> E[Server Actions]
+        E --> F[业务逻辑]
+        F --> G[数据验证 Zod]
     end
     
-    subgraph "数据层"
-        J[PostgreSQL 17] --> K[Drizzle ORM]
-        K --> L[Type-safe Queries]
+    subgraph 数据层
+        H[Drizzle ORM] --> I[PostgreSQL 17]
+        J[Better Auth] --> I
     end
     
-    subgraph "认证与安全"
-        M[Better Auth] --> N[GitHub OAuth]
-        M --> O[Anonymous Auth]
+    subgraph 外部服务
+        K[Google Gemini 2.5]
+        L[GitHub OAuth]
     end
     
-    subgraph "AI 服务"
-        P[Google Gemini 2.5] --> Q[Quiz Generation]
-        P --> R[Content Analysis]
-    end
+    B -.->|RSC| D
+    E --> H
+    E --> J
+    F --> K
+    J --> L
 ```
-
-### 技术选型理由
-
-| 技术              | 选择理由                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| **Next.js 15.4.2**| - App Router 提供更好的性能和 DX<br>- Server Actions 简化数据交互<br>- 内置优化和 SEO 支持 |
-| **Bun**           | - 极快的包安装和脚本执行速度<br>- 原生 TypeScript 支持<br>- 统一的工具链                   |
-| **Drizzle ORM**   | - 完全类型安全的数据库操作<br>- 轻量级，性能优异<br>- 优秀的开发体验                       |
-| **Better Auth**   | - 现代化的认证解决方案<br>- 支持多种认证方式<br>- 与 Next.js 深度集成                      |
-| **TailwindCSS 4.1**| - 最新的 CSS 引擎，极速编译<br>- 组件化开发友好<br>- 完善的设计系统                       |
-| **Google Gemini 2.5**| - 强大的多模态理解能力<br>- 高质量的内容生成<br>- 成本效益高                            |
 
 ## 应用架构
 
 ### Monorepo 结构
 
-项目采用 Turborepo 管理的 Monorepo 架构，实现代码共享和模块化开发：
-
 ```
 quizgen/
 ├── apps/
-│   └── web/                    # Next.js 主应用
+│   └── web/                    # Next.js 应用
 │       ├── src/
-│       │   ├── app/           # 页面和路由
-│       │   │   ├── (dashboard)/  # 主功能模块
-│       │   │   │   ├── lectures/    # 演讲管理
+│       │   ├── app/           # App Router
+│       │   │   ├── (dashboard)/   # 业务模块
+│       │   │   │   ├── lectures/     # 演讲管理
 │       │   │   │   ├── organizations/ # 组织管理
 │       │   │   │   └── participation/ # 参与互动
-│       │   │   ├── actions/     # Server Actions
-│       │   │   └── api/         # API 路由
-│       │   ├── components/    # React 组件
-│       │   ├── hooks/         # 自定义 Hooks
-│       │   ├── lib/           # 工具函数
-│       │   └── types.ts       # 类型定义
-│       └── public/            # 静态资源
-├── packages/
+│       │   │   ├── actions/       # Server Actions
+│       │   │   └── api/          # API 路由（特殊用途）
+│       │   ├── components/       # React 组件
+│       │   ├── hooks/           # 自定义 Hooks
+│       │   ├── lib/            # 工具函数
+│       │   └── types.ts        # 统一类型定义
+│       └── public/             # 静态资源
+│
+├── packages/                   # 共享包
 │   ├── ai/                    # AI 功能封装
-│   ├── auth/                  # 认证模块
-│   ├── db/                    # 数据库层
-│   └── ui/                    # UI 组件库
+│   ├── auth/                  # Better Auth 配置
+│   ├── db/                    # Drizzle ORM + Schema
+│   ├── ui/                    # shadcn/ui 组件
+│   └── tsconfig/              # TypeScript 配置
+│
 └── docs/                      # 项目文档
 ```
 
-### 分层架构
+### 核心模块
 
-```mermaid
-graph TD
-    subgraph "表现层"
-        A[React Components]
-        B[Pages/Routes]
-    end
-    
-    subgraph "应用层"
-        C[Server Actions]
-        D[API Routes]
-        E[Middleware]
-    end
-    
-    subgraph "领域层"
-        F[Business Logic]
-        G[Validation Rules]
-        H[Type Definitions]
-    end
-    
-    subgraph "基础设施层"
-        I[Database]
-        J[External APIs]
-        K[Cache]
-    end
-    
-    A --> C
-    B --> C
-    B --> D
-    C --> F
-    D --> F
-    F --> I
-    F --> J
+#### 1. Server Actions 体系
+
+```typescript
+// 统一的 Server Action 模式
+'use server';
+
+export async function actionName(input: InputType): Promise<ActionResult<OutputType>> {
+  // 1. 身份验证
+  const { user } = await requireAuth();
+  
+  // 2. 参数验证
+  const validated = schema.parse(input);
+  
+  // 3. 业务逻辑
+  const result = await db.transaction(async (tx) => {
+    // 事务操作
+  });
+  
+  // 4. 路径重验证
+  revalidatePath('/relevant-path');
+  
+  // 5. 返回结果
+  return { success: true, data: result };
+}
 ```
 
-### 核心模块设计
+#### 2. 类型系统
 
-#### 1. 演讲管理模块
+- 所有共享类型定义在 `apps/web/src/types.ts`
+- 使用 `DateToString<T>` 处理 Server Actions 日期序列化
+- 端到端类型安全，禁止使用 `any`
 
-- **功能**：创建演讲、管理状态、生成邀请码
-- **Server Actions**：
-  - `createLecture`: 创建新演讲
-  - `updateLectureStatus`: 更新演讲状态
-  - `getLectures`: 获取演讲列表
-  - `deleteLecture`: 删除演讲
+#### 3. 数据流
 
-#### 2. 测验生成模块
-
-- **功能**：基于材料生成测验题目
-- **流程**：
-  1. 接收演讲材料（文本/音频/视频）
-  2. 提取关键内容
-  3. 调用 Gemini API 生成题目
-  4. 验证题目质量
-  5. 存储到数据库
-
-#### 3. 实时互动模块
-
-- **功能**：推送题目、接收答案、统计结果
-- **技术**：轮询机制实现题目获取（`getLatestQuiz`）
-- **优化**：批量处理答案，减少数据库压力
-
-#### 4. 数据分析模块
-
-- **功能**：生成报表、可视化展示
-- **维度**：
-  - 题目正确率
-  - 参与度分析
-  - 时间分布
-  - 难度评估
+```mermaid
+sequenceDiagram
+    participant C as 客户端组件
+    participant S as Server Action
+    participant V as Zod 验证
+    participant D as 数据库
+    participant R as 重验证
+    
+    C->>S: 调用 Action
+    S->>V: 参数验证
+    V-->>S: 验证通过
+    S->>D: 数据操作
+    D-->>S: 返回结果
+    S->>R: revalidatePath
+    S-->>C: 返回响应
+```
 
 ## 数据架构
 
-### 数据模型
+### 核心实体
 
 ```mermaid
 erDiagram
     User ||--o{ Organization : owns
     User ||--o{ Lecture : creates
-    User ||--o{ LectureParticipant : participates
-    User ||--o{ Attempt : makes
+    User ||--o{ LectureParticipant : joins
+    User ||--o{ Attempt : answers
+    User ||--o{ Comment : posts
     
-    Organization ||--o{ Lecture : contains
+    Organization ||--o{ Lecture : hosts
     
     Lecture ||--o{ LectureParticipant : has
-    Lecture ||--o{ QuizItem : includes
+    Lecture ||--o{ QuizItem : contains
     Lecture ||--o{ Material : uses
-    Lecture ||--o{ Transcript : generates
+    Lecture ||--o{ Transcript : records
+    Lecture ||--o{ Comment : receives
     
-    QuizItem ||--o{ Attempt : receives
-    
-    LectureParticipant {
-        uuid id PK
-        uuid lecture_id FK
-        string user_id FK
-        enum role
-        enum status
-        timestamp joined_at
-        timestamp left_at
-    }
-    
-    QuizItem {
-        uuid id PK
-        uuid lecture_id FK
-        string question
-        json options
-        int answer
-        string explanation
-        timestamp ts
-        timestamp created_at
-        timestamp pushed_at
-    }
-    
-    Attempt {
-        uuid quiz_id FK
-        string user_id FK
-        int selected
-        boolean is_correct
-        int latency_ms
-    }
+    QuizItem ||--o{ Attempt : tracks
 ```
 
-### 数据流设计
+### 关键表设计
 
-1. **写入优化**
-   - 使用批量插入减少数据库连接
-   - 答题数据先缓存后批量写入
-   - 非关键数据异步处理
+#### lectures 表
+- 状态管理：not_started → in_progress → paused/ended
+- 邀请码生成：6位唯一码
+- 软删除支持
 
-2. **查询优化**
-   - 合理使用索引提升查询性能
-   - 统计数据定期预计算
-   - 使用数据库视图简化复杂查询
+#### quiz_items 表
+- AI 生成的题目存储
+- 推送时间戳记录
+- 正确率统计支持
 
-3. **数据一致性**
-   - 使用事务保证关键操作的原子性
-   - 外键约束维护引用完整性
-   - 软删除保留历史数据
+#### attempts 表
+- 复合主键：(quiz_id, user_id)
+- 响应时间记录
+- 正确性追踪
 
 ## 安全架构
 
-### 认证与授权
+### 认证流程
 
 ```mermaid
 graph LR
-    A[用户] --> B{认证方式}
-    B --> C[GitHub OAuth]
-    B --> D[匿名登录]
-    
-    C --> E[Better Auth]
-    D --> E
-    
-    E --> F[Session Management]
-    F --> G[JWT Token]
-    
-    G --> H{权限验证}
-    H --> I[Server Actions]
-    H --> J[API Routes]
+    A[用户访问] --> B{已登录?}
+    B -->|否| C[选择登录方式]
+    C --> D[GitHub OAuth]
+    C --> E[匿名登录]
+    D --> F[Better Auth]
+    E --> F
+    F --> G[创建会话]
+    G --> H[访问资源]
+    B -->|是| H
 ```
 
 ### 安全措施
 
-1. **身份认证**
-   - Better Auth 提供安全的会话管理
-   - 支持 OAuth 和匿名登录
-   - JWT 令牌自动刷新
+1. **身份验证**
+   - Better Auth 会话管理
+   - JWT 自动刷新
+   - 安全 Cookie 设置
 
 2. **数据验证**
-   - Zod schema 验证所有输入
+   - Zod schema 强制验证
    - SQL 注入防护（参数化查询）
    - XSS 防护（React 自动转义）
 
 3. **访问控制**
-   - Server Actions 级别的权限检查
-   - 基于角色的访问控制 (RBAC)
+   - Server Actions 权限检查
    - 资源所有权验证
-
-4. **数据保护**
-   - HTTPS 加密传输
-   - 敏感数据加密存储
-   - 定期安全审计
+   - 角色权限控制
 
 ## 部署架构
 
-### 生产环境架构
+### 生产环境
 
 ```mermaid
 graph TB
-    subgraph "客户端"
-        A[Web Browser]
-        B[Mobile Browser]
+    subgraph Vercel
+        A[Edge Network]
+        B[Next.js Functions]
+        C[静态资源 CDN]
     end
     
-    subgraph "边缘网络"
-        C[Vercel Edge Network]
-        D[CDN]
+    subgraph Neon
+        D[PostgreSQL]
+        E[连接池]
     end
     
-    subgraph "应用层"
-        E[Next.js on Vercel]
-        F[API Routes]
-        G[Server Actions]
+    subgraph 外部服务
+        F[Google Gemini API]
+        G[GitHub OAuth]
     end
     
-    subgraph "数据层"
-        H[Neon PostgreSQL]
-        I[Redis Cache]
-    end
-    
-    subgraph "外部服务"
-        J[Google Gemini API]
-        K[GitHub OAuth]
-    end
-    
+    A --> B
     A --> C
-    B --> C
-    C --> E
-    E --> F
-    E --> G
-    F --> H
-    G --> H
-    F --> I
-    G --> I
-    F --> J
-    G --> J
-    E --> K
+    B --> E
+    E --> D
+    B --> F
+    B --> G
 ```
 
-### 部署策略
+### 环境配置
 
-1. **应用部署**
-   - Vercel 自动部署（Git push 触发）
-   - Preview 环境用于测试
-   - 生产环境自动扩展
+- **开发环境** - 本地 PostgreSQL + Docker
+- **预览环境** - Vercel Preview + Neon Branch
+- **生产环境** - Vercel Production + Neon Main
 
-2. **数据库部署**
-   - Neon Serverless PostgreSQL
-   - 自动备份和恢复
-   - 连接池优化
+## 性能优化
 
-3. **监控与日志**
-   - Vercel Analytics 监控性能
-   - 错误追踪和告警
-   - 用户行为分析
+### 前端优化
 
-## 扩展性设计
+1. **渲染优化**
+   - React Server Components 减少客户端 JS
+   - Suspense 边界优化加载体验
+   - 动态导入按需加载组件
 
-### 水平扩展
+2. **资源优化**
+   - 图片自动优化（next/image）
+   - 字体子集化
+   - 静态资源 CDN 分发
 
-1. **应用层扩展**
-   - Vercel 自动扩展实例
-   - 无状态设计支持多实例
-   - 边缘函数分散负载
+### 后端优化
 
-2. **数据库扩展**
-   - 读写分离架构预留
-   - 分库分表方案设计
-   - 缓存层减少数据库压力
+1. **数据库优化**
+   - 合理索引设计
+   - 查询优化（避免 N+1）
+   - 连接池管理
 
-### 功能扩展
+2. **缓存策略**
+   - Server Actions 结果缓存
+   - AI 提示词缓存
+   - 静态页面 ISR
 
-1. **插件化设计**
-   - AI 提供商可替换（接口抽象）
-   - 认证方式可扩展
-   - 存储后端可切换
+3. **并发控制**
+   - 数据库事务隔离
+   - 乐观锁实现
+   - 请求限流
 
-2. **微服务预留**
-   - 测验生成服务可独立部署
-   - 实时通信可从轮询升级为 SSE/WebSocket
-   - 数据分析可独立为服务
+### 监控指标
 
-### 性能优化
+- **性能指标** - Core Web Vitals
+- **错误监控** - Sentry 集成
+- **用户行为** - Vercel Analytics
+- **数据库性能** - Neon 监控面板
 
-1. **前端优化**
-   - 路由预加载
-   - 图片懒加载
-   - 组件按需加载
+---
 
-2. **后端优化**
-   - 数据库查询优化
-   - 缓存策略优化
-   - 并发控制
-
-3. **AI 优化**
-   - 提示词缓存
-   - 批量处理请求
-   - 降级方案设计
-
-## 总结
-
-QuizGen 采用现代化的技术架构，通过 Next.js 15 的 Server Actions 简化了前后端交互，使用 Drizzle ORM 保证了类型安全，通过 Better Auth 提供了灵活的认证方案。整体架构设计注重可扩展性、安全性和用户体验，为未来的功能迭代和性能优化奠定了坚实基础。
-
-关键架构决策：
-- **Monorepo**: 提高代码复用，统一依赖管理
-- **Server Actions**: 简化 API 开发，增强类型安全
-- **Serverless**: 自动扩展，按需付费
-- **类型安全**: 端到端的 TypeScript 支持
-- **模块化**: 清晰的职责划分，便于维护
+> 架构设计注重简洁性、可维护性和扩展性，通过 Server Actions 简化开发流程，确保类型安全和最佳性能。
