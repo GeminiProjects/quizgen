@@ -5,6 +5,10 @@
 import { google } from '@ai-sdk/google';
 import type { LanguageModel } from 'ai';
 
-const gemini25flash = google('gemini-2.5-flash-lite');
+const gemini25flashlite = google('gemini-2.5-flash-lite');
 
-export const defaultModel: LanguageModel = gemini25flash;
+const gemini25flash = google('gemini-2.5-flash');
+
+export const defaultContextModel: LanguageModel = gemini25flashlite;
+
+export const defaultQuizModel: LanguageModel = gemini25flash;

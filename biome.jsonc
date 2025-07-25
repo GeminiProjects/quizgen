@@ -22,7 +22,8 @@
         "noAwaitInLoop": "off"
       },
       "performance": {
-        "noNamespaceImport": "off"
+        "noNamespaceImport": "off",
+        "useTopLevelRegex": "off"
       },
       "suspicious": {
         "noConsole": "off",

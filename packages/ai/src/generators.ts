@@ -4,7 +4,7 @@
  */
 
 import {
-  generateObject,
+  generateText,
   type StreamTextResult,
   streamText,
   type ToolSet,
@@ -123,18 +123,79 @@ export async function generateQuestions(
       COUNT: count.toString(),
     });
 
-    // 生成对象的 Promise
-    const generatePromise = generateObject({
+    // 这里 AI-SDK 有一个新的 bug
+    // 暂时 generateText 替代 generateObject，通过 systemPrompt 来约束返回类型
+    const systemPrompt = `You are a quiz generator. Generate a JSON object with quiz questions based on the provided content.
+
+IMPORTANT: Return ONLY a valid JSON object, nothing else. Do not include any text before or after the JSON.
+
+The JSON must have this exact structure:
+{
+  "success": true,
+  "total": 2,
+  "quizzes": [
+    {
+      "question": "Question text here",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": 0,
+      "explanation": "Explanation text here"
+    }
+  ]
+}
+
+Notes:
+- "answer" is the index (0-3) of the correct option
+- Always include exactly 4 options
+- Generate exactly ${count} questions`;
+
+    const generatePromise = generateText({
       model,
+      system: systemPrompt,
       prompt,
-      schema: quizGenerationSchema,
     });
 
     // 应用超时控制
     const result = await withTimeout(generatePromise, timeoutOptions);
 
+    // 解析 JSON 响应
+    let parsedResult: unknown;
+    try {
+      // 尝试解析 JSON
+      parsedResult = JSON.parse(result.text);
+    } catch {
+      // 如果解析失败，尝试清理文本并重试
+      const cleanedText = result.text
+        .replace(/^[^{]*/, '')
+        .replace(/[^}]*$/, '');
+      try {
+        parsedResult = JSON.parse(cleanedText);
+      } catch {
+        console.error('无法解析 JSON 响应:', result.text);
+        return {
+          success: false,
+          total: 0,
+          quizzes: [],
+          error: 'JSON 解析失败',
+        };
+      }
+    }
+
+    // 验证解析后的结果
+    const validationResult = quizGenerationSchema.safeParse(parsedResult);
+    if (!validationResult.success) {
+      console.error('响应不符合 schema:', validationResult.error);
+      return {
+        success: false,
+        total: 0,
+        quizzes: [],
+        error: '响应格式错误',
+      };
+    }
+
+    const validatedData = validationResult.data;
+
     // 验证结果
-    if (!result.object.success) {
+    if (!validatedData.success) {
       return {
         success: false,
         total: 0,
@@ -144,13 +205,13 @@ export async function generateQuestions(
     }
 
     // 确保生成的题目数量正确
-    if (result.object.quizzes.length !== count) {
+    if (validatedData.quizzes.length !== count) {
       console.warn(
-        `期望生成 ${count} 道题目，实际生成 ${result.object.quizzes.length} 道`
+        `期望生成 ${count} 道题目，实际生成 ${validatedData.quizzes.length} 道`
       );
     }
 
-    return result.object;
+    return validatedData;
   } catch (error) {
     console.error('生成测验题目时出错:', error);
 

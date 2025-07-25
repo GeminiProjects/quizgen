@@ -43,6 +43,7 @@ import { CommentSection } from '@/components/comment-section';
 import { StatsCard } from '@/components/stats-card';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { type LectureDetailClientProps, lectureStatusConfig } from '@/types';
+import AnalyticsTab from './analytics-tab';
 import DeleteLectureDialog from './delete-lecture-dialog';
 import EditLectureDialog from './edit-lecture-dialog';
 import LectureControlSection from './lecture-control-section';
@@ -176,13 +177,6 @@ export default function LectureDetailContent({
           value={stats.totalQuizItems}
         />
 
-        {/* <StatsCard
-          description="转录段数"
-          icon={Mic}
-          title="转录文本"
-          value={stats.totalTranscripts}
-        /> */}
-
         <StatsCard
           description="上传材料"
           icon={FileText}
@@ -191,7 +185,7 @@ export default function LectureDetailContent({
         />
 
         <StatsCard
-          description="材料+转录总字数"
+          description="材料总字数"
           icon={Hash}
           title="上下文大小"
           value={
@@ -216,7 +210,7 @@ export default function LectureDetailContent({
         />
       </div>
 
-      {/* 演讲控制和转录面板 */}
+      {/* 演讲控制面板 */}
       <div className="grid gap-6 lg:grid-cols-3">
         <LectureControlSection
           joinCode={lecture.join_code}
@@ -270,9 +264,7 @@ export default function LectureDetailContent({
             </TabsContent>
 
             <TabsContent value="analytics">
-              <div className="py-8 text-center text-muted-foreground">
-                数据分析功能开发中...
-              </div>
+              <AnalyticsTab lectureId={lecture.id} />
             </TabsContent>
           </Tabs>
         </CardContent>

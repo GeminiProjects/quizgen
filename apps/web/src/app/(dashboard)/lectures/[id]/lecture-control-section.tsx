@@ -23,7 +23,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { pushQuizItem } from '@/app/actions/quiz';
 import QRCodeDialog from './qrcode-dialog';
-import TranscriptPanel from './transcript-panel';
 
 interface LectureControlSectionProps {
   lectureId: string;
@@ -223,14 +222,6 @@ export default function LectureControlSection({
             </p>
           </CardContent>
         </Card>
-      )}
-
-      {/* 实时转录面板 */}
-      {(status === 'in_progress' || status === 'paused') && (
-        <TranscriptPanel
-          isActive={status === 'in_progress'}
-          lectureId={lectureId}
-        />
       )}
 
       {/* 二维码弹窗 */}

@@ -55,6 +55,7 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
   const [uploading, setUploading] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string | null>(null);
+  const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -420,6 +421,7 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
     if (material.text_content) {
       setPreviewContent(material.text_content);
       setPreviewFileName(material.file_name);
+      setPreviewMaterial(material);
       setShowPreview(true);
     } else {
       toast.error('该材料暂无可预览的内容');
@@ -536,7 +538,7 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
           {isDragActive ? '释放文件以上传' : '拖拽文件到这里，或点击选择文件'}
         </p>
         <p className="text-muted-foreground text-sm">
-          支持 PDF、TXT、MD、HTML 等格式，单个文件最大 10MB
+          支持 PDF 等格式，单个文件最大 10MB
         </p>
       </div>
 
@@ -656,13 +658,26 @@ export default function MaterialsTab({ lectureId }: { lectureId: string }) {
 
       {/* 预览对话框 */}
       <Dialog onOpenChange={setShowPreview} open={showPreview}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden">
           <DialogHeader>
             <DialogTitle>{previewFileName}</DialogTitle>
             <DialogDescription>材料内容预览</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[600px] rounded-lg border bg-muted/20 p-6">
-            <pre className="whitespace-pre-wrap font-mono text-sm">
+          {previewMaterial && (
+            <div className="mb-4 flex flex-wrap gap-3 text-muted-foreground text-sm">
+              <span>类型: {previewMaterial.file_type}</span>
+              <span>字数: {previewContent?.length || 0}</span>
+              <span>
+                上传时间:{' '}
+                {new Date(previewMaterial.created_at).toLocaleString('zh-CN')}
+              </span>
+              {previewMaterial.status === 'completed' && (
+                <span className="text-success">处理完成</span>
+              )}
+            </div>
+          )}
+          <ScrollArea className="h-[500px] rounded-lg border bg-muted/20 p-6">
+            <pre className="whitespace-pre-wrap break-words font-mono text-sm">
               {previewContent}
             </pre>
           </ScrollArea>

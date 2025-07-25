@@ -17,7 +17,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { quizItemSchemas } from '@/lib/schemas';
-import { defaultModel } from '@/models';
+import { defaultQuizModel } from '@/models';
 import type { ActionResult, QuizItem } from '@/types';
 import {
   assertOwnership,
@@ -668,7 +668,7 @@ export async function generateQuizItems(input: {
     // 生成题目
     const count = Math.min(input.count || 10, 50); // 最多生成 50 道题
     const result = await generateQuestions({
-      model: defaultModel,
+      model: defaultQuizModel,
       context,
       count,
       timeoutOptions: {

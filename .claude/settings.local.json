@@ -17,7 +17,8 @@
       "Bash(bun run check:*)",
       "Bash(npx @biomejs/biome format:*)",
       "Bash(bun install:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(bun --env-file=../../.env.local tests/test-gemini-fix.ts)"
     ],
     "deny": []
   }

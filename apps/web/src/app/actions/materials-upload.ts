@@ -4,7 +4,7 @@ import { createFilePart, generateContext } from '@repo/ai';
 import { db, eq, lectures, materials } from '@repo/db';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
-import { defaultModel } from '@/models';
+import { defaultContextModel } from '@/models';
 import type { ActionResult, Material } from '@/types';
 import {
   assertOwnership,
@@ -152,7 +152,7 @@ async function processFileAsync(
 
     // 生成上下文（流式处理）
     const { textStream } = await generateContext({
-      model: defaultModel,
+      model: defaultContextModel,
       file: filePart,
     });
 
