@@ -80,8 +80,7 @@ async function startLocalDatabase(): Promise<string> {
   const dbName = 'quizgen';
 
   // 创建 docker-compose.yml（如果不存在）
-  if (!existsSync(dockerComposePath)) {
-    const dockerComposeContent = `version: '3.8'
+  const dockerComposeContent = `version: '3.8'
 
 services:
   postgres:
@@ -105,9 +104,8 @@ services:
 volumes:
   quizgen-db-data:
 `;
-    writeFileSync(dockerComposePath, dockerComposeContent);
-    console.log('✅ 已创建 docker-compose.yml');
-  }
+  writeFileSync(dockerComposePath, dockerComposeContent);
+  console.log('✅ 已创建 docker-compose.yml');
 
   // 启动数据库
   try {

@@ -15,9 +15,9 @@
     "format": "ultracite format"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.0-beta.13",
     "@openrouter/ai-sdk-provider": "^1.0.0-beta.3",
-    "ai": "^5.0.0-beta.25",
+    "@ai-sdk/google": "^2.0.0-beta.14",
+    "ai": "^5.0.0-beta.26",
     "zod": "^4.0.5"
   },
   "devDependencies": {

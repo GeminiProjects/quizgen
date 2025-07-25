@@ -3,7 +3,8 @@
 // 参阅: https://ai-sdk.dev/docs/foundations/providers-and-models
 
 import { google } from '@ai-sdk/google';
+import type { LanguageModel } from 'ai';
 
-const gemini25flash = google('gemini-2.5-flash');
+const gemini25flash = google('gemini-2.5-flash-lite');
 
-export const defaultModel = gemini25flash;
+export const defaultModel: LanguageModel = gemini25flash;

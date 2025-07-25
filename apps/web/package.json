@@ -10,7 +10,6 @@
     "format": "ultracite format"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.2.22",
     "@radix-ui/react-slot": "^1.2.3",
     "@repo/ai": "workspace:*",
     "@repo/db": "workspace:*",
@@ -18,7 +17,8 @@
     "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
-    "ai": "^4.3.19",
+    "@ai-sdk/google": "^2.0.0-beta.14",
+    "ai": "^5.0.0-beta.26",
     "framer-motion": "^12.23.9",
     "next": "^15.4.4",
     "next-themes": "^0.4.6",
