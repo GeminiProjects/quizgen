@@ -1,6 +1,15 @@
 'use server';
 
-import { and, count, db, desc, eq, ilike, organizations } from '@repo/db';
+import {
+  and,
+  count,
+  db,
+  desc,
+  eq,
+  ilike,
+  organizations,
+  users,
+} from '@repo/db';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { organizationSchemas } from '@/lib/schemas';
@@ -260,8 +269,8 @@ export async function getPublicOrganizations(): Promise<
   ActionResult<Organization[]>
 > {
   try {
-    // 查询所有组织
-    const data = await db
+    // 查询所有组织，包含 owner 信息
+    const rawData = await db
       .select({
         id: organizations.id,
         name: organizations.name,
@@ -270,9 +279,22 @@ export async function getPublicOrganizations(): Promise<
         password: organizations.password,
         created_at: organizations.created_at,
         updated_at: organizations.updated_at,
+        owner: {
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          avatar_url: users.image,
+        },
       })
       .from(organizations)
+      .leftJoin(users, eq(organizations.owner_id, users.id))
       .orderBy(desc(organizations.created_at));
+
+    // 处理可能的 null owner，转换为 undefined
+    const data = rawData.map((item) => ({
+      ...item,
+      owner: item.owner ? item.owner : undefined,
+    }));
 
     // 返回数据（createSuccessResponse 会自动序列化日期）
     return createSuccessResponse(data);

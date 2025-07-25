@@ -1,6 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@repo/ui/components/avatar';
 import { Button } from '@repo/ui/components/button';
 import {
   Card,
@@ -82,6 +87,56 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
     loadComments();
   }, [lectureId]);
 
+  // 建立 SSE 连接，接收实时评论
+  useEffect(() => {
+    const eventSource = new EventSource(`/api/sse/${lectureId}`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'new_comment') {
+          // 添加新评论到列表
+          setComments((prev) => [...prev, data.comment]);
+          setTotalComments((prev) => prev + 1);
+
+          // 滚动到底部
+          if (scrollAreaRef.current) {
+            const scrollViewport = scrollAreaRef.current.querySelector(
+              '[data-radix-scroll-area-viewport]'
+            );
+            if (scrollViewport) {
+              setTimeout(() => {
+                scrollViewport.scrollTop = scrollViewport.scrollHeight;
+              }, 100);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('处理SSE消息失败:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE连接错误:', error);
+      // 尝试重连（可能是网络中断）
+      if (eventSource.readyState === EventSource.CONNECTING) {
+        console.log('SSE正在重连...');
+      } else if (eventSource.readyState === EventSource.CLOSED) {
+        console.error('SSE连接已关闭');
+        // 可以在这里实现重连逻辑
+      }
+    };
+
+    eventSource.onopen = () => {
+      console.log('SSE连接已建立');
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [lectureId]);
+
   // 滚动到底部
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -132,6 +187,16 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
     });
   };
 
+  // 获取用户名首字母
+  const getUserInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((word) => word.charAt(0))
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
@@ -164,38 +229,42 @@ export function CommentSection({ lectureId, isSpeaker }: CommentSectionProps) {
                   key={comment.id}
                 >
                   {/* 用户头像 */}
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                  <Avatar className="h-8 w-8">
                     {comment.is_anonymous ? (
-                      <User className="h-4 w-4 text-primary" />
-                    ) : comment.user?.is_speaker ? (
-                      // 演讲者特殊头像标识
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
-                        <span className="font-bold text-white text-xs">讲</span>
-                      </div>
-                    ) : comment.user?.is_anonymous ? (
-                      // 游客用户头像
-                      <span className="font-medium text-primary text-xs">
-                        游客
-                      </span>
+                      <AvatarFallback className="bg-primary/10">
+                        <User className="h-4 w-4 text-primary" />
+                      </AvatarFallback>
                     ) : (
-                      <span className="font-medium text-primary text-xs">
-                        {(comment.user?.name || comment.user?.email || 'U')
-                          .charAt(0)
-                          .toUpperCase()}
-                      </span>
+                      <>
+                        <AvatarImage
+                          alt={comment.user?.name || '用户'}
+                          src={comment.user?.avatar_url || undefined}
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {comment.user?.is_speaker ? (
+                            <span className="font-bold text-xs">讲</span>
+                          ) : comment.user?.is_anonymous ? (
+                            <span className="text-xs">游</span>
+                          ) : (
+                            getUserInitials(
+                              comment.user?.name || comment.user?.email || 'U'
+                            )
+                          )}
+                        </AvatarFallback>
+                      </>
                     )}
-                  </div>
+                  </Avatar>
 
                   {/* 评论内容 */}
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <span className="font-medium text-sm">
                         {comment.is_anonymous
-                          ? '匿名用户'
+                          ? `匿名${comment.user?.id?.slice(-4) || '用户'}`
                           : comment.user?.is_speaker
                             ? `${comment.user?.name || comment.user?.email} (演讲者)`
                             : comment.user?.is_anonymous
-                              ? '游客'
+                              ? `匿名${comment.user?.id?.slice(-4) || '游客'}`
                               : comment.user?.name || comment.user?.email}
                       </span>
                       <span className="text-muted-foreground text-xs">

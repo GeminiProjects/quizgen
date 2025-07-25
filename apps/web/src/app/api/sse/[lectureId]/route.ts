@@ -1,6 +1,16 @@
-import { and, db, eq, lectureParticipants, quizItems } from '@repo/db';
+import {
+  and,
+  authUser,
+  comments,
+  db,
+  eq,
+  lectureParticipants,
+  lectures,
+  quizItems,
+} from '@repo/db';
 import type { NextRequest } from 'next/server';
 import { getServerSideSession } from '@/lib/auth';
+import type { Comment } from '@/types';
 
 // 存储活跃的 SSE 连接
 const activeConnections = new Map<
@@ -10,9 +20,9 @@ const activeConnections = new Map<
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { lectureId: string } }
+  { params }: { params: Promise<{ lectureId: string }> }
 ) {
-  const { lectureId } = params;
+  const { lectureId } = await params;
 
   // 验证用户身份
   const session = await getServerSideSession();
@@ -20,8 +30,19 @@ export async function GET(
     return new Response('Unauthorized', { status: 401 });
   }
 
-  // 验证参与权限
-  const [participant] = await db
+  // 验证演讲是否存在
+  const [lecture] = await db
+    .select()
+    .from(lectures)
+    .where(eq(lectures.id, lectureId))
+    .limit(1);
+
+  if (!lecture) {
+    return new Response('Lecture not found', { status: 404 });
+  }
+
+  // 检查是否为参与者（可选，用于权限控制）
+  const [_participant] = await db
     .select()
     .from(lectureParticipants)
     .where(
@@ -31,10 +52,6 @@ export async function GET(
       )
     )
     .limit(1);
-
-  if (!participant) {
-    return new Response('Not a participant', { status: 403 });
-  }
 
   // 创建 SSE 响应
   const stream = new ReadableStream({
@@ -110,6 +127,79 @@ export async function pushQuizToParticipants(
       ts: quiz.ts.toISOString(),
       created_at: quiz.created_at.toISOString(),
     },
+  });
+
+  let pushedCount = 0;
+  const deadConnections: ReadableStreamDefaultController[] = [];
+
+  // 推送给所有连接
+  for (const controller of connections) {
+    try {
+      controller.enqueue(`data: ${message}\n\n`);
+      pushedCount++;
+    } catch {
+      // 记录失效的连接
+      deadConnections.push(controller);
+    }
+  }
+
+  // 清理失效连接
+  for (const controller of deadConnections) {
+    connections.delete(controller);
+  }
+
+  return pushedCount;
+}
+
+// 推送评论给所有连接的参与者
+export async function pushCommentToParticipants(
+  lectureId: string,
+  commentId: string
+) {
+  const connections = activeConnections.get(lectureId);
+  if (!connections || connections.size === 0) {
+    return 0;
+  }
+
+  // 获取评论信息（包含用户信息）
+  const [result] = await db
+    .select({
+      comment: comments,
+      user: {
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+        image: authUser.image,
+        is_anonymous: authUser.isAnonymous,
+      },
+      lecture: {
+        owner_id: lectures.owner_id,
+      },
+    })
+    .from(comments)
+    .innerJoin(authUser, eq(comments.user_id, authUser.id))
+    .innerJoin(lectures, eq(comments.lecture_id, lectures.id))
+    .where(eq(comments.id, commentId))
+    .limit(1);
+
+  if (!result) {
+    return 0;
+  }
+
+  // 构建评论对象
+  const comment: Comment = {
+    ...result.comment,
+    user: {
+      ...result.user,
+      is_speaker: result.user.id === result.lecture.owner_id,
+    },
+    created_at: result.comment.created_at.toISOString(),
+    updated_at: result.comment.updated_at.toISOString(),
+  };
+
+  const message = JSON.stringify({
+    type: 'new_comment',
+    comment,
   });
 
   let pushedCount = 0;

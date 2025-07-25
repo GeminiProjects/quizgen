@@ -44,15 +44,23 @@ export function ParticipationContent({
   const [activeTab, setActiveTab] = useState('quiz');
 
   const handleNewQuiz = (quiz: QuizItem) => {
-    setActiveQuiz(quiz);
-    setActiveTab('quiz'); // 自动切换到答题标签
+    // 如果当前有题目，先清除再设置新题目，避免动画覆盖
+    if (activeQuiz) {
+      setActiveQuiz(null);
+      // 短暂延迟后设置新题目，确保动画过渡流畅
+      setTimeout(() => {
+        setActiveQuiz(quiz);
+        setActiveTab('quiz'); // 自动切换到答题标签
+      }, 100);
+    } else {
+      setActiveQuiz(quiz);
+      setActiveTab('quiz'); // 自动切换到答题标签
+    }
   };
 
   const handleAnswered = () => {
-    // 答题完成后延迟清除当前题目
-    setTimeout(() => {
-      setActiveQuiz(null);
-    }, 5000);
+    // 答题完成后不再自动清除，等待下一题或手动切换标签
+    // 这样可以让用户查看答案解析
   };
 
   const isLectureActive = lectureStatus === 'in_progress';

@@ -7,7 +7,6 @@ import {
   db,
   desc,
   eq,
-  lectureParticipants,
   lectures,
   materials,
   quizItems,
@@ -499,17 +498,11 @@ export async function pushQuizItem(
       .set({ pushed_at: new Date() })
       .where(eq(quizItems.id, quizToPush.id));
 
-    // 获取当前参与者数量
-    const pushedCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(lectureParticipants)
-      .where(
-        and(
-          eq(lectureParticipants.lecture_id, lectureId),
-          eq(lectureParticipants.status, 'active')
-        )
-      )
-      .then(([result]) => Number(result?.count || 0));
+    // 通过 SSE 推送题目给参与者
+    const { pushQuizToParticipants } = await import(
+      '@/app/api/sse/[lectureId]/route'
+    );
+    const pushedCount = await pushQuizToParticipants(lectureId, quizToPush.id);
 
     // 重验证相关页面
     revalidatePaths([`/lectures/${lectureId}`, `/participation/${lectureId}`]);
